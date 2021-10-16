@@ -1,0 +1,41 @@
+<div class="navbar navbar-expand pr-0 navbar-light border-bottom-2" id="default-navbar" data-primary>
+    <!-- Navbar Toggler -->
+    <button class="navbar-toggler w-auto mr-16pt d-block d-lg-none rounded-0" type="button" data-toggle="sidebar">
+        <span class="material-icons">short_text</span>
+    </button>
+    <!-- // END Navbar Toggler -->
+
+    <!-- Navbar Brand -->
+    <a href="" class="navbar-brand mr-16pt d-lg-none">
+        <span class="avatar avatar-sm navbar-brand-icon mr-0 mr-lg-8pt">
+            <span class="avatar-title rounded bg-primary">
+                <img src="{{asset('assets/images/256_rsz_nicolas-horn-689011-unsplash.jpg')}}" alt="logo"class="img-fluid" />
+            </span>
+        </span>
+        <span class="d-none d-lg-block">Quadque - LMS</span>
+    </a>
+    <!-- // END Navbar Brand -->
+
+    <div class="flex"></div>
+
+    <!-- Navbar Menu -->
+    <div class="nav navbar-nav flex-nowrap d-flex mr-16pt">
+        <div class="nav-item dropdown">
+            <a href="#" class="nav-link d-flex align-items-center dropdown-toggle" data-toggle="dropdown" data-caret="false">
+                <span class="avatar avatar-sm mr-8pt2">
+                    <span class="avatar-title rounded-circle bg-primary"><i class="material-icons">account_box</i></span>
+                </span>
+            </a>
+            <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); document.getElementById('logout').submit()">
+                    Logout
+                </a>
+
+                <form action="{{route('logout')}}" method="post" id="logout">
+                    @csrf
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- // END Navbar Menu -->
+</div>
