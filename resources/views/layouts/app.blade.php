@@ -27,44 +27,48 @@
             <div class="sk-chase-dot"></div>
         </div>
     </div>
-    <!-- Drawer Layout -->
-    <div class="mdk-drawer-layout js-mdk-drawer-layout" data-push data-responsive-width="992px">
-        <div class="mdk-drawer-layout__content page-content">
 
-            <!-- Header -->
-            <!-- Navbar -->
-            @include('layouts.header')
-            <!-- // END Navbar -->
-            <!-- // END Header -->
+    @auth
+        <!-- Drawer Layout -->
+        <div class="mdk-drawer-layout js-mdk-drawer-layout" data-push data-responsive-width="992px">
+            <div class="mdk-drawer-layout__content page-content">
 
-            @include('components.breadcrumb')
+                <!-- Header -->
+                <!-- Navbar -->
+                @include('layouts.header')
+                <!-- // END Navbar -->
+                <!-- // END Header -->
 
-            <!-- BEFORE Page Content -->
+                @include('components.breadcrumb')
 
-            <!-- // END BEFORE Page Content -->
+                <!-- BEFORE Page Content -->
 
-            <!-- Page Content -->
-            <div class="container page__container" id="app">
-                @yield('content')
+                <!-- // END BEFORE Page Content -->
+
+                <!-- Page Content -->
+                <div class="container page__container" id="app">
+                    @yield('content')
+                </div>
+                <!-- // END Page Content -->
+
+                <!-- Footer -->
+                @include('layouts.footer')
+                <!-- // END Footer -->
             </div>
-            <!-- // END Page Content -->
 
-            <!-- Footer -->
-            @include('layouts.footer')
-            <!-- // END Footer -->
+            <!-- // END drawer-layout__content -->
+
+            <!-- Drawer -->
+
+            <div class="mdk-drawer js-mdk-drawer" id="default-drawer">
+                @include('layouts.sidebar')
+            </div>
+
+            <!-- // END Drawer -->
+
         </div>
+    @endauth
 
-        <!-- // END drawer-layout__content -->
-
-        <!-- Drawer -->
-
-        <div class="mdk-drawer js-mdk-drawer" id="default-drawer">
-            @include('layouts.sidebar')
-        </div>
-
-        <!-- // END Drawer -->
-
-    </div>
     @include('layouts.scripts')
 </body>
 
