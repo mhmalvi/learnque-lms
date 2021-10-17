@@ -3,7 +3,7 @@
 @section('title', 'Dashboard')
 
 @section('content')
-
+user dashboard
 @endsection
 
 @push('js')
