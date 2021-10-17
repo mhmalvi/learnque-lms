@@ -21,11 +21,11 @@
 
     </head>
 
-    <body class="layout-default layout-login-centered-boxed">
+    <body class="layout-default layout-login-centered-boxed justify-content-center align-items-center">
         <div class="preloader bg-light"></div>
         <div class="layout-login-centered-boxed__form card">
             <div class="d-flex flex-column justify-content-center align-items-center mt-2 mb-5 navbar-light">
-                <a href="index.html"
+                <a href=""
                    class="navbar-brand flex-column mb-2 align-items-center mr-0"
                    style="min-width: 0">
 
