@@ -9,11 +9,11 @@
             <span>John Doe</span>
         </a>
 
-        <div class="sidebar-heading">Administrator</div>
+        <div class="sidebar-heading">User Type</div>
         <ul class="sidebar-menu">
-            @include('admin.components.nav-links')
+            @include('components.student-nav-links')
 
-            @include('components.nav-links')
+            @include('components.teacher-nav-links')
 
             {{-- Account --}}
             <li class="sidebar-menu-item">
