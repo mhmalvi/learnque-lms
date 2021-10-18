@@ -1,5 +1,5 @@
 <li class="sidebar-menu-item">
-    <a class="sidebar-menu-button" href="">
+    <a class="sidebar-menu-button" href="{{ route('admin.dashboard') }}">
         <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">dashboard</span>
         <span class="sidebar-menu-text">Dashboard</span>
     </a>
@@ -19,6 +19,11 @@
         <li class="sidebar-menu-item">
             <a class="sidebar-menu-button" href="">
                 <span class="sidebar-menu-text">Posts</span>
+            </a>
+        </li>
+        <li class="sidebar-menu-item">
+            <a class="sidebar-menu-button" href="{{ route('admin.course.categories.index') }}">
+                <span class="sidebar-menu-text">Categories</span>
             </a>
         </li>
     </ul>
