@@ -82,7 +82,7 @@
                     </div>
                     <div class="mdk-box__content d-flex align-items-center justify-content-center container page__container text-center py-112pt" style="min-height: 656px;">
                         <div class="card card--transparent mb-0 p-3 pt-5" style="width: 28rem">
-                            <h3 class="text-danger">We Are Happy To See You!</h3>
+                            <h3 class="text-primary">We Are Happy To See You!</h3>
                             <div class="card-body text-left">
                                 @include('auth.login')
                             </div>

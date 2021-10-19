@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
+use App\Http\Controllers\Admin\Auth\AuthenticatedSessionController as AdminAuthSession;
 use App\Http\Controllers\Auth\ConfirmablePasswordController;
 use App\Http\Controllers\Auth\EmailVerificationNotificationController;
 use App\Http\Controllers\Auth\EmailVerificationPromptController;
@@ -13,7 +14,9 @@ use Illuminate\Support\Facades\Route;
 /**
  * Admin
  */
-Route::view('admin', 'admin.auth.login');
+Route::get('admin/login', [AdminAuthSession::class, 'create'])->middleware('guest:admin')->name('admin.login');
+
+Route::post('admin/login', [AdminAuthSession::class, 'store'])->middleware('guest:admin');
 
 Route::get('/register', [RegisteredUserController::class, 'create'])
     ->middleware('guest')
@@ -22,12 +25,8 @@ Route::get('/register', [RegisteredUserController::class, 'create'])
 Route::post('/register', [RegisteredUserController::class, 'store'])
     ->middleware('guest');
 
-Route::get('/login', [AuthenticatedSessionController::class, 'create'])
-    ->middleware('guest')
-    ->name('login');
-
 Route::post('/login', [AuthenticatedSessionController::class, 'store'])
-    ->middleware('guest');
+    ->middleware(['guest', 'guest:admin'])->name('login');
 
 Route::get('/forgot-password', [PasswordResetLinkController::class, 'create'])
     ->middleware('guest')

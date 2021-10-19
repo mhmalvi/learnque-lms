@@ -18,10 +18,10 @@
 <!-- Preloader -->
 <link type="text/css" href="{{asset('assets/css/preloader.css')}}" rel="stylesheet">
 
-@stack('css')
-
 <!-- App CSS -->
 <link type="text/css" href="{{asset('assets/css/app.css')}}" rel="stylesheet">
 
 {{-- custom --}}
 <link type="text/css" href="{{asset('assets/css/custom.css')}}" rel="stylesheet">
+
+@stack('css')
