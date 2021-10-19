@@ -7,6 +7,8 @@
               content="IE=edge">
         <meta name="viewport"
               content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="api-base-url" content="{{ URL::to('/') }}" />
+
         <title>Home</title>
 
         <!-- Prevent the demo from appearing in search engines -->
@@ -33,7 +35,7 @@
         </div>
 
         <!-- Header Layout -->
-        <div class="mdk-header-layout js-mdk-header-layout">
+        <div class="mdk-header-layout js-mdk-header-layout" id="app">
 
             <!-- Header -->
 
@@ -84,7 +86,7 @@
                         <div class="card card--transparent mb-0 p-3 pt-5" style="width: 28rem">
                             <h3 class="text-primary">We Are Happy To See You!</h3>
                             <div class="card-body text-left">
-                                @include('auth.login')
+                                <login-component></login-component>
                             </div>
                         </div>
                     </div>
@@ -104,8 +106,10 @@
         @include('layouts.nav')
         <!-- // END Drawer -->
 
-        @include('layouts.scripts')
+        <!-- Scripts -->
+        <script src="{{ asset('js/app.js') }}" defer></script>
 
+        @include('layouts.scripts')
     </body>
 
 </html>

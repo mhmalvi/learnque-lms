@@ -4,6 +4,8 @@
 
 @section('content')
 user dashboard
+
+<hello-world></hello-world>
 @endsection
 
 @push('js')
