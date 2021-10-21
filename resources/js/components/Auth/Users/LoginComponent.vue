@@ -6,7 +6,7 @@
         v-if="errors.message"
       ></alert-danger>
     </transition>
-    <form @submit.prevent="formSubmitHandler">
+    <form @submit.prevent="formSubmitHandler" novalidate>
       <div class="form-group">
         <label class="text-label" for="email_2">Email Address:</label>
         <div class="input-group input-group-merge">
@@ -84,13 +84,14 @@
 <script>
 import { ref, reactive, computed } from "vue";
 import AlertDanger from "../../AlertDanger.vue";
+import Validators from "../../../modules/Validators.js";
 export default {
   components: {
     AlertDanger,
   },
   setup() {
     const isLoading = ref(false);
-
+    const { email, password } = Validators();
     const form = reactive({
       email: "",
       password: "",
@@ -114,7 +115,6 @@ export default {
         })
         .catch((error) => {
           isLoading.value = false;
-
           if (error.response.data.errors) {
             errors.validation = error.response.data.errors;
           } else {
@@ -123,21 +123,11 @@ export default {
         });
     };
 
-    const validEmail = () => {
-      const re =
-        /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
-
-      return re.test(form.email) ? true : false;
-    };
-
-    const validPassword = () => {
-      return form.password.length >= 6 && form.password.length < 20
-        ? true
-        : false;
-    };
-
     const isValid = computed(() => {
-      return form.email && form.password && validEmail() && validPassword()
+      return form.email &&
+        form.password &&
+        email(form.email) &&
+        password(form.password, 6, 20)
         ? true
         : false;
     });
