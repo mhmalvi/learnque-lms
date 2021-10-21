@@ -40,7 +40,7 @@
         </div>
 
         <div class="mdk-drawer js-mdk-drawer" id="default-drawer">
-            @include('layouts.sidebar')
+            @include('admin.layouts.sidebar')
         </div>
 
     </div>
