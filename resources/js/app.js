@@ -16,7 +16,6 @@ axios.defaults.baseURL = document.head.querySelector(
 ).content;
 
 // Register all components here
-app.component("hello-world", HelloWorld);
 app.component("course-category-list", CourseCategoryList);
 app.component("create-course-category-form", CreateCourseCategoryForm);
 /**
