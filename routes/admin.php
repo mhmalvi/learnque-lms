@@ -19,3 +19,5 @@ Route::prefix('course')->name('course.')->group(function () {
 
     Route::resource('categories', CategoryController::class);
 });
+
+Route::resource('courses', CourseController::class);
