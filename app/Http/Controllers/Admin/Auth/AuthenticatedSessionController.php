@@ -28,11 +28,15 @@ class AuthenticatedSessionController extends Controller
      */
     public function store(AdminLoginRequest $request)
     {
-        $request->authenticate();
+        try {
+            $request->authenticate();
 
-        $request->session()->regenerate();
+            $request->session()->regenerate();
 
-        return redirect()->intended(RouteServiceProvider::ADMIN);
+            return response()->json(['message' => 'success', 'redirectTo' => RouteServiceProvider::ADMIN], 201);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 503);
+        }
     }
 
     /**

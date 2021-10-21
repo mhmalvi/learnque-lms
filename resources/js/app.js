@@ -3,7 +3,8 @@ import { createApp } from "vue";
 import store from "./store";
 import axios from "axios";
 import CopyWrite from "./components/CopyWrite.vue";
-import LoginComponent from "./components/Auth/Users/LoginComponent.vue";
+import UserLogin from "./components/Auth/Users/LoginComponent.vue";
+import AdminLogin from "./components/Auth/Admin/LoginComponent.vue";
 
 const app = createApp({});
 
@@ -15,7 +16,12 @@ axios.defaults.baseURL = document.head.querySelector(
  * Guest
  */
 app.component("copy-write", CopyWrite);
-app.component("login-component", LoginComponent);
+app.component("login-component", UserLogin);
+
+/**
+ * Admin
+ */
+app.component("admin-login", AdminLogin);
 
 app.use(store).mount("#app");
 

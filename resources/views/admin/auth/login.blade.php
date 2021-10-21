@@ -8,6 +8,7 @@
               content="IE=edge">
         <meta name="viewport"
               content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <meta name="api-base-url" content="{{ URL::to('/') }}" />
         <title>Login - Learnque Admin</title>
 
         <!-- Prevent the demo from appearing in search engines -->
@@ -24,7 +25,7 @@
 
     <body class="layout-default layout-login-centered-boxed justify-content-center align-items-center">
         <div class="preloader bg-light"></div>
-        <div class="layout-login-centered-boxed__form card">
+        <div class="layout-login-centered-boxed__form card" id="app">
             <div class="d-flex flex-column justify-content-center align-items-center mt-2 mb-4 navbar-light">
                 <a href=""
                    class="navbar-brand flex-column mb-2 align-items-center mr-0 font-bold"
@@ -50,7 +51,9 @@
                 </div>
             @endif
 
-            <form action="{{route('admin.login')}}" method="POST">
+            <admin-login></admin-login>
+
+            {{-- <form action="{{route('admin.login')}}" method="POST">
                 @csrf
                 <div class="form-group">
                     <label class="text-label font-semibold" for="email_2">Email Address:</label>
@@ -88,9 +91,11 @@
                 <div class="form-group">
                     <button class="btn btn-block btn-primary" type="submit">Login</button>
                 </div>
-            </form>
+            </form> --}}
         </div>
 
+        <!-- Scripts -->
+        <script src="{{ asset('js/app.js') }}" defer></script>
         @include('layouts.scripts')
     </body>
 
