@@ -4,6 +4,6 @@
             <img class="brand-icon" src="{{asset('assets/images/logo/black-70@2x.png')}}" width="30" alt="Quadque - LMS">
             LearnQue
         </p>
-        <p class="text-50 small mt-n1 mb-0">Copyright <script type="text/javascript">document.write(new Date().getFullYear());</script> &copy; All rights reserved.</p>
+        <p class="text-50 small mt-n1 mb-0">Copyright <copy-write></copy-write> &copy; All rights reserved.</p>
     </div>
 </div>

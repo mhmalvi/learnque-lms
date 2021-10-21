@@ -19,14 +19,15 @@
 
         @include('layouts.styles')
 
+        <link type="text/css" href="{{asset('css/app.css')}}" rel="stylesheet">
     </head>
 
     <body class="layout-default layout-login-centered-boxed justify-content-center align-items-center">
         <div class="preloader bg-light"></div>
         <div class="layout-login-centered-boxed__form card">
-            <div class="d-flex flex-column justify-content-center align-items-center mt-2 mb-5 navbar-light">
+            <div class="d-flex flex-column justify-content-center align-items-center mt-2 mb-4 navbar-light">
                 <a href=""
-                   class="navbar-brand flex-column mb-2 align-items-center mr-0"
+                   class="navbar-brand flex-column mb-2 align-items-center mr-0 font-bold"
                    style="min-width: 0">
 
                     <span class="avatar avatar-sm navbar-brand-icon mr-0">
@@ -37,15 +38,26 @@
 
                     Learnque
                 </a>
-                <p class="m-0">Login to access your Account </p>
+                <p class="m-0 semibold">Login to access your Account </p>
             </div>
 
-            <form action="" novalidate>
+            @if ($errors->any())
+                <div class="bg-red-50 border-l-4 border-red-500 text-red-700 p-4 mb-4" role="alert">
+                    <p class="font-bold">{{ __('Whoops! Something went wrong.') }}</p>
+                    @foreach ($errors->all() as $error)
+                        <p>{{ $error }}</p>
+                    @endforeach
+                </div>
+            @endif
+
+            <form action="{{route('admin.login')}}" method="POST">
+                @csrf
                 <div class="form-group">
-                    <label class="text-label" for="email_2">Email Address:</label>
+                    <label class="text-label font-semibold" for="email_2">Email Address:</label>
                     <div class="input-group input-group-merge">
                         <input id="email_2"
                                type="email"
+                               name="email"
                                required=""
                                class="form-control form-control-prepended"
                                placeholder="john@doe.com">
@@ -57,11 +69,12 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <label class="text-label"
+                    <label class="text-label font-semibold"
                            for="password_2">Password:</label>
                     <div class="input-group input-group-merge">
                         <input id="password_2"
                                type="password"
+                               name="password"
                                required=""
                                class="form-control form-control-prepended"
                                placeholder="Enter your password">
@@ -73,8 +86,7 @@
                     </div>
                 </div>
                 <div class="form-group">
-                    <button class="btn btn-block btn-primary"
-                            type="submit">Login</button>
+                    <button class="btn btn-block btn-primary" type="submit">Login</button>
                 </div>
             </form>
         </div>
