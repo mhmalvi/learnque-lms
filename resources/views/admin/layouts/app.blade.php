@@ -33,7 +33,7 @@
 
             @include('components.breadcrumb')
 
-            <div class="container page__container" id="app">
+            <div class="container-fluid page__container p-5" id="app">
                 @yield('content')
             </div>
 

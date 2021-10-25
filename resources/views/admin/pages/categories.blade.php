@@ -8,7 +8,7 @@
         <div class="col-md-4">
             <create-course-category-form />
         </div>
-        <div class="col-md-8">
+        <div class="col-md-6 offset-md-2">
             <course-category-list />
         </div>
     </div>

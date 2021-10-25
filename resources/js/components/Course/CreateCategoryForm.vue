@@ -2,22 +2,14 @@
   <div>
     <form action="">
       <div class="form-group">
-        <label>Category Title</label>
-        <input
-          type="text"
-          class="form-control form-control-sm"
-          v-model="title"
-        />
+        <label for="title">Category Title</label>
+        <input type="text" class="form-control" id="title" v-model="title" />
         <p v-if="errors.title" class="text-danger">{{ errors.title[0] }}</p>
       </div>
 
       <div class="form-group">
         <label>Category Slug</label>
-        <input
-          type="text"
-          class="form-control form-control-sm"
-          v-model="slug"
-        />
+        <input type="text" class="form-control" v-model="slug" />
       </div>
 
       <div class="form-group">
@@ -25,7 +17,7 @@
         <textarea
           cols="30"
           rows="5"
-          class="form-control form-control-sm"
+          class="form-control"
           style="resize: none"
           v-model="description"
         ></textarea>
@@ -33,7 +25,7 @@
 
       <div class="form-group">
         <label>Thumbnail</label>
-        <input type="file" class="form-control form-control-sm" />
+        <input type="file" class="form-control" />
       </div>
 
       <div class="form-group">
