@@ -6,8 +6,10 @@ import CopyWrite from "./components/CopyWrite.vue";
 import LoginComponent from "./components/Auth/Users/LoginComponent.vue";
 
 // Import the components here
-import CourseCategoryList from './pages/Course/Category/List.vue';
-import CreateCourseCategoryForm from './components/Course/CreateCategoryForm.vue';
+import CourseCategoryList from './components/Course/Category/List.vue';
+import CreateCourseCategoryForm from './components/Course/Category/CreateForm.vue';
+import CourseList from './components/Course/List.vue';
+import CourseCreateComponent from './components/Course/CreateComponent.vue';
 
 const app = createApp({});
 
@@ -16,8 +18,13 @@ axios.defaults.baseURL = document.head.querySelector(
 ).content;
 
 // Register all components here
+
+// Admin components
 app.component("course-category-list", CourseCategoryList);
 app.component("create-course-category-form", CreateCourseCategoryForm);
+app.component("course-list", CourseList);
+app.component('course-create-component', CourseCreateComponent);
+// End of Admin components
 /**
  * Guest
  */
