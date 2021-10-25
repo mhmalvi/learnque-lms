@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,3 +20,7 @@ Route::prefix('course')->name('course.')->group(function () {
 
     Route::resource('categories', CategoryController::class);
 });
+
+Route::get('courses/all', [CourseController::class, 'getPaginatedList']);
+
+Route::resource('courses', CourseController::class);
