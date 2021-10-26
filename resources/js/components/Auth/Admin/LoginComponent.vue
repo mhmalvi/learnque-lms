@@ -1,21 +1,27 @@
 <template>
   <div>
     <transition name="fade">
-      <alert-danger
-        :message="errors.message"
+      <div
+        class="bg-red-50 border-l-4 border-red-500 text-red-700 py-3 px-4 mb-4"
+        role="alert"
         v-if="errors.message"
-      ></alert-danger>
+      >
+        <p class="font-bold mb-0">Whoops! Something went wrong</p>
+        <p class="mb-0">{{ errors.message }}</p>
+      </div>
     </transition>
-    <form @submit.prevent="formSubmitHandler" novalidate>
+    <form @submit.prevent="formSubmitHandler">
       <div class="form-group">
-        <label class="text-label" for="email_2">Email Address:</label>
+        <label class="text-label font-semibold" for="email_2"
+          >Email Address:</label
+        >
         <div class="input-group input-group-merge">
           <input
             id="email_2"
             type="email"
             v-model="form.email"
+            required
             class="form-control form-control-prepended"
-            :class="errors.validation.email.length > 0 && 'is-invalid'"
             placeholder="john@doe.com"
           />
           <div class="input-group-prepend">
@@ -24,27 +30,18 @@
             </div>
           </div>
         </div>
-        <transition-group name="fade">
-          <div v-if="errors.validation.email.length > 0">
-            <div
-              class="invalid-feedback d-block"
-              v-for="(error, index) in errors.validation.email"
-              :key="index"
-            >
-              {{ error }}
-            </div>
-          </div>
-        </transition-group>
       </div>
       <div class="form-group">
-        <label class="text-label" for="password_2">Password:</label>
+        <label class="text-label font-semibold" for="password_2"
+          >Password:</label
+        >
         <div class="input-group input-group-merge">
           <input
             id="password_2"
             type="password"
             v-model="form.password"
+            required
             class="form-control form-control-prepended"
-            :class="errors.validation.email.length > 0 && 'is-invalid'"
             placeholder="Enter your password"
           />
           <div class="input-group-prepend">
@@ -53,45 +50,28 @@
             </div>
           </div>
         </div>
-        <transition-group name="fade">
-          <div v-if="errors.validation.password.length > 0">
-            <div
-              class="invalid-feedback d-block"
-              v-for="(error, index) in errors.validation.password"
-              :key="index"
-            >
-              {{ error }}
-            </div>
-          </div>
-        </transition-group>
       </div>
       <div class="form-group">
         <button
           class="btn btn-block btn-primary"
-          :class="isLoading && 'is-loading'"
           type="submit"
           :disabled="!isValid"
+          :class="isLoading && 'is-loading'"
         >
           Login
         </button>
-      </div>
-      <div class="form-group text-center">
-        <a href="">Forgot password?</a> <br />
       </div>
     </form>
   </div>
 </template>
 <script>
 import { ref, reactive, computed } from "vue";
-import AlertDanger from "../../AlertDanger.vue";
 import Validators from "../../../modules/Validators.js";
 export default {
-  components: {
-    AlertDanger,
-  },
   setup() {
     const isLoading = ref(false);
     const { email, password } = Validators();
+
     const form = reactive({
       email: "",
       password: "",
@@ -105,10 +85,19 @@ export default {
       message: "",
     });
 
+    const isValid = computed(() => {
+      return form.email &&
+        form.password &&
+        email(form.email) &&
+        password(form.password, 5, 20)
+        ? true
+        : false;
+    });
+
     const formSubmitHandler = async () => {
       isLoading.value = true;
       await axios
-        .post("login", form)
+        .post("admin/login", form)
         .then((res) => {
           window.location.href = res.data.redirectTo;
           isLoading.value = false;
@@ -122,15 +111,6 @@ export default {
           }
         });
     };
-
-    const isValid = computed(() => {
-      return form.email &&
-        form.password &&
-        email(form.email) &&
-        password(form.password, 6, 20)
-        ? true
-        : false;
-    });
 
     return {
       form,

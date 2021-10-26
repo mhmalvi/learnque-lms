@@ -3,7 +3,8 @@ import { createApp } from "vue";
 import store from "./store";
 import axios from "axios";
 import CopyWrite from "./components/CopyWrite.vue";
-import LoginComponent from "./components/Auth/Users/LoginComponent.vue";
+import UserLogin from "./components/Auth/Users/LoginComponent.vue";
+import AdminLogin from "./components/Auth/Admin/LoginComponent.vue";
 
 // Import the components here
 import CreateCategories from "./components/Categories/CreateCategories.vue";
@@ -31,7 +32,12 @@ app.component("create-courses", CreateCourses);
  * Guest
  */
 app.component("copy-write", CopyWrite);
-app.component("login-component", LoginComponent);
+app.component("login-component", UserLogin);
+
+/**
+ * Admin
+ */
+app.component("admin-login", AdminLogin);
 
 app.use(store).mount("#app");
 

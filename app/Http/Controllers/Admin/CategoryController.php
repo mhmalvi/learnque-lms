@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Course\CategoryCreateRequest;
 use App\Http\Resources\Course\CategoriesCollection;
-use App\Models\Category;
 use Illuminate\Http\Request;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
@@ -17,7 +17,6 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return view('admin.pages.categories');
     }
 
 
