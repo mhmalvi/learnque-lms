@@ -12,6 +12,9 @@ import ListCategories from "./components/Categories/ListCategories.vue";
 import CourseList from "./components/Courses/ListCourses.vue";
 import CreateCourses from "./components/Courses/CreateCourses.vue";
 
+import { QuillEditor } from "@vueup/vue-quill";
+// import "@vueup/vue-quill/dist/vue-quill.snow.css";
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -19,6 +22,7 @@ axios.defaults.baseURL = document.head.querySelector(
 ).content;
 
 // Register all components here
+app.component('quill-editor', QuillEditor);
 
 // Admin components
 app.component("create-categories", CreateCategories);
