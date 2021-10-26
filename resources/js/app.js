@@ -6,10 +6,11 @@ import CopyWrite from "./components/CopyWrite.vue";
 import LoginComponent from "./components/Auth/Users/LoginComponent.vue";
 
 // Import the components here
-import CourseCategoryList from './components/Course/Category/List.vue';
-import CreateCourseCategoryForm from './components/Course/Category/CreateForm.vue';
-import CourseList from './components/Course/List.vue';
-import CourseCreateComponent from './components/Course/CreateComponent.vue';
+import CreateCategories from "./components/Categories/CreateCategories.vue";
+import ListCategories from "./components/Categories/ListCategories.vue";
+
+import CourseList from "./components/Courses/ListCourses.vue";
+import CreateCourses from "./components/Courses/CreateCourses.vue";
 
 import { QuillEditor } from "@vueup/vue-quill";
 // import "@vueup/vue-quill/dist/vue-quill.snow.css";
@@ -24,10 +25,11 @@ axios.defaults.baseURL = document.head.querySelector(
 app.component('quill-editor', QuillEditor);
 
 // Admin components
-app.component("course-category-list", CourseCategoryList);
-app.component("create-course-category-form", CreateCourseCategoryForm);
+app.component("create-categories", CreateCategories);
+app.component("list-categories", ListCategories);
+
 app.component("course-list", CourseList);
-app.component('course-create-component', CourseCreateComponent);
+app.component("create-courses", CreateCourses);
 // End of Admin components
 /**
  * Guest

@@ -4,10 +4,11 @@
       <table class="table table-responsive">
         <thead>
           <tr>
-            <th width="5%">#</th>
-            <th width="65%">Category</th>
-            <th width="15%">Description</th>
-            <th width="15%">Thumbnail</th>
+            <th width="10%">#</th>
+            <th width="10%">Thumbnail</th>
+            <th width="20%">Category</th>
+            <th width="40%">Description</th>
+            <th Width="20%">Created At</th>
           </tr>
         </thead>
         <tbody v-if="isLoading">
@@ -19,7 +20,8 @@
         </tbody>
         <tbody v-else>
           <tr v-for="(category, index) in categories" v-bind:key="index">
-            <td>{{ index + 1 }}</td>
+            <td>{{ index++ }}</td>
+            <td></td>
             <td>
               {{ category.title }}
               <div class="pt-1">
