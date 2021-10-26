@@ -16,13 +16,7 @@ class CategoriesCollection extends ResourceCollection
     {
         return [
             'data' => $this->collection->map(function ($res) {
-                return [
-                    'title' => $res->title,
-                    'slug' => $res->slug,
-                    'description' => $res->description,
-                    'thumbnail' => $res->thumbnail,
-                    'created_at' => $res->created_at->format('d M, Y'),
-                ];
+                return new CategoryResource($res);
             })
         ];
     }

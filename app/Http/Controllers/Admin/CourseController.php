@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CourseCreateRequest;
 use App\Http\Resources\CoursesCollection;
 use App\Models\Course;
+use App\Actions\CourseCreateAction;
 use Illuminate\Http\Request;
 
 class CourseController extends Controller
@@ -42,9 +44,13 @@ class CourseController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CourseCreateRequest $request, CourseCreateAction $create_action)
     {
-        //
+        $create_action->execute($request->all());
+
+        return response()->json([
+            'message' => "Successfully created the course!",
+        ], 200);
     }
 
     /**
@@ -84,11 +90,15 @@ class CourseController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  int  $id
+     * @param  Course $course
      * @return \Illuminate\Http\Response
      */
-    public function destroy($id)
+    public function destroy(Course $course)
     {
-        //
+        $course->delete();
+
+        return response()->json([
+            'message' => "You have successfully deleted the server!",
+        ], 200);
     }
 }

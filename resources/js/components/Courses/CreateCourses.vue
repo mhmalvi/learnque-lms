@@ -41,7 +41,14 @@
                 class="form-control custom-select"
                 v-model="category"
               >
-                <option value="uncategorized" selected>Uncategorized</option>
+                <option value="" selected>Uncategorized</option>
+                <option
+                  :value="category.uuid"
+                  v-for="(category, index) in categories"
+                  v-bind:key="index"
+                >
+                  {{ category.title }}
+                </option>
               </select>
             </div>
             <div class="form-group">
@@ -69,8 +76,13 @@
         <div class="col-lg-8 d-flex align-items-center">
           <div class="flex" style="max-width: 100%">
             <div class="form-group">
-              <label class="form-label" for="details">Descriptions</label>
-              <QuillEditor theme="snow" />
+              <label class="form-label" for="description">Descriptions</label>
+              <quill-editor
+                theme="snow"
+                v-model:content="description"
+                contentType="html"
+                ref="myEditor"
+              />
             </div>
           </div>
         </div>
@@ -121,42 +133,45 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
+
 export default {
-  components: {
-    QuillEditor,
-  },
+  components: { QuillEditor },
   data() {
     return {
       isValid: false,
       code: "",
       title: "",
-      category: "uncategorized",
+      categor: "uncategorized",
       lessons: "",
       thumbnail: "",
-      details: "",
+      description: "",
       imgTitle: "",
       imgAlt: "",
       draft: "",
       isLoading: false,
+      categories: [],
     };
+  },
+  mounted() {
+    this.getCategories();
   },
   methods: {
     onImageUpload(image) {},
     onFormSubmitHandlar() {
       this.isLoading = true;
       axios
-        .post("admin/course/store", this.formDataHandler)
+        .post("admin/courses", this.formDataHandler)
         .then((res) => {
           this.isLoading = false;
           Swal.fire({
             title: "Success",
-            text: "Data saved successfully!",
+            text: res.data.message,
             icon: "success",
             showCancelButton: true,
             confirmButtonText: `View course list`,
           }).then((result) => {
             if (result.isConfirmed) {
-              window.location = "/admin/course/all-courses";
+              window.location = "/admin/courses";
             }
           });
           this.resetForm();
@@ -176,12 +191,17 @@ export default {
       this.title = "";
       this.category = "uncategorized";
       this.lessons = "";
-      this.details = "";
+      this.description = "";
       this.imgTitle = "";
       this.imgAlt = "";
       this.draft = "";
       this.isLoading = false;
       this.$refs.myEditor.setHTML("");
+    },
+    getCategories() {
+      axios.get("admin/course/categories/all/raw").then((res) => {
+        this.categories = res.data.data;
+      });
     },
   },
   computed: {
@@ -192,9 +212,9 @@ export default {
       let fd = new FormData();
       fd.append("code", this.code);
       fd.append("title", this.title);
-      fd.append("category", this.category);
+      fd.append("category_id", this.category);
       fd.append("lessons", this.lessons);
-      fd.append("descriptions", this.details);
+      fd.append("description", this.description);
       fd.append("imgTitle", this.imgTitle);
       fd.append("alt", this.imgAlt);
       fd.append("draft", this.draft);

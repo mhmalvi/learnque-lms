@@ -4,8 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Course\CategoryCreateRequest;
-
+use App\Http\Resources\Course\CategoriesCollection;
 use Illuminate\Http\Request;
+use App\Models\Category;
 
 class CategoryController extends Controller
 {
@@ -18,6 +19,24 @@ class CategoryController extends Controller
     {
     }
 
+
+    public function getPaginatedList()
+    {
+        try {
+            return new CategoriesCollection(
+                Category::latest()->paginate(request('items'))
+            );
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage()
+            ], 503);
+        }
+    }
+
+    public function getRawList()
+    {
+        return new CategoriesCollection(Category::all());
+    }
 
     /**
      * Show the form for creating a new resource.
