@@ -20,8 +20,10 @@
         </tbody>
         <tbody v-else>
           <tr v-for="(category, index) in categories" v-bind:key="index">
-            <td>{{ index++ }}</td>
-            <td></td>
+            <td>{{ ++index }}</td>
+            <td>
+              <img class="rounded" src="https://via.placeholder.com/50" />
+            </td>
             <td>
               {{ category.title }}
               <div class="pt-1">

@@ -1,15 +1,13 @@
 <template>
-  <div>
+  <div class="py-5">
     <div class="card">
       <table class="table table-responsive">
-        <thead>
+        <thead class="text-center bg-light">
           <tr>
-            <th width="5%">#</th>
-            <th width="40%">Course Title</th>
-            <th width="20%">Category</th>
+            <th width="10%">#</th>
             <th width="10%">Thumbnail</th>
-            <th width="10%">Status</th>
-            <th width="15%">Created at</th>
+            <th width="50%">Course Title</th>
+            <th width="30%">Category</th>
           </tr>
         </thead>
         <tbody v-if="courses.length == 0">
