@@ -28,6 +28,9 @@
           <tr v-for="(course, index) in courses" v-bind:key="index">
             <td>{{ index + 1 }}</td>
             <td>
+              <img class="rounded" src="https://via.placeholder.com/50" />
+            </td>
+            <td>
               {{ course.title }}
               <div class="pt-1">
                 <a class="btn text-primary pl-0">Edit</a>
