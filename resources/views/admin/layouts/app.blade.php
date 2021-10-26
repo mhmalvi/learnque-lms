@@ -27,20 +27,20 @@
 
     <!-- Drawer Layout -->
     <div class="mdk-drawer-layout js-mdk-drawer-layout" data-push data-responsive-width="992px">
-        <div class="mdk-drawer-layout__content page-content">
+        <div class="mdk-drawer-layout__content page-content" id="app">
 
             @include('layouts.header')
-
-            @include('components.breadcrumb')
-
-            <div class="container page__container" id="app">
-                @yield('content')
+            
+            <div class="pt-32pt">
+                @yield('breadcrumb')
             </div>
+
+            @yield('content')
 
         </div>
 
         <div class="mdk-drawer js-mdk-drawer" id="default-drawer">
-            @include('layouts.sidebar')
+            @include('admin.layouts.sidebar')
         </div>
 
     </div>

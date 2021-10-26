@@ -1,7 +1,14 @@
 import { createStore } from "vuex";
-import axios from "axios";
+import { categoryModule } from './course/category';
+
 export default createStore({
-    state() {},
+    modules: {
+        course_category: categoryModule
+    },
+    state() {
+        return {
+        }
+    },
     getters: {},
     actions: {},
     mutations: {},

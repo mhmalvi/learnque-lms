@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\DashboardController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -10,4 +13,14 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::view('dashboard', 'admin.pages.dashboard');
+Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+
+Route::prefix('course')->name('course.')->group(function () {
+    Route::get('categories/all', [CategoryController::class, 'getPaginatedList'])->name('categories.all');
+
+    Route::resource('categories', CategoryController::class);
+});
+
+Route::get('courses/all', [CourseController::class, 'getPaginatedList']);
+
+Route::resource('courses', CourseController::class);
