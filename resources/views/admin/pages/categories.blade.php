@@ -4,6 +4,7 @@
 
 
 @section('content')
+<div class="container-fluid page__container p-5">
     <div class="row">
         <div class="col-md-4">
             <create-categories />
@@ -12,4 +13,5 @@
             <list-categories />
         </div>
     </div>
+</div>
 @endsection

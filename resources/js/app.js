@@ -9,8 +9,8 @@ import LoginComponent from "./components/Auth/Users/LoginComponent.vue";
 import CreateCategories from "./components/Categories/CreateCategories.vue";
 import ListCategories from "./components/Categories/ListCategories.vue";
 
-import CourseList from "./components/Course/List.vue";
-import CourseCreateComponent from "./components/Course/CreateComponent.vue";
+import CourseList from "./components/Courses/ListCourses.vue";
+import CreateCourses from "./components/Courses/CreateCourses.vue";
 
 const app = createApp({});
 
@@ -25,7 +25,7 @@ app.component("create-categories", CreateCategories);
 app.component("list-categories", ListCategories);
 
 app.component("course-list", CourseList);
-app.component("course-create-component", CourseCreateComponent);
+app.component("create-courses", CreateCourses);
 // End of Admin components
 /**
  * Guest
