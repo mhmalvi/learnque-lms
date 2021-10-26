@@ -12,18 +12,13 @@
     </a>
     <ul class="sidebar-submenu collapse sm-indent" id="course_menu">
         <li class="sidebar-menu-item">
-            <a class="sidebar-menu-button" href="{{ route('admin.courses.index') }}">
-                <span class="sidebar-menu-text">Manage Course</span>
-            </a>
-        </li>
-        <li class="sidebar-menu-item">
-            <a class="sidebar-menu-button" href="">
-                <span class="sidebar-menu-text">Posts</span>
-            </a>
-        </li>
-        <li class="sidebar-menu-item">
             <a class="sidebar-menu-button" href="{{ route('admin.course.categories.index') }}">
-                <span class="sidebar-menu-text">Categories</span>
+                <span class="sidebar-menu-text">Manage Categories</span>
+            </a>
+        </li>
+        <li class="sidebar-menu-item">
+            <a class="sidebar-menu-button" href="{{ route('admin.courses.index') }}">
+                <span class="sidebar-menu-text">Manage Courses</span>
             </a>
         </li>
     </ul>

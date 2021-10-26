@@ -133,9 +133,16 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
+<<<<<<< HEAD
 
 export default {
   components: { QuillEditor },
+=======
+export default {
+  components: {
+    QuillEditor,
+  },
+>>>>>>> ec0b80f109c7de792b11065580a21c6937997244
   data() {
     return {
       isValid: false,

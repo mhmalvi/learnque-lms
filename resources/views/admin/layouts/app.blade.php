@@ -30,8 +30,10 @@
         <div class="mdk-drawer-layout__content page-content" id="app">
 
             @include('layouts.header')
-
-            @include('components.breadcrumb')
+            
+            <div class="pt-32pt">
+                @yield('breadcrumb')
+            </div>
 
             @yield('content')
 
