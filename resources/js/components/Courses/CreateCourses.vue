@@ -70,7 +70,7 @@
           <div class="flex" style="max-width: 100%">
             <div class="form-group">
               <label class="form-label" for="details">Descriptions</label>
-              <!-- <quill-editor /> -->
+              <QuillEditor theme="snow" />
             </div>
           </div>
         </div>
@@ -119,7 +119,12 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+import { QuillEditor } from "@vueup/vue-quill";
+import "@vueup/vue-quill/dist/vue-quill.snow.css";
 export default {
+  components: {
+    QuillEditor,
+  },
   data() {
     return {
       isValid: false,
