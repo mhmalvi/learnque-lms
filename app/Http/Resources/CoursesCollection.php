@@ -24,8 +24,9 @@ class CoursesCollection extends ResourceCollection
                     'code' => $res->code,
                     'title' => $res->title,
                     'slug' => $res->slug,
-                    'category' => new CategoryResource($res->category),
+                    'category' => $res->category ? new CategoryResource($res->category) : '',
                     'publish' => $res->publish,
+                    'publish_status' => $res->publish ? "Published" : "Draft",
                     'created_at' => $res->created_at->format('d M, Y'),
                 ];
             })

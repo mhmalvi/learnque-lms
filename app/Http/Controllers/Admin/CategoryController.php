@@ -34,6 +34,11 @@ class CategoryController extends Controller
         }
     }
 
+    public function getRawList()
+    {
+        return new CategoriesCollection(Category::all());
+    }
+
     /**
      * Show the form for creating a new resource.
      *

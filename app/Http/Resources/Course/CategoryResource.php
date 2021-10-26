@@ -14,14 +14,13 @@ class CategoryResource extends JsonResource
      */
     public function toArray($request)
     {
-        return $this->collection->map(function ($res) {
-            return [
-                'uuid' => $res->uuid,
-                'title' => $res->title,
-                'slug' => $res->slug,
-                'description' => $res->description,
-                'thumbnail' => $res->thumbnail,
-            ];
-        });
+        return [
+            'uuid' => $this->uuid,
+            'title' => $this->title,
+            'slug' => $this->slug,
+            'description' => $this->description,
+            'thumbnail' => $this->thumbnail,
+            'created_at' => $this->created_at->format('d M, Y'),
+        ];
     }
 }

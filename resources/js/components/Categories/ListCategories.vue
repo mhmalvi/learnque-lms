@@ -20,7 +20,7 @@
         </tbody>
         <tbody v-else>
           <tr v-for="(category, index) in categories" v-bind:key="index">
-            <td>{{ index++ }}</td>
+            <td>{{ index + 1 }}</td>
             <td></td>
             <td>
               {{ category.title }}

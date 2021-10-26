@@ -32,6 +32,7 @@ class CategoryCreateRequest extends CategoryRequest
     public function save()
     {
         Category::create([
+            'uuid' => Str::uuid(),
             'title' => $this->title,
             'slug' => $this->filled('slug') ? $this->slug : Str::slug($this->slug),
             'description' => $this->filled('description') ? $this->description : '',

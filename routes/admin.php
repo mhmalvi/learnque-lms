@@ -15,12 +15,19 @@ use Illuminate\Support\Facades\Route;
 
 Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
-Route::prefix('course')->name('course.')->group(function () {
-    Route::get('categories/all', [CategoryController::class, 'getPaginatedList'])->name('categories.all');
+Route::prefix('course/categories')->name('course.categories.')->group(function () {
+    Route::get('all', [CategoryController::class, 'getPaginatedList'])->name('all');
+    Route::get('all/raw', [CategoryController::class, 'getRawList'])->name('all.raw');
 
-    Route::resource('categories', CategoryController::class);
+    Route::get('/', [CategoryController::class, 'index'])->name('index');
+    Route::post('/', [CategoryController::class, 'store'])->name('store');
 });
 
-Route::get('courses/all', [CourseController::class, 'getPaginatedList']);
 
-Route::resource('courses', CourseController::class);
+Route::prefix("courses")->name('courses.')->group(function () {
+    Route::get('/', [CourseController::class, 'index'])->name('index');
+    Route::post('/', [CourseController::class, 'store']);
+    Route::get('all', [CourseController::class, 'getPaginatedList']);
+    Route::get('create', [CourseController::class, 'create'])->name('create');
+    Route::get('{course}', [CourseController::class, 'destroy']);
+});

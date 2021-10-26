@@ -7,9 +7,11 @@
 @endsection
 
 @section('content')
-    <div class="row">
-        <div class="col-md-12">
-            <course-list />
+    <div class="container page__container p-5">
+        <div class="row">
+            <div class="col-md-12">
+                <course-list />
+            </div>
         </div>
     </div>
 @endsection
