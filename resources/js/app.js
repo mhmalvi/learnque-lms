@@ -11,6 +11,9 @@ import CreateCourseCategoryForm from './components/Course/Category/CreateForm.vu
 import CourseList from './components/Course/List.vue';
 import CourseCreateComponent from './components/Course/CreateComponent.vue';
 
+import { QuillEditor } from "@vueup/vue-quill";
+// import "@vueup/vue-quill/dist/vue-quill.snow.css";
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -18,6 +21,7 @@ axios.defaults.baseURL = document.head.querySelector(
 ).content;
 
 // Register all components here
+app.component('quill-editor', QuillEditor);
 
 // Admin components
 app.component("course-category-list", CourseCategoryList);
