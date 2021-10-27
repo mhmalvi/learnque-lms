@@ -4,6 +4,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
+use App\Http\Controllers\Admin\StudentsController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -38,4 +39,15 @@ Route::prefix("courses")->name('courses.')->group(function () {
 Route::prefix("enroll-users")->name('enroll_users.')->group(function () {
     Route::get('/', [EnrollUsersController::class, 'index'])->name('index');
     Route::post('/', [EnrollUsersController::class, 'store'])->name('store');
+});
+
+/**
+ * Manage Students routes
+ */
+Route::prefix("students")->name('students.')->group(function () {
+    Route::get('/', [StudentsController::class, 'index'])->name('index');
+    Route::get('all', [StudentsController::class, 'getPaginatedList']);
+    Route::get('/edit/{student:name}', [StudentsController::class, 'edit']);
+    Route::patch('{student:uuid}', [StudentsController::class, 'update']);
+    Route::delete('{student:uuid}', [StudentsController::class, 'destroy']);
 });

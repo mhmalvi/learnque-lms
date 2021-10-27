@@ -14,6 +14,8 @@ import CourseList from "./components/Courses/ListCourses.vue";
 import CreateCourses from "./components/Courses/CreateCourses.vue";
 
 import EnrollUserForm from "./components/Users/EnrollUserForm.vue";
+import StudentsList from './components/Users/StudentsList.vue';
+import StudentEditForm from './components/Users/StudentEditForm.vue';
 
 const app = createApp({});
 
@@ -31,6 +33,8 @@ app.component("course-list", CourseList);
 app.component("create-courses", CreateCourses);
 
 app.component("enrole-user-form", EnrollUserForm);
+app.component("students-list", StudentsList);
+app.component("student-edit-form", StudentEditForm);
 // End of Admin components
 /**
  * Guest

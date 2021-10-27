@@ -42,7 +42,7 @@
             </a>
         </li>
         <li class="sidebar-menu-item">
-            <a class="sidebar-menu-button" href="">
+            <a class="sidebar-menu-button" href="{{ route('admin.students.index') }}">
                 <span class="sidebar-menu-text">Manage Students</span>
             </a>
         </li>

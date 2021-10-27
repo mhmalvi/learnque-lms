@@ -85,7 +85,7 @@
             </div>
 
             <div class="form-group">
-              <label for="user_type">User Type</label>
+              <label class="form-label" for="user_type">User Type</label>
               <select
                 id="user_type"
                 class="form-control"
