@@ -13,6 +13,8 @@ import ListCategories from "./components/Categories/ListCategories.vue";
 import CourseList from "./components/Courses/ListCourses.vue";
 import CreateCourses from "./components/Courses/CreateCourses.vue";
 
+import CreateClassroom from "./components/Classrooms/CreateClassroom.vue";
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -27,7 +29,9 @@ app.component("list-categories", ListCategories);
 
 app.component("course-list", CourseList);
 app.component("create-courses", CreateCourses);
+app.component("create-classroom", CreateClassroom);
 // End of Admin components
+
 /**
  * Guest
  */

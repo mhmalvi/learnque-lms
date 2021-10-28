@@ -32,7 +32,7 @@
             @include('layouts.header')
             
             <div class="pt-32pt">
-                @yield('breadcrumb')
+                @include('components.breadcrumb')
             </div>
 
             @yield('content')

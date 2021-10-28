@@ -34,7 +34,6 @@
                 <a href="{{ route('admin.courses.create') }}" class="btn btn-outline-secondary">Create New</a>
             </div>
         </div>
-
     </div>
 @endsection
 
