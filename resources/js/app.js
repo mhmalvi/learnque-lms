@@ -18,6 +18,7 @@ import StudentsList from './components/Users/StudentsList.vue';
 import StudentEditForm from './components/Users/StudentEditForm.vue';
 
 import TeachersList from './components/Users/TeachersList.vue';
+import TeachersEditForm from './components/Users/TeacherEditForm.vue';
 
 const app = createApp({});
 
@@ -39,6 +40,7 @@ app.component("students-list", StudentsList);
 app.component("student-edit-form", StudentEditForm);
 
 app.component('teachers-list', TeachersList)
+app.component('teacher-edit-form', TeachersEditForm);
 // End of Admin components
 /**
  * Guest

@@ -24,18 +24,18 @@ class UserUpdateRequest extends FormRequest
      */
     public function rules()
     {
-        $student = User::where('uuid', $this->uuid)->first();
+        $user = User::where('uuid', $this->uuid)->first();
         return [
-            'username' => "required|unique:users,name,{$student->id}",
-            'email' => "required|unique:users,email,{$student->id}",
+            'username' => "required|unique:users,name,{$user->id}",
+            'email' => "required|unique:users,email,{$user->id}",
         ];
     }
 
-    public function update(User $student)
+    public function update(User $user)
     {
-        $student->name = $this->username;
-        $student->email = $this->email;
+        $user->name = $this->username;
+        $user->email = $this->email;
 
-        $student->save();
+        $user->save();
     }
 }

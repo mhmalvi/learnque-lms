@@ -59,5 +59,7 @@ Route::prefix("students")->name('students.')->group(function () {
 Route::prefix("teachers")->name('teachers.')->group(function () {
     Route::get('/', [TeachersController::class, 'index'])->name('index');
     Route::get('all', [TeachersController::class, 'getPaginatedList'])->name('all');
+    Route::get('edit/{teacher:name}', [TeachersController::class, 'edit']);
+    Route::patch('{teacher:uuid}', [TeachersController::class, 'update']);
     Route::delete('{teacher:uuid}', [TeachersController::class, 'destroy']);
 });
