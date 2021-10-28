@@ -47,7 +47,7 @@
             </a>
         </li>
         <li class="sidebar-menu-item">
-            <a class="sidebar-menu-button" href="">
+            <a class="sidebar-menu-button" href="{{ route('admin.teachers.index') }}">
                 <span class="sidebar-menu-text">Manage Instructors</span>
             </a>
         </li>

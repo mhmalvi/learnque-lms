@@ -22,6 +22,15 @@
                 v-model="form.username"
                 required
               />
+              <p
+                class="text-danger"
+                v-if="
+                  errors.validation.username &&
+                  errors.validation.username.length > 0
+                "
+              >
+                {{ errors.validation.username[0] }}
+              </p>
             </div>
 
             <div class="form-group">
@@ -36,6 +45,14 @@
                 v-model="form.email"
                 required
               />
+              <p
+                class="text-danger"
+                v-if="
+                  errors.validation.email && errors.validation.email.length > 0
+                "
+              >
+                {{ errors.validation.email[0] }}
+              </p>
             </div>
 
             <div class="form-group">

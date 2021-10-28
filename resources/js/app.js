@@ -17,6 +17,8 @@ import EnrollUserForm from "./components/Users/EnrollUserForm.vue";
 import StudentsList from './components/Users/StudentsList.vue';
 import StudentEditForm from './components/Users/StudentEditForm.vue';
 
+import TeachersList from './components/Users/TeachersList.vue';
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -35,6 +37,8 @@ app.component("create-courses", CreateCourses);
 app.component("enrole-user-form", EnrollUserForm);
 app.component("students-list", StudentsList);
 app.component("student-edit-form", StudentEditForm);
+
+app.component('teachers-list', TeachersList)
 // End of Admin components
 /**
  * Guest

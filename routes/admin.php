@@ -5,6 +5,7 @@ use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
 use App\Http\Controllers\Admin\StudentsController;
+use App\Http\Controllers\Admin\TeachersController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -50,4 +51,13 @@ Route::prefix("students")->name('students.')->group(function () {
     Route::get('/edit/{student:name}', [StudentsController::class, 'edit']);
     Route::patch('{student:uuid}', [StudentsController::class, 'update']);
     Route::delete('{student:uuid}', [StudentsController::class, 'destroy']);
+});
+
+/**
+ * Manage Teachers routes
+ */
+Route::prefix("teachers")->name('teachers.')->group(function () {
+    Route::get('/', [TeachersController::class, 'index'])->name('index');
+    Route::get('all', [TeachersController::class, 'getPaginatedList'])->name('all');
+    Route::delete('{teacher:uuid}', [TeachersController::class, 'destroy']);
 });
