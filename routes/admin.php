@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
@@ -23,6 +24,7 @@ Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard'
  */
 Route::view('classroom', 'admin.pages.classrooms.index')->name('classrooms');
 Route::view('classroom/create', 'admin.pages.classrooms.create')->name('classroom.create');
+Route::post('classroom', [ClassroomsController::class, 'store']);
 
 // Category routes
 Route::prefix('categories')->name('categories.')->group(function () {
