@@ -19,6 +19,10 @@ class CreateClassroomsTable extends Migration
             $table->string('title');
             $table->text('slug');
             $table->string('section');
+            $table->foreignId('course_id')
+                ->constrained()
+                ->onUpdate('cascade')
+                ->onDelete('cascade');
             $table->string('cover_photo')->nullable();
             $table->timestamps();
         });
