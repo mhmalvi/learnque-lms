@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use Illuminate\Support\Str;
 use App\Models\User;
+use App\Models\UserInfo;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Hash;
 
@@ -37,12 +38,16 @@ class UserCreateRequest extends FormRequest
 
     public function save()
     {
-        User::create([
+        $user = User::create([
             'uuid' => Str::uuid(),
             'name' => $this->username,
             'email' => $this->email,
             'password' => Hash::make($this->password),
             'user_type' => $this->user_type,
+        ]);
+
+        UserInfo::create([
+            'user_id' => $user->id,
         ]);
     }
 }
