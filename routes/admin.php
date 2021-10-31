@@ -22,8 +22,8 @@ Route::view('classroom', 'admin.pages.classrooms.index')->name('classrooms');
 Route::view('classroom/create', 'admin.pages.classrooms.create')->name('classroom.create');
 
 
-Route::prefix('course/categories')->name('course.categories.')->group(function () {
-    Route::get('all', [CategoryController::class, 'getPaginatedList'])->name('all');
+Route::prefix('categories')->name('categories.')->group(function () {
+    Route::get('list', [CategoryController::class, 'getPaginatedList'])->name('all');
     Route::get('all/raw', [CategoryController::class, 'getRawList'])->name('all.raw');
     Route::get('/', [CategoryController::class, 'index'])->name('index');
     Route::post('/', [CategoryController::class, 'store'])->name('store');
