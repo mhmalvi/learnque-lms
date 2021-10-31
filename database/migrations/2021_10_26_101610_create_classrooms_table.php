@@ -17,11 +17,10 @@ class CreateClassroomsTable extends Migration
             $table->id();
             $table->string('unique_id');
             $table->string('title');
-            $table->string('Section');
-            $table->integer('students');
+            $table->string('section');
             $table->unsignedBigInteger('user_id');
-            $table->string('color')->nullable();
-            $table->string('avatar')->nullable();
+            $table->foreign('user_id')->references('users')->on('id')->onDelete('set null')->onUpdate('cascade');
+            $table->string('cover_photo')->nullable();
             $table->timestamps();
         });
     }
