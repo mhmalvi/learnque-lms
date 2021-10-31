@@ -13,8 +13,15 @@
         </thead>
         <tbody v-if="isLoading">
           <tr>
-            <td>
-              <i class="fas fa-circle-notch fa-spin"></i>
+            <td colspan="12" class="text-center">
+              <b>Loading...</b>
+            </td>
+          </tr>
+        </tbody>
+        <tbody v-else-if="categories.length == 0">
+          <tr>
+            <td colspan="12" class="text-center">
+              <b>No category found! </b>
             </td>
           </tr>
         </tbody>
@@ -27,8 +34,10 @@
             <td>
               {{ category.title }}
               <div class="pt-1">
-                <a class="btn text-primary pl-0">Edit</a>
-                <a class="btn text-primary pl-0">Delete</a>
+                <a href="javascript:void(0)" class="text-primary mr-2">Edit</a>
+                <a href="javascript:void(0)" class="text-primary mr-2"
+                  >Delete</a
+                >
               </div>
             </td>
             <td>{{ category.description }}</td>
@@ -57,7 +66,7 @@ export default {
     // fires on mount
     (() => {
       axios
-        .get("admin/course/categories/all", {
+        .get("admin/categories/list", {
           params: {
             items: itemsPerPage.value,
             search: search.value,
@@ -71,12 +80,12 @@ export default {
     // watch for new category creation, and then add it to list
     store.watch(
       (state, _) => {
-        return state.course_category.newCategory;
+        return state.courseCategories.newCategory;
       },
       (newVal, oldVal) => {
         if (!_.isEmpty(newVal)) {
           categories.value.unshift(newVal);
-          store.commit("course_category/resetNewCategory");
+          store.commit("courseCategories/resetNewCategory");
         }
       }
     );

@@ -2,24 +2,31 @@
   <div>
     <form action="">
       <div class="form-group">
-        <label for="title">Category Title</label>
-        <input type="text" class="form-control" id="title" v-model="title" />
-        <p v-if="errors.title" class="text-danger">{{ errors.title[0] }}</p>
+        <label for="title">Title</label>
+        <input
+          type="text"
+          class="form-control"
+          id="title"
+          v-model="form.title"
+        />
+        <p v-if="message.errors.title" class="text-danger">
+          {{ message.errors.title[0] }}
+        </p>
       </div>
 
       <div class="form-group">
-        <label>Category Slug</label>
-        <input type="text" class="form-control" v-model="slug" />
+        <label>Slug</label>
+        <input type="text" class="form-control" v-model="form.slug" />
       </div>
 
       <div class="form-group">
-        <label>Category Description</label>
+        <label>Description</label>
         <textarea
           cols="30"
           rows="5"
           class="form-control"
           style="resize: none"
-          v-model="description"
+          v-model="form.description"
         ></textarea>
       </div>
 
@@ -39,8 +46,8 @@
         </button>
       </div>
       <div class="form-group">
-        <div class="alert alert-success" v-if="success_message">
-          {{ success_message }}
+        <div class="alert alert-success" v-if="message.success">
+          {{ message.success }}
         </div>
       </div>
     </form>
@@ -48,71 +55,63 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref, reactive } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 
 export default {
   setup() {
     const isSubmitting = ref(false);
-    const title = ref("");
-    const slug = ref("");
-    const description = ref("");
-    const errors = ref({});
-    const success_message = ref("");
+
+    const form = reactive({
+      title: "",
+      slug: "",
+      description: "",
+    });
+
+    const message = reactive({
+      validation: {},
+      errors: {},
+      success: "",
+    });
 
     const store = useStore();
 
-    console.log("store info", store.state);
-
     function submit() {
       isSubmitting.value = true;
-      errors.value = {};
-      success_message.value = "";
-
       axios
-        .post("admin/course/categories", {
-          title: title.value,
-          slug: slug.value,
-          description: description.value,
-        })
+        .post("admin/categories", form)
         .then((res) => {
-          console.log(res);
-          success_message.value = res.data.message;
-
-          store.commit("course_category/addNewCategory", {
-            title: title.value,
-            slug: slug.value,
-            description: description.value,
+          store.commit("courseCategories/addNewCategory", {
+            title: form.title,
+            slug: form.slug,
+            description: form.description,
           });
 
-          resetForm();
+          message.success = res.data.message;
+
+          reset();
         })
-        .catch((error) => {
-          errors.value = error.response.data.errors;
+        .catch((err) => {
+          message.errors = err.response.data.errors;
         })
         .finally(() => {
           isSubmitting.value = false;
         });
     }
 
-    function resetForm() {
-      title.value = "";
-      slug.value = "";
-      description.value = "";
-    }
+    const reset = () => {
+      form.title = "";
+      form.slug = "";
+      form.description = "";
+    };
 
     return {
       isSubmitting,
-      title,
-      slug,
-      description,
+      form,
       submit,
-      errors,
-      success_message,
+      message,
     };
   },
-
-  methods: {},
 };
 </script>

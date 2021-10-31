@@ -18,7 +18,7 @@
     </a>
     <ul class="sidebar-submenu collapse sm-indent" id="course_menu">
         <li class="sidebar-menu-item">
-            <a class="sidebar-menu-button" href="{{ route('admin.course.categories.index') }}">
+            <a class="sidebar-menu-button" href="{{ route('admin.categories.index') }}">
                 <span class="sidebar-menu-text">Manage Categories</span>
             </a>
         </li>

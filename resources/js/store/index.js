@@ -1,13 +1,12 @@
 import { createStore } from "vuex";
-import { categoryModule } from './course/category';
+import { category } from "./course/category";
 
 export default createStore({
     modules: {
-        course_category: categoryModule
+        courseCategories: category,
     },
     state() {
-        return {
-        }
+        return {};
     },
     getters: {},
     actions: {},

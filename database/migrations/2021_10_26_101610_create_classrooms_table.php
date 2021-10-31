@@ -17,9 +17,8 @@ class CreateClassroomsTable extends Migration
             $table->id();
             $table->string('unique_id');
             $table->string('title');
+            $table->text('slug');
             $table->string('section');
-            $table->unsignedBigInteger('user_id');
-            $table->foreign('user_id')->references('users')->on('id')->onDelete('set null')->onUpdate('cascade');
             $table->string('cover_photo')->nullable();
             $table->timestamps();
         });

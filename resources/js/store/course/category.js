@@ -1,18 +1,16 @@
-export const categoryModule = {
+export const category = {
     namespaced: true,
     state() {
         return {
-            newCategory: {}
+            newCategory: {},
         };
     },
     mutations: {
-        addNewCategory(state, category)
-        {
-            state.newCategory = category
+        addNewCategory(state, category) {
+            state.newCategory = category;
         },
-        resetNewCategory(state)
-        {
-            state.newCategory = {}
-        }
-    }
+        resetNewCategory(state) {
+            state.newCategory = {};
+        },
+    },
 };
