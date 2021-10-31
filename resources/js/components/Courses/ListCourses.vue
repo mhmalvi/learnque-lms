@@ -78,10 +78,9 @@ export default {
         })
         .then((res) => {
           courses.value = res.data.data;
-          console.log(courses.value);
         })
         .catch((error) => {
-          console.log(error);
+          console.error(error);
         })
         .finally(() => {
           isLoading.value = false;

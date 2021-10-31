@@ -12,7 +12,7 @@
             <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
-                        Content
+                        {{ json_encode($classroom) }}
                     </div>
                 </div>
             </div>

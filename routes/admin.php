@@ -27,6 +27,7 @@ Route::view('classroom/create', 'admin.pages.classrooms.create')->name('classroo
 Route::post('classroom', [ClassroomsController::class, 'store']);
 Route::get('classroom/all', [ClassroomsController::class, 'getPaginatedList']);
 Route::view('classroom/test', 'admin.pages.classrooms.show');
+Route::get('classroom/{classroom:unique_id}', [ClassroomsController::class, 'show']);
 
 // Category routes
 Route::prefix('categories')->name('categories.')->group(function () {

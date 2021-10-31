@@ -99,7 +99,6 @@ export default {
       username: teacher.username,
       email: teacher.email,
     });
-    console.log("form", form);
 
     const errors = reactive({
       validation: {
