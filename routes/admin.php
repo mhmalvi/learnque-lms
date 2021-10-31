@@ -39,6 +39,7 @@ Route::prefix("courses")->name('courses.')->group(function () {
     Route::get('/', [CourseController::class, 'index'])->name('index');
     Route::post('/', [CourseController::class, 'store']);
     Route::get('all', [CourseController::class, 'getPaginatedList']);
+    Route::get('raw', [CourseController::class, 'getRawList']);
     Route::get('create', [CourseController::class, 'create'])->name('create');
     Route::get('{course}', [CourseController::class, 'destroy']);
 });

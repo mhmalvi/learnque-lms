@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Course;
+use App\Models\Classroom;
+use Illuminate\Support\Str;
 use Illuminate\Foundation\Http\FormRequest;
 
 class CreateClassroomRequest extends FormRequest
@@ -13,7 +16,7 @@ class CreateClassroomRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return true;
     }
 
     /**
@@ -24,7 +27,22 @@ class CreateClassroomRequest extends FormRequest
     public function rules()
     {
         return [
-            //
+            'title' => 'required',
+            'section' => 'required',
+            'course' => 'required',
         ];
+    }
+
+    public function save()
+    {
+        $course = Course::where('uuid', $this->course)->first();
+
+        Classroom::create([
+            'unique_id' => Str::random(8),
+            'title' => $this->title,
+            'slug' => Str::slug($this->title),
+            'section' => $this->section,
+            'course_id' => $course->id,
+        ]);
     }
 }

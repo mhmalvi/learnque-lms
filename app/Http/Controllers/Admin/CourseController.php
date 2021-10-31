@@ -28,6 +28,13 @@ class CourseController extends Controller
         );
     }
 
+    public function getRawList()
+    {
+        return new CoursesCollection(
+            Course::all()
+        );
+    }
+
     /**
      * Show the form for creating a new resource.
      *
