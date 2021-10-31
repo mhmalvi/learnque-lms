@@ -18,3 +18,12 @@ Route::view('/', 'index')->middleware('guest')->name('learnque');
 Route::view('dashboard', 'pages.dashboard')->middleware('auth');
 
 require __DIR__ . '/auth.php';
+
+
+Route::middleware('auth')->group(function () {
+    /**
+     * User profile routes
+     */
+    Route::get('profile', 'ProfileController@edit')->name('profile.edit');
+    Route::post('profile', 'ProfileController@update');
+});

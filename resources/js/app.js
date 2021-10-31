@@ -21,6 +21,8 @@ import TeachersList from './components/Users/TeachersList.vue';
 import TeachersEditForm from './components/Users/TeacherEditForm.vue';
 import CreateClassroom from "./components/Classrooms/CreateClassroom.vue";
 
+import UserEditProfile from './components/Users/EditProfile.vue';
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -43,6 +45,7 @@ app.component("student-edit-form", StudentEditForm);
 app.component('teachers-list', TeachersList)
 app.component('teacher-edit-form', TeachersEditForm);
 app.component("create-classroom", CreateClassroom);
+app.component('user-edit-profile', UserEditProfile);
 // End of Admin components
 
 /**

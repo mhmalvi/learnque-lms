@@ -27,6 +27,7 @@
                 </span>
             </a>
             <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item" href="{{ route('profile.edit') }}">Edit Profile</a>
                 <a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); document.getElementById('logout').submit()">
                     Logout
                 </a>
