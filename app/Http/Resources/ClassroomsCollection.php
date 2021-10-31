@@ -2,12 +2,9 @@
 
 namespace App\Http\Resources;
 
-use App\Http\Resources\Course\CategoryResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
 
-use function PHPSTORM_META\map;
-
-class CoursesCollection extends ResourceCollection
+class ClassroomsCollection extends ResourceCollection
 {
     /**
      * Transform the resource collection into an array.
@@ -17,10 +14,8 @@ class CoursesCollection extends ResourceCollection
      */
     public function toArray($request)
     {
-        return [
-            'data' => $this->collection->map(function ($res) {
-                return new CourseResource($res);
-            })
-        ];
+        return $this->collection->map(function ($res) {
+            return new ClassroomResource($res);
+        });
     }
 }

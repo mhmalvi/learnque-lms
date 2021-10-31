@@ -23,6 +23,8 @@ import CreateClassroom from "./components/Classrooms/CreateClassroom.vue";
 
 import UserEditProfile from './components/Users/EditProfile.vue';
 
+import ClassroomItemsGridList from './components/Classrooms/ClassroomItemsGridList.vue';
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -46,6 +48,8 @@ app.component('teachers-list', TeachersList)
 app.component('teacher-edit-form', TeachersEditForm);
 app.component("create-classroom", CreateClassroom);
 app.component('user-edit-profile', UserEditProfile);
+
+app.component('classroom-items-grid-list', ClassroomItemsGridList);
 // End of Admin components
 
 /**
