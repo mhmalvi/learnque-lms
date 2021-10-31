@@ -19,12 +19,12 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
 
-        // Admin::create([
-        //     'uuid' => Str::orderedUuid(),
-        //     'name' => 'Admin',
-        //     'email' => 'admin@quadque.tech',
-        //     'password' => Hash::make('admin')
-        // ]);
+        Admin::create([
+            'uuid' => Str::orderedUuid(),
+            'name' => 'Admin',
+            'email' => 'admin@quadque.tech',
+            'password' => Hash::make('admin')
+        ]);
 
         User::create([
             'uuid' => Str::orderedUuid(),
