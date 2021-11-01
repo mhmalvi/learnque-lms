@@ -27,6 +27,17 @@ class TeachersController extends Controller
         }
     }
 
+    public function getRawList()
+    {
+        try {
+            return new UsersCollection(
+                User::where('user_type', 'teacher')->get()
+            );
+        } catch (\Throwable $e) {
+            return $e->getMessage();
+        }
+    }
+
     public function edit(User $teacher)
     {
         $teacher = (new UserResource($teacher))->jsonSerialize();

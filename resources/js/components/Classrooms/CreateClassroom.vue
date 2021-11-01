@@ -77,6 +77,7 @@ export default {
     }
 
     function handleFormSubmit() {
+      isSubmitting.value = true;
       axios
         .post("/admin/classroom", {
           ...form,
@@ -94,6 +95,9 @@ export default {
             title: "Something went wrong!",
             text: err.response.data.message,
           });
+        })
+        .finally(() => {
+          isSubmitting.value = false;
         });
     }
 

@@ -1,7 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
-use App\Http\Controllers\Admin\ClassroomAddPeopleController;
+use App\Http\Controllers\Admin\ClassroomMembersController;
 use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -29,7 +29,8 @@ Route::post('classroom', [ClassroomsController::class, 'store']);
 Route::get('classroom/all', [ClassroomsController::class, 'getPaginatedList']);
 Route::view('classroom/test', 'admin.pages.classrooms.show');
 Route::get('classroom/{classroom:unique_id}', [ClassroomsController::class, 'show']);
-Route::post('classroom/add/students', [ClassroomAddPeopleController::class, 'storeStudents']);
+Route::post('classroom/members/add', [ClassroomMembersController::class, 'store']);
+Route::get('classroom/{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
 
 // Category routes
 Route::prefix('categories')->name('categories.')->group(function () {
@@ -73,6 +74,7 @@ Route::prefix("students")->name('students.')->group(function () {
 Route::prefix("teachers")->name('teachers.')->group(function () {
     Route::get('/', [TeachersController::class, 'index'])->name('index');
     Route::get('all', [TeachersController::class, 'getPaginatedList'])->name('all');
+    Route::get('raw', [TeachersController::class, 'getRawList']);
     Route::get('edit/{teacher:name}', [TeachersController::class, 'edit']);
     Route::patch('{teacher:uuid}', [TeachersController::class, 'update']);
     Route::delete('{teacher:uuid}', [TeachersController::class, 'destroy']);

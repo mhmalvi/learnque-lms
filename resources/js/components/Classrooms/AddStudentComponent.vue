@@ -1,14 +1,26 @@
 <template>
   <div>
-    <h4>Add Student</h4>
-
     <div class="form-group">
-      <label for="select_student" class="form-label"></label>
-
+      <label
+        for="select_student"
+        class="form-label d-flex justify-content-between"
+      >
+        <span>Select Students</span>
+        <button
+          class="btn btn-outline-primary btn-sm"
+          @click="save"
+          :disabled="selected_students.length == 0 || isSubmitting"
+        >
+          <i class="fas fa-circle-notch mr-2 fa-spin" v-if="isSubmitting"></i>
+          <i class="fas fa-plus-circle mr-2" v-else></i>
+          Add Students
+        </button>
+      </label>
       <input
         list="select_student"
-        class="form-control"
+        class="form-control form-control-flush"
         @change="newUserAdded"
+        placeholder="Type student name ..."
         v-model="student_select"
       />
       <datalist id="select_student">
@@ -24,21 +36,16 @@
     </div>
 
     <div class="form-group">
-      <button
-        class="btn btn-sm btn-info mr-2"
+      <p
+        class="mr-2"
         v-for="(student, index) in selected_students"
         :key="index"
-        @click="removeStudent(index)"
       >
-        {{ student }} <i class="fas fa-times ml-2"></i>
-      </button>
-    </div>
-
-    <div class="form-group">
-      <button class="btn btn-primary" @click="save">
-        <span class="material-icons mr-2">save</span>
-        Save
-      </button>
+        {{ student }}
+        <a href="javascript:void(0)" @click="removeStudent(index)">
+          <i class="fas fa-times ml-2"></i>
+        </a>
+      </p>
     </div>
   </div>
 </template>
@@ -49,10 +56,12 @@ import Swal from "sweetalert2";
 import { ref, onMounted } from "vue";
 
 export default {
-  setup() {
+  props: ["classroom_id"],
+  setup({ classroom_id }) {
     const students = ref([]);
     const student_select = ref("");
     const selected_students = ref([]);
+    const isSubmitting = ref(false);
 
     function getStudents() {
       axios
@@ -64,6 +73,7 @@ export default {
           Swal.fire({
             icon: "error",
             title: "Something went wrong while fetching students!",
+            text: error.response.data.message,
           });
         });
     }
@@ -92,12 +102,23 @@ export default {
     }
 
     function save() {
+      isSubmitting.value = true;
+
       axios
-        .post("/admin/classroom/add/students", {
-          students: selected_students.value,
+        .post("/admin/classroom/members/add", {
+          users: selected_students.value,
+          classroom_id,
         })
-        .then()
-        .catch();
+        .then((res) => {
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+          });
+        })
+        .catch()
+        .finally(() => {
+          isSubmitting.value = false;
+        });
     }
 
     onMounted(() => {
@@ -111,6 +132,7 @@ export default {
       selected_students,
       removeStudent,
       save,
+      isSubmitting,
     };
   },
 };
