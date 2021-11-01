@@ -24,6 +24,7 @@ import CreateClassroom from "./components/Classrooms/CreateClassroom.vue";
 import UserEditProfile from './components/Users/EditProfile.vue';
 
 import ClassroomItemsGridList from './components/Classrooms/ClassroomItemsGridList.vue';
+import ClassroomView from './components/Classrooms/ClassroomView.vue';
 
 const app = createApp({});
 
@@ -50,6 +51,7 @@ app.component("create-classroom", CreateClassroom);
 app.component('user-edit-profile', UserEditProfile);
 
 app.component('classroom-items-grid-list', ClassroomItemsGridList);
+app.component('classroom-view', ClassroomView);
 // End of Admin components
 
 /**

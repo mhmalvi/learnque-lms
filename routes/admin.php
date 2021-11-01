@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\ClassroomAddPeopleController;
 use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -28,6 +29,7 @@ Route::post('classroom', [ClassroomsController::class, 'store']);
 Route::get('classroom/all', [ClassroomsController::class, 'getPaginatedList']);
 Route::view('classroom/test', 'admin.pages.classrooms.show');
 Route::get('classroom/{classroom:unique_id}', [ClassroomsController::class, 'show']);
+Route::post('classroom/add/students', [ClassroomAddPeopleController::class, 'storeStudents']);
 
 // Category routes
 Route::prefix('categories')->name('categories.')->group(function () {
@@ -59,6 +61,7 @@ Route::prefix("enroll-users")->name('enroll_users.')->group(function () {
 Route::prefix("students")->name('students.')->group(function () {
     Route::get('/', [StudentsController::class, 'index'])->name('index');
     Route::get('all', [StudentsController::class, 'getPaginatedList']);
+    Route::get('raw', [StudentsController::class, 'getRawList']);
     Route::get('/edit/{student:name}', [StudentsController::class, 'edit']);
     Route::patch('{student:uuid}', [StudentsController::class, 'update']);
     Route::delete('{student:uuid}', [StudentsController::class, 'destroy']);

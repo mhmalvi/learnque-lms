@@ -27,6 +27,13 @@ class StudentsController extends Controller
         }
     }
 
+    public function getRawList()
+    {
+        return new UsersCollection(
+            User::where('user_type', 'student')->get()
+        );
+    }
+
     public function edit(User $student)
     {
         $student = (new UserResource($student))->jsonSerialize();
