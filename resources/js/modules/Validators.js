@@ -12,8 +12,17 @@ export default function Validators() {
             : false;
     };
 
+    /**
+     * This will validate image file type
+     */
+    const allowedExtensions = ["png", "jpg", "jpeg"];
+    const fileType = (filename) => {
+        return allowedExtensions.includes(filename.split(".").pop());
+    };
+
     return {
         email,
         password,
+        fileType,
     };
 }

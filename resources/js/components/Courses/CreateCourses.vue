@@ -88,7 +88,30 @@
         </div>
       </div>
       <div class="row mb-32pt">
-        <input type="hidden" v-model="thumbnail" />
+        <div class="col-lg-4">
+          <div class="page-separator">
+            <div class="page-separator__text">Thumbnail Image</div>
+          </div>
+          <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
+        </div>
+        <div class="col-lg-8 d-flex align-items-center">
+          <div class="form-group img-container">
+            <label for="thumbnail"
+              >Click here to Upload Product Thumbnail</label
+            >
+            <div class="row w-100" v-if="thumbnail">
+              <div class="col-12 img-wrapper">
+                <img :src="thumbnail" class="img-fluid" />
+              </div>
+            </div>
+            <input
+              type="file"
+              id="thumbnail"
+              class="form-control d-none"
+              @change="onThumbnailUpload"
+            />
+          </div>
+        </div>
       </div>
       <div class="row mb-32pt">
         <div class="col-lg-4">
@@ -131,6 +154,7 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
+import Validators from "../../modules/Validators";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 
@@ -141,7 +165,7 @@ export default {
       isValid: false,
       code: "",
       title: "",
-      categor: "uncategorized",
+      category: "uncategorized",
       lessons: "",
       thumbnail: "",
       description: "",
@@ -156,6 +180,22 @@ export default {
     this.getCategories();
   },
   methods: {
+    /**
+     * upload thumbnail image
+     */
+    onThumbnailUpload(event) {
+      const { fileType } = Validators();
+      let file = event.target.files[0];
+      if (fileType(file.name)) {
+        let reader = new FileReader();
+        reader.onload = (e) => {
+          this.thumbnail = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // this.errors.push(`${file.name} is not a valid file type!`);
+      }
+    },
     onImageUpload(image) {},
     onFormSubmitHandlar() {
       this.isLoading = true;

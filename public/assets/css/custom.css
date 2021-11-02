@@ -1,3 +1,34 @@
 .thumbnail-select {
     cursor: pointer;
 }
+.img-container {
+    border: 1px dashed;
+    padding: 20px;
+    text-align: center;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+}
+
+.img-container label {
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.img-container label:hover {
+    color: #30419b;
+}
+
+.img-wrapper {
+    position: relative;
+    padding: 5px;
+}
+
+.img-remove {
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 5px 15px;
+}
