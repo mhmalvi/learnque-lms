@@ -75,23 +75,6 @@
 
             <!-- Header Layout Content -->
             <div class="mdk-header-layout__content page-content ">
-
-                <div class="mdk-box mdk-box--bg-white-35 bg-white js-mdk-box mb-0"
-                     data-effects="parallax-background blend-background">
-                    <div class="mdk-box__bg">
-                        <div class="mdk-box__bg-front"
-                             style="background-image: url({{asset('assets/images/photodune-4161018-group-of-students-m.jpg')}});"></div>
-                    </div>
-                    <div class="mdk-box__content d-flex align-items-center justify-content-center container page__container text-center py-112pt" style="min-height: 656px;">
-                        <div class="card card--transparent mb-0 p-3 pt-5" style="width: 28rem">
-                            <h3 class="text-primary">We Are Happy To See You!</h3>
-                            <div class="card-body text-left">
-                                <login-component></login-component>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
                 @yield('content')
             </div>
             <!-- // END Header Layout Content -->

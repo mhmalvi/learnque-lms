@@ -11,7 +11,7 @@
       data-trigger="click"
     >
       <a
-        href="#"
+        :href="'/course/' + course.uuid"
         class="card-img-top js-image"
         data-position=""
         data-height="140"
@@ -28,9 +28,9 @@
       <div class="card-body flex">
         <div class="d-flex">
           <div class="flex">
-            <a class="card-title" href="student-course.html">{{
-              course.title
-            }}</a>
+            <a class="card-title" :href="'/course/' + course.uuid">
+              {{ course.title }}
+            </a>
             <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
           </div>
           <a

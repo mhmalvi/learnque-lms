@@ -22828,6 +22828,7 @@ __webpack_require__.r(__webpack_exports__);
     CourseItemComponent: _CourseItemComponent_vue__WEBPACK_IMPORTED_MODULE_1__["default"]
   },
   setup: function setup() {
+    var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(true);
     var courses = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)([]);
     axios__WEBPACK_IMPORTED_MODULE_0___default().get("/api/courses", {
       params: {
@@ -22835,9 +22836,12 @@ __webpack_require__.r(__webpack_exports__);
       }
     }).then(function (res) {
       courses.value = res.data.data;
+    })["finally"](function () {
+      return isLoading.value = false;
     });
     return {
-      courses: courses
+      courses: courses,
+      isLoading: isLoading
     };
   }
 });
@@ -24993,30 +24997,29 @@ var _hoisted_2 = {
   "data-toggle": "popover",
   "data-trigger": "click"
 };
+var _hoisted_3 = ["href"];
 
-var _hoisted_3 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<a href=\"#\" class=\"card-img-top js-image\" data-position=\"\" data-height=\"140\"><img src=\"/assets/images/paths/sketch_430x168.png\" alt=\"course\"><span class=\"overlay__content\"><span class=\"overlay__action d-flex flex-column text-center\"><i class=\"material-icons icon-32pt\">play_circle_outline</i><span class=\"card-title text-white\">Preview</span></span></span></a>", 1);
+var _hoisted_4 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<img src=\"/assets/images/paths/sketch_430x168.png\" alt=\"course\"><span class=\"overlay__content\"><span class=\"overlay__action d-flex flex-column text-center\"><i class=\"material-icons icon-32pt\">play_circle_outline</i><span class=\"card-title text-white\">Preview</span></span></span>", 2);
 
-var _hoisted_4 = {
+var _hoisted_6 = [_hoisted_4];
+var _hoisted_7 = {
   "class": "card-body flex"
 };
-var _hoisted_5 = {
+var _hoisted_8 = {
   "class": "d-flex"
 };
-var _hoisted_6 = {
+var _hoisted_9 = {
   "class": "flex"
 };
-var _hoisted_7 = {
-  "class": "card-title",
-  href: "student-course.html"
-};
+var _hoisted_10 = ["href"];
 
-var _hoisted_8 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
+var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("small", {
   "class": "text-50 font-weight-bold mb-4pt"
 }, "Elijah Murray", -1
 /* HOISTED */
 );
 
-var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+var _hoisted_12 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
   href: "#",
   "data-toggle": "tooltip",
   "data-title": "Add Favorite",
@@ -25027,14 +25030,24 @@ var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 /* HOISTED */
 );
 
-var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"card-footer\"><div class=\"row justify-content-between\"><div class=\"col-auto d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">access_time</span><p class=\"flex text-50 lh-1 mb-0\"><small>6 hours</small></p></div><div class=\"col-auto d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">play_circle_outline</span><p class=\"flex text-50 lh-1 mb-0\"><small>12 lessons</small></p></div></div></div>", 1);
+var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"card-footer\"><div class=\"row justify-content-between\"><div class=\"col-auto d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">access_time</span><p class=\"flex text-50 lh-1 mb-0\"><small>6 hours</small></p></div><div class=\"col-auto d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">play_circle_outline</span><p class=\"flex text-50 lh-1 mb-0\"><small>12 lessons</small></p></div></div></div>", 1);
 
-var _hoisted_11 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"popoverContainer d-none\"><div class=\"media\"><div class=\"media-left mr-12pt\"><img src=\"{{asset(&#39;assets/images/paths/sketch_40x40@2x.png&#39;)}}\" width=\"40\" height=\"40\" alt=\"Angular\" class=\"rounded\"></div><div class=\"media-body\"><div class=\"card-title mb-0\">Learn Sketch</div><p class=\"lh-1 mb-0\"><span class=\"text-50 small\">with</span><span class=\"text-50 small font-weight-bold\">Elijah Murray</span></p></div></div><p class=\"my-16pt text-70\"> Learn the fundamentals of working with Angular and how to create basic applications. </p><div class=\"mb-16pt\"><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Fundamentals of working with Angular</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Create complete Angular applications</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Working with the Angular CLI</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Understanding Dependency Injection</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Testing with Angular</small></p></div></div><div class=\"row align-items-center\"><div class=\"col-auto\"><div class=\"d-flex align-items-center mb-4pt\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">access_time</span><p class=\"flex text-50 lh-1 mb-0\"><small>6 hours</small></p></div><div class=\"d-flex align-items-center mb-4pt\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">play_circle_outline</span><p class=\"flex text-50 lh-1 mb-0\"><small>12 lessons</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">assessment</span><p class=\"flex text-50 lh-1 mb-0\"><small>Beginner</small></p></div></div><div class=\"col text-right\"><a href=\"student-course.html\" class=\"btn btn-primary\">Watch trailer</a></div></div></div>", 1);
+var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createStaticVNode)("<div class=\"popoverContainer d-none\"><div class=\"media\"><div class=\"media-left mr-12pt\"><img src=\"{{asset(&#39;assets/images/paths/sketch_40x40@2x.png&#39;)}}\" width=\"40\" height=\"40\" alt=\"Angular\" class=\"rounded\"></div><div class=\"media-body\"><div class=\"card-title mb-0\">Learn Sketch</div><p class=\"lh-1 mb-0\"><span class=\"text-50 small\">with</span><span class=\"text-50 small font-weight-bold\">Elijah Murray</span></p></div></div><p class=\"my-16pt text-70\"> Learn the fundamentals of working with Angular and how to create basic applications. </p><div class=\"mb-16pt\"><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Fundamentals of working with Angular</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Create complete Angular applications</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Working with the Angular CLI</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Understanding Dependency Injection</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-8pt\">check</span><p class=\"flex text-50 lh-1 mb-0\"><small>Testing with Angular</small></p></div></div><div class=\"row align-items-center\"><div class=\"col-auto\"><div class=\"d-flex align-items-center mb-4pt\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">access_time</span><p class=\"flex text-50 lh-1 mb-0\"><small>6 hours</small></p></div><div class=\"d-flex align-items-center mb-4pt\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">play_circle_outline</span><p class=\"flex text-50 lh-1 mb-0\"><small>12 lessons</small></p></div><div class=\"d-flex align-items-center\"><span class=\"material-icons icon-16pt text-50 mr-4pt\">assessment</span><p class=\"flex text-50 lh-1 mb-0\"><small>Beginner</small></p></div></div><div class=\"col text-right\"><a href=\"student-course.html\" class=\"btn btn-primary\">Watch trailer</a></div></div></div>", 1);
 
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [_hoisted_3, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", _hoisted_7, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.course.title), 1
-  /* TEXT */
-  ), _hoisted_8]), _hoisted_9])]), _hoisted_10]), _hoisted_11]);
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    href: '/course/' + $setup.course.uuid,
+    "class": "card-img-top js-image",
+    "data-position": "",
+    "data-height": "140"
+  }, _hoisted_6, 8
+  /* PROPS */
+  , _hoisted_3), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+    "class": "card-title",
+    href: '/course/' + $setup.course.uuid
+  }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.course.title), 9
+  /* TEXT, PROPS */
+  , _hoisted_10), _hoisted_11]), _hoisted_12])]), _hoisted_13]), _hoisted_14]);
 }
 
 /***/ }),
@@ -25053,12 +25066,25 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
 var _hoisted_1 = {
+  key: 0,
+  "class": "row d-flex justify-content-center py-4"
+};
+
+var _hoisted_2 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h5", null, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+  "class": "fas fa-circle-notch fa-spin"
+})], -1
+/* HOISTED */
+);
+
+var _hoisted_3 = [_hoisted_2];
+var _hoisted_4 = {
+  key: 1,
   "class": "row card-group-row"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_course_item_component = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("course-item-component");
 
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.courses, function (course, index) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [$setup.isLoading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, _hoisted_3)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_4, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.courses, function (course, index) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(_component_course_item_component, {
       key: index,
       course: course
@@ -25067,7 +25093,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["course"]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))])]);
+  ))]))]);
 }
 
 /***/ }),
