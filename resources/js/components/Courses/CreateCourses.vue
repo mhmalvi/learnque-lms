@@ -199,7 +199,7 @@ export default {
       this.$refs.myEditor.setHTML("");
     },
     getCategories() {
-      axios.get("admin/course/categories/all/raw").then((res) => {
+      axios.get("admin/categories/all").then((res) => {
         this.categories = res.data.data;
       });
     },
