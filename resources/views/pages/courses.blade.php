@@ -44,7 +44,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="js-image"
                         data-position="">
                         <img src="/assets/images/paths/mailchimp_430x168.png"
@@ -62,10 +62,10 @@
                             <div class="d-flex">
                                 <div class="flex">
                                     <a class="card-title"
-                                        href="student-course.html">Newsletter Design</a>
+                                        href="">Newsletter Design</a>
                                     <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                                 </div>
-                                <a href="student-course.html"
+                                <a href=""
                                     data-toggle="tooltip"
                                     data-title="Remove Favorite"
                                     data-placement="top"
@@ -95,7 +95,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="js-image"
                         data-position="">
                         <img src="/assets/images/paths/xd_430x168.png"
@@ -113,10 +113,10 @@
                             <div class="d-flex">
                                 <div class="flex">
                                     <a class="card-title"
-                                        href="student-course.html">Adobe XD</a>
+                                        href="">Adobe XD</a>
                                     <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                                 </div>
-                                <a href="student-course.html"
+                                <a href=""
                                     data-toggle="tooltip"
                                     data-title="Add Favorite"
                                     data-placement="top"
@@ -195,7 +195,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -211,7 +211,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="js-image"
                         data-position="">
                         <img src="/assets/images/paths/invision_430x168.png"
@@ -229,10 +229,10 @@
                             <div class="d-flex">
                                 <div class="flex">
                                     <a class="card-title"
-                                        href="student-course.html">inVision App</a>
+                                        href="">inVision App</a>
                                     <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                                 </div>
-                                <a href="student-course.html"
+                                <a href=""
                                     data-toggle="tooltip"
                                     data-title="Add Favorite"
                                     data-placement="top"
@@ -311,7 +311,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -327,7 +327,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="js-image"
                         data-position="">
                         <img src="/assets/images/paths/craft_430x168.png"
@@ -345,10 +345,10 @@
                             <div class="d-flex">
                                 <div class="flex">
                                     <a class="card-title"
-                                        href="student-course.html">Craft by inVision</a>
+                                        href="">Craft by inVision</a>
                                     <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                                 </div>
-                                <a href="student-course.html"
+                                <a href=""
                                     data-toggle="tooltip"
                                     data-title="Add Favorite"
                                     data-placement="top"
@@ -427,7 +427,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -489,7 +489,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -507,10 +507,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Learn Angular fundamentals</a>
+                                    href="">Learn Angular fundamentals</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -600,7 +600,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -615,7 +615,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -633,10 +633,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Build an iOS Application in Swift</a>
+                                    href="">Build an iOS Application in Swift</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -726,7 +726,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -741,7 +741,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -759,10 +759,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Build a WordPress Website</a>
+                                    href="">Build a WordPress Website</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -852,7 +852,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -867,7 +867,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position="left"
                         data-height="140">
@@ -885,10 +885,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Become a React Native Developer</a>
+                                    href="">Become a React Native Developer</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -978,7 +978,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -1040,7 +1040,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -1058,10 +1058,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Learn Sketch</a>
+                                    href="">Learn Sketch</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -1151,7 +1151,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -1166,7 +1166,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -1184,10 +1184,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Learn Flinto</a>
+                                    href="">Learn Flinto</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -1277,7 +1277,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -1292,7 +1292,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -1310,10 +1310,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Learn Photoshop</a>
+                                    href="">Learn Photoshop</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -1403,7 +1403,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
@@ -1418,7 +1418,7 @@
                         data-toggle="popover"
                         data-trigger="click">
 
-                    <a href="student-course.html"
+                    <a href=""
                         class="card-img-top js-image"
                         data-position=""
                         data-height="140">
@@ -1436,10 +1436,10 @@
                         <div class="d-flex">
                             <div class="flex">
                                 <a class="card-title"
-                                    href="student-course.html">Learn Figma</a>
+                                    href="">Learn Figma</a>
                                 <small class="text-50 font-weight-bold mb-4pt">Elijah Murray</small>
                             </div>
-                            <a href="student-course.html"
+                            <a href=""
                                 data-toggle="tooltip"
                                 data-title="Add Favorite"
                                 data-placement="top"
@@ -1529,7 +1529,7 @@
                             </div>
                         </div>
                         <div class="col text-right">
-                            <a href="student-course.html"
+                            <a href=""
                                 class="btn btn-primary">Watch trailer</a>
                         </div>
                     </div>
