@@ -13,7 +13,7 @@
         <ul class="sidebar-menu">
             @include('components.student-nav-links')
 
-            @include('components.teacher-nav-links')
+            {{-- @include('components.teacher-nav-links') --}}
 
             {{-- Account --}}
             <li class="sidebar-menu-item">
