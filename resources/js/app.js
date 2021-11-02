@@ -26,6 +26,8 @@ import UserEditProfile from './components/Users/EditProfile.vue';
 import ClassroomItemsGridList from './components/Classrooms/ClassroomItemsGridList.vue';
 import ClassroomView from './components/Classrooms/ClassroomView.vue';
 
+import HomeCourseListComponent from './components/Home/CourseListComponent.vue';
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -59,6 +61,8 @@ app.component('classroom-view', ClassroomView);
  */
 app.component("copy-write", CopyWrite);
 app.component("login-component", UserLogin);
+
+app.component('home-course-list-component', HomeCourseListComponent);
 
 /**
  * Admin

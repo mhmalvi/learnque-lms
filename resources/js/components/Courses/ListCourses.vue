@@ -1,13 +1,15 @@
 <template>
   <div class="py-5">
-    <div class="card">
-      <table class="table table-responsive">
+    <div class="card table-responsive">
+      <table class="table">
         <thead class="text-center bg-light">
           <tr>
-            <th width="10%">#</th>
-            <th width="10%">Thumbnail</th>
-            <th width="50%">Course Title</th>
-            <th width="30%">Category</th>
+            <th>#</th>
+            <th>Thumbnail</th>
+            <th>Course Title</th>
+            <th>Category</th>
+            <th>Status</th>
+            <th>Created At</th>
           </tr>
         </thead>
         <tbody v-if="isLoading">
@@ -34,13 +36,12 @@
               {{ course.title }}
               <div class="pt-1">
                 <a class="btn text-primary pl-0">Edit</a>
-                <a class="btn text-primary pl-0" @click="deleteCourse"
+                <a class="btn text-primary pl-0" @click="deleteCourse(course)"
                   >Delete</a
                 >
               </div>
             </td>
             <td>{{ course.category.title }}</td>
-            <td>{{ course.thumbnail }}</td>
             <td>{{ course.publish_status }}</td>
             <td>{{ course.created_at }}</td>
           </tr>
@@ -99,7 +100,20 @@ export default {
             .post("admin/courses/" + course.uuid, {
               _method: "DELETE",
             })
-            .then((res) => {});
+            .then((res) => {
+              Swal.fire({
+                icon: "success",
+                title: res.data.message,
+              });
+              getCourses();
+            })
+            .catch((error) => {
+              Swal.fire({
+                icon: "error",
+                title: "Failed to delete the course",
+              });
+              console.error(error);
+            });
         }
       });
     }

@@ -47,7 +47,7 @@ Route::prefix("courses")->name('courses.')->group(function () {
     Route::get('all', [CourseController::class, 'getPaginatedList']);
     Route::get('raw', [CourseController::class, 'getRawList']);
     Route::get('create', [CourseController::class, 'create'])->name('create');
-    Route::get('{course}', [CourseController::class, 'destroy']);
+    Route::delete('{course:uuid}', [CourseController::class, 'destroy']);
 });
 
 // Enrol User routes
