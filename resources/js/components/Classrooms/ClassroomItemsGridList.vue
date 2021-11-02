@@ -4,6 +4,12 @@
       <h4><i class="fas fa-circle-notch fa-spin"></i></h4>
     </div>
   </div>
+  <div
+    class="row d-flex justify-content-center"
+    v-else-if="classrooms.length == 0"
+  >
+    <h5>No classroom here</h5>
+  </div>
   <div v-else class="row">
     <classroom-item
       v-for="(classroom, index) in classrooms"

@@ -20,6 +20,9 @@ class ClassroomResource extends JsonResource
             'slug' => $this->slug,
             'section' => $this->section,
             'course' => new CourseResource($this->course),
+            'students_count' => $this->members->filter(function ($member) {
+                return $member->user->user_type == 'student';
+            })->count(),
             'cover_photo' => $this->cover_photo,
         ];
     }

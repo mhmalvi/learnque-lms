@@ -1,6 +1,12 @@
 <template>
   <div>
-    <label class="form-label d-flex justify-content-between">
+    <p v-if="isLoading" class="text-center py-4">
+      <i class="fas fa-circle-notch fa-spin"></i>
+    </p>
+    <h4 class="text-center py-4" v-else-if="students.length == 0">
+      No students here
+    </h4>
+    <label class="form-label d-flex justify-content-between" v-else>
       <span>Students List</span>
       <button class="btn btn-outline-primary btn-sm">
         <i class="fas fa-circle-notch mr-2 fa-spin" v-if="isUpdating"></i>
@@ -9,10 +15,7 @@
       </button>
     </label>
 
-    <p v-if="isLoading" class="text-center py-4">
-      <i class="fas fa-circle-notch fa-spin"></i>
-    </p>
-    <ul v-else class="list-group">
+    <ul class="list-group">
       <li
         class="list-group-item"
         v-for="(student, index) in students"

@@ -42,7 +42,9 @@
           </div>
           <div class="col-auto d-flex align-items-center">
             <span class="material-icons icon-16pt text-50 mr-4pt">people</span>
-            <p class="flex text-50 lh-1 mb-0"><small>12 Students</small></p>
+            <p class="flex text-50 lh-1 mb-0">
+              <small>{{ classroom.students_count }} Students</small>
+            </p>
           </div>
         </div>
       </div>
