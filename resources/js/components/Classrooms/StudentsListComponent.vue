@@ -34,6 +34,7 @@
 
 <script>
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 
 export default {
   props: ["classroom_id"],
@@ -42,7 +43,10 @@ export default {
     const isLoading = ref(false);
     const isUpdating = ref(false);
 
+    const store = useStore();
+
     function getAddedStudents() {
+      students.value = [];
       isLoading.value = true;
       axios
         .get("/admin/classroom/" + classroom_id + "/students")
@@ -68,6 +72,16 @@ export default {
     onMounted(() => {
       getAddedStudents();
     });
+
+    store.watch(
+      (state, _) => {
+        return state.classroomStudents.newStudents;
+      },
+      (newVal, oldVal) => {
+        console.log("new student added");
+        getAddedStudents();
+      }
+    );
 
     return {
       isLoading,

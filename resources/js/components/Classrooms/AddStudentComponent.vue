@@ -54,6 +54,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 
 export default {
   props: ["classroom_id"],
@@ -62,6 +63,8 @@ export default {
     const student_select = ref("");
     const selected_students = ref([]);
     const isSubmitting = ref(false);
+
+    const store = useStore();
 
     function getStudents() {
       axios
@@ -114,6 +117,8 @@ export default {
             icon: "success",
             title: res.data.message,
           });
+
+          store.dispatch("classroomStudents/newStudentAdded");
         })
         .catch()
         .finally(() => {

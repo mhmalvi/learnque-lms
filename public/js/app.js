@@ -22150,6 +22150,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_1__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+
 
 
 
@@ -22161,6 +22163,7 @@ __webpack_require__.r(__webpack_exports__);
     var student_select = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)("");
     var selected_students = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)([]);
     var isSubmitting = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(false);
+    var store = (0,vuex__WEBPACK_IMPORTED_MODULE_3__.useStore)();
 
     function getStudents() {
       axios__WEBPACK_IMPORTED_MODULE_0___default().get("/admin/students/raw").then(function (res) {
@@ -22204,6 +22207,7 @@ __webpack_require__.r(__webpack_exports__);
           icon: "success",
           title: res.data.message
         });
+        store.dispatch("classroomStudents/newStudentAdded");
       })["catch"]()["finally"](function () {
         isSubmitting.value = false;
       });
@@ -22681,6 +22685,8 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ["classroom_id"],
@@ -22689,8 +22695,10 @@ __webpack_require__.r(__webpack_exports__);
     var students = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([]);
     var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
     var isUpdating = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
+    var store = (0,vuex__WEBPACK_IMPORTED_MODULE_1__.useStore)();
 
     function getAddedStudents() {
+      students.value = [];
       isLoading.value = true;
       axios.get("/admin/classroom/" + classroom_id + "/students").then(function (res) {
         for (var key in res.data.data) {
@@ -22709,6 +22717,12 @@ __webpack_require__.r(__webpack_exports__);
     }
 
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
+      getAddedStudents();
+    });
+    store.watch(function (state, _) {
+      return state.classroomStudents.newStudents;
+    }, function (newVal, oldVal) {
+      console.log("new student added");
       getAddedStudents();
     });
     return {
@@ -26575,6 +26589,36 @@ var post = {
 
 /***/ }),
 
+/***/ "./resources/js/store/classroom/student.js":
+/*!*************************************************!*\
+  !*** ./resources/js/store/classroom/student.js ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "student": () => (/* binding */ student)
+/* harmony export */ });
+var student = {
+  namespaced: true,
+  state: {
+    newStudents: 0
+  },
+  mutations: {
+    incrementStudents: function incrementStudents(state) {
+      state.newStudents++;
+    }
+  },
+  actions: {
+    newStudentAdded: function newStudentAdded(context) {
+      context.commit('incrementStudents');
+    }
+  }
+};
+
+/***/ }),
+
 /***/ "./resources/js/store/course/category.js":
 /*!***********************************************!*\
   !*** ./resources/js/store/course/category.js ***!
@@ -26616,16 +26660,19 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
 /* harmony import */ var _course_category__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./course/category */ "./resources/js/store/course/category.js");
 /* harmony import */ var _classroom_post_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./classroom/post.js */ "./resources/js/store/classroom/post.js");
+/* harmony import */ var _classroom_student__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./classroom/student */ "./resources/js/store/classroom/student.js");
 
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ((0,vuex__WEBPACK_IMPORTED_MODULE_2__.createStore)({
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ((0,vuex__WEBPACK_IMPORTED_MODULE_3__.createStore)({
   modules: {
     courseCategories: _course_category__WEBPACK_IMPORTED_MODULE_0__.category,
-    classroomPosts: _classroom_post_js__WEBPACK_IMPORTED_MODULE_1__.post
+    classroomPosts: _classroom_post_js__WEBPACK_IMPORTED_MODULE_1__.post,
+    classroomStudents: _classroom_student__WEBPACK_IMPORTED_MODULE_2__.student
   },
   state: function state() {
     return {};
