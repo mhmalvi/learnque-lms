@@ -1,6 +1,11 @@
 <template>
   <div>
-    <div class="row card-group-row">
+    <div v-if="isLoading" class="row d-flex justify-content-center py-4">
+      <h5>
+        <i class="fas fa-circle-notch fa-spin"></i>
+      </h5>
+    </div>
+    <div class="row card-group-row" v-else>
       <course-item-component
         v-for="(course, index) in courses"
         :key="index"
@@ -18,6 +23,7 @@ import { ref } from "vue";
 export default {
   components: { CourseItemComponent },
   setup() {
+    const isLoading = ref(true);
     const courses = ref([]);
     axios
       .get("/api/courses", {
@@ -27,10 +33,12 @@ export default {
       })
       .then((res) => {
         courses.value = res.data.data;
-      });
+      })
+      .finally(() => (isLoading.value = false));
 
     return {
       courses,
+      isLoading,
     };
   },
 };

@@ -1,6 +1,12 @@
 <template>
   <div>
-    <label class="form-label d-flex justify-content-between">
+    <p v-if="isLoading" class="text-center py-4">
+      <i class="fas fa-circle-notch fa-spin"></i>
+    </p>
+    <h4 class="text-center py-4" v-else-if="students.length == 0">
+      No students here
+    </h4>
+    <label class="form-label d-flex justify-content-between" v-else>
       <span>Students List</span>
       <button class="btn btn-outline-primary btn-sm">
         <i class="fas fa-circle-notch mr-2 fa-spin" v-if="isUpdating"></i>
@@ -9,10 +15,7 @@
       </button>
     </label>
 
-    <p v-if="isLoading" class="text-center py-4">
-      <i class="fas fa-circle-notch fa-spin"></i>
-    </p>
-    <ul v-else class="list-group">
+    <ul class="list-group">
       <li
         class="list-group-item"
         v-for="(student, index) in students"
@@ -31,6 +34,7 @@
 
 <script>
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 
 export default {
   props: ["classroom_id"],
@@ -39,7 +43,10 @@ export default {
     const isLoading = ref(false);
     const isUpdating = ref(false);
 
+    const store = useStore();
+
     function getAddedStudents() {
+      students.value = [];
       isLoading.value = true;
       axios
         .get("/admin/classroom/" + classroom_id + "/students")
@@ -65,6 +72,16 @@ export default {
     onMounted(() => {
       getAddedStudents();
     });
+
+    store.watch(
+      (state, _) => {
+        return state.classroomStudents.newStudents;
+      },
+      (newVal, oldVal) => {
+        console.log("new student added");
+        getAddedStudents();
+      }
+    );
 
     return {
       isLoading,

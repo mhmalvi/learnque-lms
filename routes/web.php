@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CoursesController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -31,6 +32,8 @@ Route::view('quiz-results-details', 'pages.quiz-results-details')->middleware('a
 Route::view('path-assessment', 'pages.path-assessment')->middleware('auth');
 Route::view('path-assessment-result', 'pages.path-assessment-result')->middleware('auth');
 Route::view('paths', 'pages.paths')->middleware('auth');
+
+Route::get('course/{course:uuid}', [CoursesController::class, 'show']);
 
 require __DIR__ . '/auth.php';
 
