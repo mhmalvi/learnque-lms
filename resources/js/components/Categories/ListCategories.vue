@@ -35,7 +35,10 @@
               {{ category.title }}
               <div class="pt-1">
                 <a href="javascript:void(0)" class="text-primary mr-2">Edit</a>
-                <a href="javascript:void(0)" class="text-primary mr-2"
+                <a
+                  href="javascript:void(0)"
+                  class="text-primary mr-2"
+                  @click="deleteCategory(category)"
                   >Delete</a
                 >
               </div>
@@ -51,6 +54,7 @@
 
 <script>
 import axios from "axios";
+import Swal from "sweetalert2";
 import { ref } from "vue";
 import { useStore } from "vuex";
 
@@ -62,6 +66,38 @@ export default {
     const categories = ref([]);
 
     const store = useStore();
+
+    function deleteCategory(category) {
+      Swal.fire({
+        icon: "warning",
+        title: "Are you sure you want to delete this category?",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel!",
+        confirmButtonText: "Yes, delete it!",
+      }).then((res) => {
+        if (res.isConfirmed) {
+          axios
+            .post("/admin/categories/" + category.uuid, {
+              _method: "DELETE",
+            })
+            .then((res) => {
+              Swal.fire({
+                icon: "success",
+                title: res.data.mesage,
+                timer: 1000,
+              });
+            })
+            .catch((err) => {
+              Swal.fire({
+                icon: "error",
+                title: "Something went wrong!",
+                timer: 3000,
+              });
+              console.log(err);
+            });
+        }
+      });
+    }
 
     // fires on mount
     (() => {
@@ -95,6 +131,7 @@ export default {
       itemsPerPage,
       search,
       categories,
+      deleteCategory,
     };
   },
 };

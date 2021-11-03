@@ -24,7 +24,7 @@ class CourseController extends Controller
     public function getPaginatedList()
     {
         return new CoursesCollection(
-            Course::paginate(request('items'))
+            Course::latest()->paginate(request('items'))
         );
     }
 

@@ -32,7 +32,7 @@
                     Logout
                 </a>
 
-                <form action="{{route('logout')}}" method="post" id="logout">
+                <form action="{{route('logout')}}" method="POST" id="logout">
                     @csrf
                 </form>
             </div>
