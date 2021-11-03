@@ -15,8 +15,7 @@ class PostCreateRequest extends PostRequest
      */
     public function authorize()
     {
-        $classroom = Classroom::where('unique_id', $this->classroom_id)->first();
-        $classroom_member = ClassroomMember::where('classroom_id', $classroom->id)
+        $classroom_member = ClassroomMember::where('classroom_id', $this->getClassroomId())
             ->where('user_id', auth()->user()->id)
             ->first();
 
@@ -33,18 +32,15 @@ class PostCreateRequest extends PostRequest
     {
         return [
             'classroom_id' => 'required',
-            'title' => 'required',
+            'description' => 'required',
         ];
     }
 
     public function save()
     {
-        $classroom = Classroom::where('unique_id', $this->classroom_id)
-            ->first();
         ClassroomPost::create([
             'user_id' => auth()->user()->id,
-            'classroom_id' => $classroom->id,
-            'title' => $this->title,
+            'classroom_id' => $this->getClassroomId(),
             'description' => $this->filled('description') ? $this->description : '',
         ]);
     }

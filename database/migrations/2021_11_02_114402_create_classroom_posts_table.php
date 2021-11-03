@@ -24,7 +24,6 @@ class CreateClassroomPostsTable extends Migration
                 ->constrained()
                 ->onUpdate('cascade')
                 ->onDelete('cascade');
-            $table->string('title');
             $table->longText('description')->nullable();
 
             $table->timestamps();

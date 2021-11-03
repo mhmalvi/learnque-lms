@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Classroom;
 
+use App\Models\Classroom;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PostRequest extends FormRequest
@@ -26,5 +27,11 @@ class PostRequest extends FormRequest
         return [
             //
         ];
+    }
+
+    protected function getClassroomId()
+    {
+        return Classroom::where('unique_id', $this->classroom_id)
+            ->first()->id;
     }
 }

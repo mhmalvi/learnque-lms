@@ -34,6 +34,7 @@ Route::prefix('classroom')->name('classroom.')->group(function () {
     Route::post('members/add', [ClassroomMembersController::class, 'store']);
     Route::get('{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
     Route::post('{classroom:unique_id}/posts', [ClassroomPostsController::class, 'store']);
+    Route::get('{classroom:unique_id}/posts', [ClassroomPostsController::class, 'getPaginatedList']);
 });
 
 // Category routes

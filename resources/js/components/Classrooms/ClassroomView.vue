@@ -17,11 +17,12 @@
         </div>
       </div>
       <div class="col-md-9">
-        <div class="card">
-          <div class="card-body">
-            <publish-post-component :classroom_id="classroom.unique_id" />
-          </div>
+        <publish-post-component :classroom_id="classroom.unique_id" />
+
+        <div class="mt-4">
+          <post-list-component :classroom_id="classroom.unique_id" />
         </div>
+
         <div class="card">
           <div class="card-body">
             <add-teacher-component :classroom_id="classroom.unique_id" />
@@ -46,6 +47,7 @@ import AddStudentComponent from "./AddStudentComponent.vue";
 import AddTeacherComponent from "./AddTeacherComponent.vue";
 import StudentsListComponent from "./StudentsListComponent.vue";
 import PublishPostComponent from "./PublishPostComponent.vue";
+import PostListComponent from "./ClassroomPostListComponent.vue";
 
 export default {
   components: {
@@ -53,6 +55,7 @@ export default {
     AddTeacherComponent,
     StudentsListComponent,
     PublishPostComponent,
+    PostListComponent,
   },
   props: ["classroom_data"],
   setup(props) {
