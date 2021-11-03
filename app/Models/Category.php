@@ -10,4 +10,9 @@ class Category extends Model
     use HasFactory;
 
     protected $guarded = [];
+
+    public function getCreatedAtAttribute($value)
+    {
+        return date("M d, Y", strtotime($value));
+    }
 }
