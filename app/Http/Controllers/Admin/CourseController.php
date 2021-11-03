@@ -51,13 +51,17 @@ class CourseController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(CourseCreateRequest $request, CourseCreateAction $create_action)
+    public function store(CourseCreateRequest $request)
     {
-        $create_action->execute($request->all());
+        try {
+            $request->save();
 
-        return response()->json([
-            'message' => "Successfully created the course!",
-        ], 200);
+            return response()->json([
+                'message' => "Successfully created the course!",
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 503);
+        }
     }
 
     /**

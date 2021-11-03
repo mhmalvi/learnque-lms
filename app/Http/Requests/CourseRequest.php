@@ -3,28 +3,67 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Intervention\Image\Facades\Image;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
+use App\Models\Category;
 
 class CourseRequest extends FormRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
+     * retrive course category id
      */
-    public function authorize()
+    protected function category()
     {
-        return false;
+        return Category::where('uuid', $this->category)->first()->id;
     }
 
     /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
+     * retrive file extension from base64 string
      */
-    public function rules()
+    private function getOrigianlFileExtension($file)
     {
-        return [
-            //
-        ];
+        $encodedImgString = explode(',', $file, 2)[1];
+        $decodedImgString = base64_decode($encodedImgString);
+        $info = getimagesizefromstring($decodedImgString);
+
+        $ext = image_type_to_extension($info[2]);
+
+        return $ext;
+    }
+
+    /**
+     * Make directory if not exist
+     */
+    private function makeDirectory()
+    {
+        if (!Storage::exists("public/courses")) {
+            Storage::makeDirectory("public/courses");
+            Storage::makeDirectory("public/courses/thumbnails");
+        }
+    }
+
+    /**
+     * store product thumbanil
+     * base64 encoded
+     */
+    protected function storeThumbnailImages()
+    {
+        $file = $this->thumbnail;
+        $name = $this->image_title ? Str::slug($this->image_title) : Str::slug($this->title);
+        $extension = $this->getOrigianlFileExtension($file);
+        $filename = "{$name}{$extension}";
+
+        $this->makeDirectory();
+
+        Image::make($file)
+            ->fit(1080, 720)
+            ->save(storage_path('app/public/courses/' . $filename));
+
+        Image::make($file)
+            ->fit(430, 168)
+            ->save(storage_path('app/public/courses/thumbnails/' . $filename));
+
+        return $filename;
     }
 }

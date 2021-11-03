@@ -28,7 +28,9 @@
     <!-- Drawer Layout -->
     <div class="mdk-drawer-layout js-mdk-drawer-layout" data-push data-responsive-width="992px">
         <div class="mdk-drawer-layout__content page-content" id="app">
-
+            <div class="action-loading d-none" id="action-loading">
+                <div class="is-loading"></div>
+            </div>
             @include('layouts.header')
             
             <div class="pt-32pt">

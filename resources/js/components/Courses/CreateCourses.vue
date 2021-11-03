@@ -1,168 +1,209 @@
 <template>
-  <div>
-    <form @submit.prevent="onFormSubmitHandlar()">
-      <div class="row mb-32pt">
-        <div class="col-lg-4">
-          <div class="page-separator">
-            <div class="page-separator__text">Basic Informations</div>
-          </div>
-          <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
+  <form @submit.prevent="onFormSubmitHandlar()">
+    <div class="row mb-32pt">
+      <div class="col-lg-4">
+        <div class="page-separator">
+          <div class="page-separator__text">Basic Informations</div>
         </div>
-        <div class="col-lg-8 d-flex align-items-center">
-          <div class="flex" style="max-width: 100%">
-            <div class="form-group">
-              <label class="form-label" for="code"
-                >Course Code <small class="text-danger">*</small></label
-              >
-              <input
-                type="text"
-                class="form-control"
-                id="code"
-                placeholder="Enter course code .."
-                v-model="code"
-              />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="title"
-                >Course Title <small class="text-danger">*</small></label
-              >
-              <input
-                type="text"
-                class="form-control"
-                id="title"
-                placeholder="Enter course title .."
-                v-model="title"
-              />
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="category">Course Category</label>
-              <select
-                id="category"
-                class="form-control custom-select"
-                v-model="category"
-              >
-                <option value="" selected>Uncategorized</option>
-                <option
-                  :value="category.uuid"
-                  v-for="(category, index) in categories"
-                  v-bind:key="index"
-                >
-                  {{ category.title }}
-                </option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="lessons"
-                >Number of lessons <small class="text-danger">*</small></label
-              >
-              <input
-                type="number"
-                class="form-control"
-                id="lessons"
-                placeholder="Enter total number of lessons .."
-                v-model="lessons"
-              />
-            </div>
-          </div>
-        </div>
+        <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
       </div>
-      <div class="row mb-32pt">
-        <div class="col-lg-4">
-          <div class="page-separator">
-            <div class="page-separator__text">Course Informations</div>
-          </div>
-          <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
-        </div>
-        <div class="col-lg-8 d-flex align-items-center">
-          <div class="flex" style="max-width: 100%">
-            <div class="form-group">
-              <label class="form-label" for="description">Descriptions</label>
-              <quill-editor
-                theme="snow"
-                v-model:content="description"
-                contentType="html"
-                ref="myEditor"
-              />
-            </div>
-          </div>
-        </div>
-      </div>
-      <div class="row mb-32pt">
-        <input type="hidden" v-model="thumbnail" />
-      </div>
-      <div class="row mb-32pt">
-        <div class="col-lg-4">
+      <div class="col-lg-8 d-flex align-items-center">
+        <div class="flex" style="max-width: 100%">
           <div class="form-group">
-            <div class="custom-control custom-checkbox">
-              <input
-                class="custom-control-input"
-                type="checkbox"
-                value=""
-                id="draft"
-                v-model="draft"
-              />
-              <label class="custom-control-label" for="draft">
-                Save as draft
-              </label>
-            </div>
+            <label class="form-label" for="code"
+              >Course Code <small class="text-danger">*</small></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="code"
+              placeholder="Enter course code .."
+              v-model="formData.code"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="title"
+              >Course Title <small class="text-danger">*</small></label
+            >
+            <input
+              type="text"
+              class="form-control"
+              id="title"
+              placeholder="Enter course title .."
+              v-model="formData.title"
+            />
+          </div>
+          <div class="form-group">
+            <label class="form-label" for="category">Course Category</label>
+            <select
+              id="category"
+              class="form-control custom-select"
+              v-model="formData.category"
+            >
+              <option value="" selected>Uncategorized</option>
+              <option
+                v-for="(category, index) in data.categories"
+                :value="category.uuid"
+                :key="index"
+              >
+                {{ category.title }}
+              </option>
+            </select>
           </div>
         </div>
-        <div class="col-lg-8">
+      </div>
+    </div>
+    <div class="row mb-32pt">
+      <div class="col-lg-4">
+        <div class="page-separator">
+          <div class="page-separator__text">Course Informations</div>
+        </div>
+        <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
+      </div>
+      <div class="col-lg-8 d-flex align-items-center">
+        <div class="flex" style="max-width: 100%">
+          <div class="form-group">
+            <label class="form-label" for="description">Descriptions</label>
+            <quill-editor
+              theme="snow"
+              v-model:content="formData.description"
+              contentType="html"
+              ref="myEditor"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="row mb-32pt">
+      <div class="col-lg-4">
+        <div class="page-separator">
+          <div class="page-separator__text">Thumbnail Image</div>
+        </div>
+        <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
+      </div>
+      <div class="col-lg-8">
+        <div class="d-flex align-items-center">
+          <div class="form-group img-container">
+            <label for="thumbnail" class="img-container-lbl"
+              >Click here to Upload Product Thumbnail</label
+            >
+            <div class="row w-100" v-if="formData.thumbnail">
+              <div class="col-12 img-wrapper">
+                <img :src="formData.thumbnail" class="img-fluid" />
+              </div>
+            </div>
+            <input
+              type="file"
+              id="thumbnail"
+              class="form-control d-none"
+              @change="onThumbnailUpload"
+            />
+          </div>
+        </div>
+
+        <div class="mt-5">
           <button
-            type="submit"
-            class="btn btn-primary"
-            :class="isLoading && 'is-loading'"
+            type="button"
+            class="btn btn-outline-secondary mr-1"
+            @click="onSaveAsDraft"
             :disabled="!formIsValid"
           >
             <span class="material-icons mr-2">save</span>
-            Save Now
+            save as draft
           </button>
-
-          <button type="reset" class="btn btn-light ml-2">
+          <button
+            type="submit"
+            class="btn btn-outline-primary m-1"
+            :disabled="!formIsValid"
+          >
+            <span class="material-icons mr-2">add_circle_outline</span>
+            save &amp; publish
+          </button>
+          <button type="reset" class="btn btn-outline-light m-1">
             <span class="material-icons mr-2">clear_all</span>
-            Clear all
+            clear
           </button>
         </div>
       </div>
-    </form>
-  </div>
+    </div>
+  </form>
 </template>
 
 <script>
+import { ref, reactive, computed, onMounted } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
+import Validators from "../../modules/Validators";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import IsLoading from "../../modules/IsLoading";
 
 export default {
   components: { QuillEditor },
-  data() {
-    return {
-      isValid: false,
+
+  setup(props) {
+    const isLoading = ref(false);
+    const isValid = ref(false);
+    const data = reactive({
+      categories: {},
+    });
+
+    const { start, stop } = IsLoading();
+
+    onMounted(() => {
+      axios.get("admin/categories/all").then((res) => {
+        data.categories = res.data.data;
+      });
+    });
+
+    const formData = reactive({
       code: "",
       title: "",
-      categor: "uncategorized",
-      lessons: "",
+      category: "",
       thumbnail: "",
       description: "",
-      imgTitle: "",
-      imgAlt: "",
-      draft: "",
-      isLoading: false,
-      categories: [],
+      draft: false,
+    });
+
+    const formIsValid = computed(() => {
+      return formData.title && formData.code;
+    });
+
+    const resetForm = () => {
+      isValid.value = false;
+      formData.code = "";
+      formData.title = "";
+      formData.category = "uncategorized";
+      formData.description = "";
+      formData.thumbnail = "";
+      formData.$refs.myEditor.setHTML("");
     };
-  },
-  mounted() {
-    this.getCategories();
-  },
-  methods: {
-    onImageUpload(image) {},
-    onFormSubmitHandlar() {
-      this.isLoading = true;
+
+    const onThumbnailUpload = (event) => {
+      const { fileType } = Validators();
+      let file = event.target.files[0];
+      if (fileType(file.name)) {
+        let reader = new FileReader();
+        reader.onload = (e) => {
+          formData.thumbnail = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // this.errors.push(`${file.name} is not a valid file type!`);
+      }
+    };
+
+    const onSaveAsDraft = () => {
+      formData.draft = true;
+      onFormSubmitHandlar();
+    };
+
+    const onFormSubmitHandlar = () => {
+      start();
       axios
-        .post("admin/courses", this.formDataHandler)
+        .post("admin/courses", formData)
         .then((res) => {
-          this.isLoading = false;
+          stop();
           Swal.fire({
             title: "Success",
             text: res.data.message,
@@ -174,52 +215,27 @@ export default {
               window.location = "/admin/courses";
             }
           });
-          this.resetForm();
+          resetForm();
         })
         .catch((err) => {
-          this.isLoading = false;
+          stop();
           Swal.fire({
             title: "Server Error!",
             text: err.response.data.message,
             icon: "warning",
           });
         });
-    },
-    resetForm() {
-      this.isValid = false;
-      this.code = "";
-      this.title = "";
-      this.category = "uncategorized";
-      this.lessons = "";
-      this.description = "";
-      this.imgTitle = "";
-      this.imgAlt = "";
-      this.draft = "";
-      this.isLoading = false;
-      this.$refs.myEditor.setHTML("");
-    },
-    getCategories() {
-      axios.get("admin/categories/all").then((res) => {
-        this.categories = res.data.data;
-      });
-    },
-  },
-  computed: {
-    formIsValid() {
-      return this.title && this.code && this.lessons;
-    },
-    formDataHandler() {
-      let fd = new FormData();
-      fd.append("code", this.code);
-      fd.append("title", this.title);
-      fd.append("category_id", this.category);
-      fd.append("lessons", this.lessons);
-      fd.append("description", this.description);
-      fd.append("imgTitle", this.imgTitle);
-      fd.append("alt", this.imgAlt);
-      fd.append("draft", this.draft);
-      return fd;
-    },
+    };
+
+    return {
+      data,
+      formData,
+      formIsValid,
+      onThumbnailUpload,
+      onFormSubmitHandlar,
+      onSaveAsDraft,
+      isLoading,
+    };
   },
 };
 </script>
