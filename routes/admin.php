@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClassroomMembersController;
+use App\Http\Controllers\Admin\ClassroomPostsController;
 use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
@@ -24,13 +25,16 @@ Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard'
  * Classroom
  */
 Route::view('classroom', 'admin.pages.classrooms.index')->name('classrooms');
-Route::view('classroom/create', 'admin.pages.classrooms.create')->name('classroom.create');
-Route::post('classroom', [ClassroomsController::class, 'store']);
-Route::get('classroom/all', [ClassroomsController::class, 'getPaginatedList']);
-Route::view('classroom/test', 'admin.pages.classrooms.show');
-Route::get('classroom/{classroom:unique_id}', [ClassroomsController::class, 'show']);
-Route::post('classroom/members/add', [ClassroomMembersController::class, 'store']);
-Route::get('classroom/{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
+Route::prefix('classroom')->name('classroom.')->group(function () {
+    Route::view('create', 'admin.pages.classrooms.create')->name('create');
+    Route::post('/', [ClassroomsController::class, 'store']);
+    Route::get('all', [ClassroomsController::class, 'getPaginatedList']);
+    Route::view('test', 'admin.pages.classrooms.show');
+    Route::get('{classroom:unique_id}', [ClassroomsController::class, 'show']);
+    Route::post('members/add', [ClassroomMembersController::class, 'store']);
+    Route::get('{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
+    Route::post('{classroom:unique_id}/posts', [ClassroomPostsController::class, 'store']);
+});
 
 // Category routes
 Route::prefix('categories')->name('categories.')->group(function () {
