@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ClassroomPostsController;
 use App\Http\Controllers\CoursesController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
@@ -44,4 +45,8 @@ Route::middleware('auth')->group(function () {
      */
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('profile', [ProfileController::class, 'update']);
+
+    Route::prefix('classrooms')->group(function () {
+        Route::get('{classroom:unique_id}/posts/list', [ClassroomPostsController::class, 'getPaginatedList']);
+    });
 });

@@ -5,6 +5,7 @@
 @section('content')
 
     <div class="container page__container">
+
         <div class="d-flex flex-column flex-sm-row align-items-sm-center mb-24pt"
                 style="white-space: nowrap;">
             <small class="flex text-muted text-headings text-uppercase mr-3 mb-2 mb-sm-0">Displaying 4 out of 10 courses</small>
