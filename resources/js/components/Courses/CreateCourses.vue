@@ -85,7 +85,7 @@
         <div class="d-flex align-items-center">
           <div class="form-group img-container">
             <label for="thumbnail" class="img-container-lbl"
-              >Click here to Upload Product Thumbnail</label
+              >Click here to Upload Thumbnail</label
             >
             <div class="row w-100" v-if="formData.thumbnail">
               <div class="col-12 img-wrapper">
@@ -104,7 +104,7 @@
         <div class="mt-5">
           <button
             type="button"
-            class="btn btn-outline-secondary mr-1"
+            class="btn btn-sm btn-outline-secondary mr-1"
             @click="onSaveAsDraft"
             :disabled="!formIsValid"
           >
@@ -113,13 +113,13 @@
           </button>
           <button
             type="submit"
-            class="btn btn-outline-primary m-1"
+            class="btn btn-sm btn-outline-primary m-1"
             :disabled="!formIsValid"
           >
             <span class="material-icons mr-2">add_circle_outline</span>
             save &amp; publish
           </button>
-          <button type="reset" class="btn btn-outline-light m-1">
+          <button type="reset" class="btn btn-sm btn-outline-light m-1">
             <span class="material-icons mr-2">clear_all</span>
             clear
           </button>

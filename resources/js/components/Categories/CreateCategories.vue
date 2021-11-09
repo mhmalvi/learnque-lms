@@ -30,15 +30,30 @@
         ></textarea>
       </div>
 
-      <div class="form-group">
-        <label>Thumbnail</label>
-        <input type="file" class="form-control" />
+      <div class="d-flex align-items-center">
+        <div class="form-group img-container">
+          <label for="thumbnail" class="img-container-lbl"
+            >Click here to Upload Thumbnail</label
+          >
+          <div class="row w-100" v-if="form.thumbnail">
+            <div class="col-12 img-wrapper">
+              <img :src="form.thumbnail" class="img-fluid" />
+            </div>
+          </div>
+          <input
+            type="file"
+            id="thumbnail"
+            class="form-control d-none"
+            @change="onThumbnailUpload"
+          />
+        </div>
       </div>
 
       <div class="form-group">
         <button
-          class="btn btn-sm btn-primary font-weight-light px-3"
+          class="btn btn-sm btn-outline-primary font-weight-light px-3"
           @click.prevent="submit"
+          :disabled="!formIsValid"
         >
           <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
           <i class="fas fa-plus-circle" v-else></i>
@@ -55,9 +70,10 @@
 </template>
 
 <script>
-import { ref, reactive } from "vue";
+import { ref, reactive, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
+import Validators from "../../modules/Validators";
 
 export default {
   setup() {
@@ -67,6 +83,7 @@ export default {
       title: "",
       slug: "",
       description: "",
+      thumbnail: "",
     });
 
     const message = reactive({
@@ -76,6 +93,24 @@ export default {
     });
 
     const store = useStore();
+
+    const onThumbnailUpload = (event) => {
+      const { fileType } = Validators();
+      let file = event.target.files[0];
+      if (fileType(file.name)) {
+        let reader = new FileReader();
+        reader.onload = (e) => {
+          form.thumbnail = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      } else {
+        // this.errors.push(`${file.name} is not a valid file type!`);
+      }
+    };
+
+    const formIsValid = computed(() => {
+      return form.title;
+    });
 
     function submit() {
       isSubmitting.value = true;
@@ -111,6 +146,8 @@ export default {
       form,
       submit,
       message,
+      onThumbnailUpload,
+      formIsValid,
     };
   },
 };
