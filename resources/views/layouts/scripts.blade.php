@@ -23,4 +23,6 @@
 <!-- Global Settings -->
 <script src="{{asset('assets/js/settings.js')}}"></script>
 
+<script src="https://apis.google.com/js/api.js" type="text/javascript"></script>
+
 @stack('js')

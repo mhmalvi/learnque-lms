@@ -23,6 +23,26 @@
             />
           </div>
 
+          <div>
+            <google-file-picker-component @filesSelected="handleFilesUpload" />
+          </div>
+
+          <div class="col-7">
+            <p
+              v-for="(file, index) in form.attachments"
+              :key="index"
+              class="d-flex justify-content-between p-2 align-items-center"
+            >
+              {{ file.name }}
+              <button
+                class="btn btn-flush btn-primary p-2"
+                @click="removeAttachment(file)"
+              >
+                <i class="fas fa-times"></i>
+              </button>
+            </p>
+          </div>
+
           <div class="form-group d-flex justify-content-end">
             <button
               class="btn btn-primary"
@@ -47,13 +67,15 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { reactive, computed, ref } from "vue";
 import { useStore } from "vuex";
+import GoogleFilePickerComponent from "./GoogleFilePickerComponent.vue";
 
 export default {
-  components: { QuillEditor },
+  components: { QuillEditor, GoogleFilePickerComponent },
   props: ["classroom_id"],
   setup({ classroom_id }, context) {
     const form = reactive({
       description: "",
+      attachments: [],
     });
     const description = ref(null); // for binding with the quill editor with reference
     const isSubmitting = ref(false);
@@ -98,8 +120,21 @@ export default {
 
     function resetForm() {
       description.value.setHTML("");
+      form.attachments = [];
+      form.description = "";
     }
-    console.log("context", context);
+
+    function handleFilesUpload(files) {
+      form.attachments = files;
+    }
+
+    function removeAttachment(file) {
+      form.attachments.forEach((item, index) => {
+        if (file.id == item.id) {
+          form.attachments.splice(index, 1);
+        }
+      });
+    }
 
     return {
       form,
@@ -108,6 +143,8 @@ export default {
       isSubmitting,
       description,
       isOpened,
+      handleFilesUpload,
+      removeAttachment,
     };
   },
 };
