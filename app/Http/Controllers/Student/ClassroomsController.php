@@ -31,8 +31,9 @@ class ClassroomsController extends Controller
             foreach ($classroom_members as $member) {
                 array_push($classrooms, $member->classroom);
             }
+
             return new ClassroomsCollection(
-                $this->paginate($classrooms)
+                $this->paginate($classrooms, 5, null, ['path' => '/student/classrooms/list'])
             );
         } catch (\Throwable $e) {
             return $e->getMessage();

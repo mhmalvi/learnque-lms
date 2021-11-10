@@ -15,6 +15,26 @@
       <div v-for="(classroom, index) in classrooms" :key="index">
         <classroom-item :classroom="classroom" />
       </div>
+      <nav
+        class="col-12 d-flex justify-content-center"
+        aria-label="Page navigation example"
+      >
+        <ul class="pagination">
+          <li
+            class="page-item"
+            v-for="(page, key) in links"
+            :key="key"
+            :class="page.url == null ? 'disabled' : ''"
+          >
+            <a
+              class="page-link"
+              href="javascript:void(0)"
+              @click="getLink(page.url)"
+              v-html="page.label"
+            ></a>
+          </li>
+        </ul>
+      </nav>
     </div>
   </div>
 </template>
@@ -30,15 +50,18 @@ export default {
     const classrooms = ref([]);
     const isLoading = ref(false);
     const itemsPerPage = ref(5);
+    const links = ref([]);
+    const action_link = "/student/classrooms/list";
 
-    function getClassrooms() {
+    function getClassrooms(link) {
       isLoading.value = true;
       axios
-        .get("/student/classrooms/list", {
+        .get(link, {
           items: itemsPerPage.value,
         })
         .then((res) => {
           classrooms.value = res.data.data;
+          links.value = res.data.meta.links;
         })
         .catch((err) => {
           console.log(err);
@@ -51,13 +74,18 @@ export default {
         .finally(() => (isLoading.value = false));
     }
 
+    function getLink(link) {
+      getClassrooms(link);
+    }
+
     onMounted(() => {
-      getClassrooms();
+      getClassrooms(action_link);
     });
 
     return {
       classrooms,
       isLoading,
+      links,
     };
   },
 };
