@@ -6,7 +6,7 @@
     <!-- // END Navbar Toggler -->
 
     <!-- Navbar Brand -->
-    <a href="" class="navbar-brand mr-16pt d-lg-none">
+    <a href="{{route('learnque')}}" class="navbar-brand mr-16pt d-lg-none">
         <span class="avatar avatar-sm navbar-brand-icon mr-0 mr-lg-8pt">
             <span class="avatar-title rounded bg-primary">
                 <img src="{{asset('assets/images/256_rsz_nicolas-horn-689011-unsplash.jpg')}}" alt="logo"class="img-fluid" />

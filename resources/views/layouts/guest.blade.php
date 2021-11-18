@@ -44,7 +44,7 @@
                     <div class="navbar navbar-expand navbar-light bg-white navbar-shadow" id="default-navbar" data-primary>
                         <div class="container page__container">
                             <!-- Navbar Brand -->
-                            <a href="" class="navbar-brand mr-16pt">
+                            <a href="{{route('learnque')}}" class="navbar-brand mr-16pt">
                                 <span class="avatar avatar-sm navbar-brand-icon mr-0 mr-lg-8pt">
                                     <span class="avatar-title rounded bg-primary">
                                         <img src="{{asset('assets/images/illustration/student/128/white.svg')}}" alt="logo" class="img-fluid" />
