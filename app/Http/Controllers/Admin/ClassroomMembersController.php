@@ -18,6 +18,7 @@ class ClassroomMembersController extends Controller
         $users = User::whereIn('name', $usernames)->get();
         $classroom = Classroom::where('unique_id', $request->classroom_id)->first();
 
+        dd($users);
         foreach ($users as $user) {
             if (
                 ClassroomMember::where('user_id', $user->id)->count() == 0 // check if user is already added

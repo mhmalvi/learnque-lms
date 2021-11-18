@@ -28,6 +28,12 @@ import ClassroomView from "./components/Classrooms/ClassroomView.vue";
 
 import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
+/**
+ * importing students components
+ */
+import StudentClassroomList from './components/Users/StudentClassroomList.vue';
+import StudentClassroomView from './components/Users/StudentClassroomView.vue';
+
 const app = createApp({});
 
 axios.defaults.baseURL = document.head.querySelector(
@@ -55,6 +61,11 @@ app.component("user-edit-profile", UserEditProfile);
 app.component("classroom-items-grid-list", ClassroomItemsGridList);
 app.component("classroom-view", ClassroomView);
 // End of Admin components
+
+// Students components
+app.component('student-classroom-list', StudentClassroomList);
+app.component('student-classroom-view', StudentClassroomView);
+// End of students components
 
 /**
  * Guest

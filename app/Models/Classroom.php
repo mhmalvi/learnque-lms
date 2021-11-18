@@ -20,4 +20,9 @@ class Classroom extends Model
     {
         return $this->hasMany(ClassroomMember::class);
     }
+
+    public function posts()
+    {
+        return $this->hasMany(ClassroomPost::class);
+    }
 }

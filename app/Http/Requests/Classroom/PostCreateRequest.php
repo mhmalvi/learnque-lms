@@ -5,6 +5,7 @@ namespace App\Http\Requests\Classroom;
 use App\Models\Classroom;
 use App\Models\ClassroomMember;
 use App\Models\ClassroomPost;
+use App\Models\ClassroomPostAttachment;
 
 class PostCreateRequest extends PostRequest
 {
@@ -38,10 +39,24 @@ class PostCreateRequest extends PostRequest
 
     public function save()
     {
-        ClassroomPost::create([
+        $classroom_post = ClassroomPost::create([
             'user_id' => auth()->user()->id,
             'classroom_id' => $this->getClassroomId(),
             'description' => $this->filled('description') ? $this->description : '',
         ]);
+
+        if (count($this->attachments)) {
+            try {
+                foreach ($this->attachments as $attachment) {
+                    ClassroomPostAttachment::create([
+                        'classroom_post_id' => $classroom_post->id,
+                        'title' => $attachment['name']
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $classroom_post->delete();
+                throw $e;
+            }
+        }
     }
 }
