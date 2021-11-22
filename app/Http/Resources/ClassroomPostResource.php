@@ -23,6 +23,7 @@ class ClassroomPostResource extends JsonResource
             'user' => new UserResource($this->user),
             'classroom_id' => $classroom->unique_id,
             'description' => $this->description,
+            'attachments' => $this->attachments,
             'created_at' => $this->created_at->format("d M, Y"),
         ];
     }

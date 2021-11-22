@@ -21,7 +21,7 @@ class ClassroomsController extends Controller
     public function getPaginatedList()
     {
         try {
-            $classroom_members = ClassroomMember::with('classroom')
+            $classroom_members = ClassroomMember::with('classroom', 'attachments')
                 ->where('user_id', auth()->user()->id)
                 ->limit(request('items'))
                 ->latest()
