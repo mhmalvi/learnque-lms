@@ -22800,7 +22800,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
 
     function handleFilesUpload(files) {
-      form.attachments = files;
+      form.attachments = form.attachments.concat(files);
     }
 
     function removeAttachment(file) {

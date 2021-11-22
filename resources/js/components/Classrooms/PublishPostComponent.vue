@@ -125,7 +125,7 @@ export default {
     }
 
     function handleFilesUpload(files) {
-      form.attachments = files;
+      form.attachments = form.attachments.concat(files);
     }
 
     function removeAttachment(file) {

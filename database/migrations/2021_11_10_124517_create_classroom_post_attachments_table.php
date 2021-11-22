@@ -23,6 +23,9 @@ class CreateClassroomPostAttachmentsTable extends Migration
             $table->string('title');
             $table->string('type')->nullable();
             $table->string('origin')->nullable();
+            $table->text('icon_url')->nullable();
+            $table->text('file_url')->nullable();
+            $table->bigInteger('file_size')->nullable();
 
             $table->timestamps();
         });
