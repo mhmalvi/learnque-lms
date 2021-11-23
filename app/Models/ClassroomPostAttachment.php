@@ -15,4 +15,9 @@ class ClassroomPostAttachment extends Model
     {
         return $this->belongsTo(ClassroomPost::class);
     }
+
+    public function getFileSizeAttribute($value)
+    {
+        return number_format((float)$value / 1000000, 2); // 1 mb = 1000000 bytes
+    }
 }

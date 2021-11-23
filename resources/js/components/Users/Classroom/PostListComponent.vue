@@ -14,7 +14,7 @@
 <script>
 import { ref, onMounted } from "vue";
 import axios from "axios";
-import PostComponent from "./PostComponent.vue";
+import PostComponent from "../../ClassroomPostComponent.vue";
 import Swal from "sweetalert2";
 
 export default {

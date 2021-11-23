@@ -9,36 +9,8 @@
       <h5>No posts here</h5>
     </div>
     <div v-else>
-      <div class="card" v-for="(post, index) in posts" :key="index">
-        <div class="card-body">
-          <h4 class="card-title">
-            {{ post.user.username }}
-          </h4>
-          <p class="card-subtitle text-muted mb-2">{{ post.created_at }}</p>
-          <div
-            class="card-text post-description"
-            v-html="post.description"
-          ></div>
-          <div class="card-text" v-if="post.attachments.length > 0">
-            <div
-              class="
-                file-attachment-item
-                badge badge-info
-                rounded-pill
-                mr-1
-                py-1
-                px-2
-              "
-              v-for="(attachment, index) in post.attachments"
-              :key="index"
-            >
-              <a :href="attachment.file_url" target="_blank" class="text-light">
-                {{ attachment.title }}
-              </a>
-            </div>
-          </div>
-        </div>
-        <h6 class="card-footer mb-0">0 comment</h6>
+      <div v-for="(post, index) in posts" :key="index">
+        <post-component :post="post" />
       </div>
     </div>
   </div>
@@ -48,9 +20,11 @@
 import { ref, onMounted, watch } from "vue";
 import Swal from "sweetalert2";
 import { useStore } from "vuex";
+import PostComponent from "../ClassroomPostComponent.vue";
 
 export default {
   props: ["classroom_id"],
+  components: { PostComponent },
   setup({ classroom_id }) {
     const posts = ref([]);
     const isLoading = ref(false);
