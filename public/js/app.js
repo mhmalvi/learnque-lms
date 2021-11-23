@@ -22827,7 +22827,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     }
 
     function handleFilesUpload(files) {
-      form.attachments = files;
+      form.attachments = form.attachments.concat(files);
     }
 
     function removeAttachment(file) {
@@ -24963,8 +24963,13 @@ var _hoisted_10 = {
   "class": "card-subtitle text-muted mb-2"
 };
 var _hoisted_11 = ["innerHTML"];
+var _hoisted_12 = {
+  key: 0,
+  "class": "card-text"
+};
+var _hoisted_13 = ["href"];
 
-var _hoisted_12 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h6", {
+var _hoisted_14 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h6", {
   "class": "card-footer mb-0"
 }, "0 comment", -1
 /* HOISTED */
@@ -24984,7 +24989,20 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       innerHTML: post.description
     }, null, 8
     /* PROPS */
-    , _hoisted_11)]), _hoisted_12]);
+    , _hoisted_11), post.attachments.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_12, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(post.attachments, function (attachment, index) {
+      return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+        "class": "file-attachment-item badge badge-info rounded-pill mr-1 py-1 px-2",
+        key: index
+      }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+        href: attachment.file_url,
+        target: "_blank",
+        "class": "text-light"
+      }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(attachment.title), 9
+      /* TEXT, PROPS */
+      , _hoisted_13)]);
+    }), 128
+    /* KEYED_FRAGMENT */
+    ))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), _hoisted_14]);
   }), 128
   /* KEYED_FRAGMENT */
   ))]))]);
@@ -25273,9 +25291,7 @@ var _hoisted_5 = {
 
 var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
   "class": "form-group"
-}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
-  "class": "form-label"
-}, "Publish a post")], -1
+}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h4", null, "Publish a post")], -1
 /* HOISTED */
 );
 
@@ -26026,8 +26042,13 @@ var _hoisted_4 = {
   "class": "card-subtitle text-muted mb-2"
 };
 var _hoisted_5 = ["innerHTML"];
+var _hoisted_6 = {
+  key: 0,
+  "class": "card-text"
+};
+var _hoisted_7 = ["href"];
 
-var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h6", {
+var _hoisted_8 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h6", {
   "class": "card-footer mb-0"
 }, "0 comment", -1
 /* HOISTED */
@@ -26043,7 +26064,20 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     innerHTML: $setup.post.description
   }, null, 8
   /* PROPS */
-  , _hoisted_5)]), _hoisted_6]);
+  , _hoisted_5), $setup.post.attachments.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_6, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.post.attachments, function (attachment, index) {
+    return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", {
+      "class": "file-attachment-item badge badge-info rounded-pill mr-1 py-1 px-2",
+      key: index
+    }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+      href: attachment.file_url,
+      target: "_blank",
+      "class": "text-light"
+    }, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(attachment.title), 9
+    /* TEXT, PROPS */
+    , _hoisted_7)]);
+  }), 128
+  /* KEYED_FRAGMENT */
+  ))])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), _hoisted_8]);
 }
 
 /***/ }),

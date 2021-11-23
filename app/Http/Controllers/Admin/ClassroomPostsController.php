@@ -15,7 +15,7 @@ class ClassroomPostsController extends Controller
     {
         try {
             return new ClassroomPostsCollection(
-                ClassroomPost::where('classroom_id', $classroom->id)
+                ClassroomPost::with('attachments')->where('classroom_id', $classroom->id)
                     ->latest()->paginate(request('items'))
             );
         } catch (\Throwable $e) {

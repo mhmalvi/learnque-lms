@@ -10,7 +10,7 @@
       <div v-if="isOpened">
         <form @submit.prevent="handleFormSubmit">
           <div class="form-group">
-            <label class="form-label">Publish a post</label>
+            <h4>Publish a post</h4>
           </div>
 
           <div class="form-group">
@@ -125,7 +125,7 @@ export default {
     }
 
     function handleFilesUpload(files) {
-      form.attachments = files;
+      form.attachments = form.attachments.concat(files);
     }
 
     function removeAttachment(file) {

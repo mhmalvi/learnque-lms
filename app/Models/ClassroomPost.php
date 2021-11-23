@@ -15,4 +15,9 @@ class ClassroomPost extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    public function attachments()
+    {
+        return $this->hasMany(ClassroomPostAttachment::class);
+    }
 }

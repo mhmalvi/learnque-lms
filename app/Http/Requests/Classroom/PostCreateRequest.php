@@ -50,7 +50,12 @@ class PostCreateRequest extends PostRequest
                 foreach ($this->attachments as $attachment) {
                     ClassroomPostAttachment::create([
                         'classroom_post_id' => $classroom_post->id,
-                        'title' => $attachment['name']
+                        'title' => $attachment['name'],
+                        'origin' => 'google_drive',
+                        'type' => $attachment['type'],
+                        'file_url' => $attachment['url'],
+                        'icon_url' => $attachment['iconUrl'],
+                        'file_size' => $attachment['sizeBytes'],
                     ]);
                 }
             } catch (\Exception $e) {
