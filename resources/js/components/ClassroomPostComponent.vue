@@ -8,7 +8,11 @@
       <div class="card-text post-description" v-html="post.description"></div>
       <div class="card-text" v-if="post.attachments.length > 0">
         <div class="row mt-2">
-          <div v-for="(attachment, index) in post.attachments" :key="index">
+          <div
+            class="col-12"
+            v-for="(attachment, index) in post.attachments"
+            :key="index"
+          >
             <classroom-post-attachment-component :attachment="attachment" />
           </div>
         </div>

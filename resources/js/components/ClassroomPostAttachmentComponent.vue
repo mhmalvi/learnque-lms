@@ -35,4 +35,10 @@ export default {
   width: 35px;
   height: 35px;
 }
+.media {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 5px 2px;
+  width: 100%;
+}
 </style>
