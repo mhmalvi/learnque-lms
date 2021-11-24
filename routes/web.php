@@ -41,7 +41,7 @@ Route::get('course/{course:uuid}', [CoursesController::class, 'show']);
 require __DIR__ . '/auth.php';
 
 
-Route::middleware('auth:web')->group(function () {
+Route::middleware('auth:web,admin')->group(function () {
     /**
      * User profile routes
      */

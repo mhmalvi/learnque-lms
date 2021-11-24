@@ -49,7 +49,7 @@ import AddStudentComponent from "./AddStudentComponent.vue";
 import AddTeacherComponent from "./AddTeacherComponent.vue";
 import StudentListComponent from "./StudentListComponent.vue";
 import PublishPostComponent from "./PublishPostComponent.vue";
-import PostListComponent from "./ClassroomPostListComponent.vue";
+import PostListComponent from "../Users/Classroom/PostListComponent.vue";
 import TeacherListComponent from "./TeacherListComponent.vue";
 
 export default {

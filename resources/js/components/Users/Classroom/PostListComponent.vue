@@ -33,7 +33,7 @@ export default {
     function getPosts() {
       isLoading.value = true;
       axios
-        .get("classrooms/" + classroom_id + "/posts/list")
+        .get("/classrooms/" + classroom_id + "/posts/list")
         .then((res) => {
           posts.value = res.data.data;
         })
