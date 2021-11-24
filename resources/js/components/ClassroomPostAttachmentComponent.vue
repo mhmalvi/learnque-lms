@@ -6,7 +6,17 @@
   >
     <span class="avatar mr-2">
       <span class="avatar-title rounded-circle">
-        <i class="material-icons font-size-24pt">attach_file</i>
+        <i
+          class="material-icons font-size-24pt"
+          v-if="attachment.type == 'video'"
+          >movie</i
+        >
+        <i
+          class="material-icons font-size-24pt"
+          v-else-if="attachment.type == 'photo'"
+          >image</i
+        >
+        <i class="material-icons font-size-24pt" v-else>attach_file</i>
       </span>
     </span>
     <span class="media-body" style="line-height: 1.5">

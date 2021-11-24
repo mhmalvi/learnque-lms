@@ -24655,36 +24655,41 @@ var _withScopeId = function _withScopeId(n) {
 };
 
 var _hoisted_1 = ["href"];
-
-var _hoisted_2 = /*#__PURE__*/_withScopeId(function () {
-  return /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "avatar mr-2"
-  }, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", {
-    "class": "avatar-title rounded-circle"
-  }, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
-    "class": "material-icons font-size-24pt"
-  }, "attach_file")])], -1
-  /* HOISTED */
-  );
-});
-
+var _hoisted_2 = {
+  "class": "avatar mr-2"
+};
 var _hoisted_3 = {
+  "class": "avatar-title rounded-circle"
+};
+var _hoisted_4 = {
+  key: 0,
+  "class": "material-icons font-size-24pt"
+};
+var _hoisted_5 = {
+  key: 1,
+  "class": "material-icons font-size-24pt"
+};
+var _hoisted_6 = {
+  key: 2,
+  "class": "material-icons font-size-24pt"
+};
+var _hoisted_7 = {
   "class": "media-body",
   style: {
     "line-height": "1.5"
   }
 };
-var _hoisted_4 = {
+var _hoisted_8 = {
   "class": "text-primary"
 };
 
-var _hoisted_5 = /*#__PURE__*/_withScopeId(function () {
+var _hoisted_9 = /*#__PURE__*/_withScopeId(function () {
   return /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br", null, null, -1
   /* HOISTED */
   );
 });
 
-var _hoisted_6 = {
+var _hoisted_10 = {
   "class": "text-50"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
@@ -24692,9 +24697,9 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     href: $setup.attachment.file_url,
     target: "_blank",
     "class": "media align-items-center mt-2 text-decoration-0 pl-2 pr-3"
-  }, [_hoisted_2, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_3, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_4, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.attachment.title), 1
+  }, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_3, [$setup.attachment.type == 'video' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_4, "movie")) : $setup.attachment.type == 'photo' ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_5, "image")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_6, "attach_file"))])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_7, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_8, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.attachment.title), 1
   /* TEXT */
-  ), _hoisted_5, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_6, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.attachment.file_size) + " MB", 1
+  ), _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", _hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.attachment.file_size) + " MB", 1
   /* TEXT */
   )])], 8
   /* PROPS */
