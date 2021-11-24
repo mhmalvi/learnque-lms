@@ -44,6 +44,7 @@ export default {
     const action = "/admin/classroom/" + classroom_id + "/teachers";
     const teachers = ref([]);
     const isLoading = ref(false);
+    const isUpdating = ref(false);
 
     const getAddedTeachers = (action) => {
       isLoading.value = true;
@@ -63,6 +64,8 @@ export default {
 
     return {
       teachers,
+      isLoading,
+      isUpdating,
     };
   },
 };

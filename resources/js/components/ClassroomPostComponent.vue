@@ -1,5 +1,5 @@
 <template>
-  <div class="card">
+  <div class="card post">
     <div class="card-body">
       <h4 class="card-title">
         {{ post.user.username }}
@@ -35,3 +35,19 @@ export default {
   },
 };
 </script>
+
+<style scoped>
+.post {
+  animation: fadeIn 0.2s linear;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+  }
+
+  100% {
+    opacity: 1;
+  }
+}
+</style>

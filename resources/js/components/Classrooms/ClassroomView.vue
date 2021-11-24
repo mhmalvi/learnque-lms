@@ -37,7 +37,10 @@
           </div>
         </div>
 
-        <student-list-component :classroom_id="classroom.unique_id" />
+        <student-list-component
+          :classroom_id="classroom.unique_id"
+          :editable="true"
+        />
       </div>
     </div>
   </div>
@@ -49,7 +52,7 @@ import AddStudentComponent from "./AddStudentComponent.vue";
 import AddTeacherComponent from "./AddTeacherComponent.vue";
 import StudentListComponent from "./StudentListComponent.vue";
 import PublishPostComponent from "./PublishPostComponent.vue";
-import PostListComponent from "../Users/Classroom/PostListComponent.vue";
+import PostListComponent from "../PostListComponent.vue";
 import TeacherListComponent from "./TeacherListComponent.vue";
 
 export default {

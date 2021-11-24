@@ -29,7 +29,7 @@
 </template>
 
 <script>
-import PostListComponent from "./Classroom/PostListComponent.vue";
+import PostListComponent from "../PostListComponent.vue";
 import PublishPostComponent from "../Classrooms/PublishPostComponent.vue";
 import StudentListComponent from "../Classrooms/StudentListComponent.vue";
 
