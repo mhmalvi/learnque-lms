@@ -1,7 +1,7 @@
 import { createStore } from "vuex";
 import { category } from "./course/category";
 import { post } from "./classroom/post.js";
-import { student } from './classroom/student';
+import { student } from "./classroom/student";
 
 export default createStore({
     modules: {
@@ -10,9 +10,26 @@ export default createStore({
         classroomStudents: student,
     },
     state() {
-        return {};
+        return {
+            user_mode: "", // 'teacher' | 'admin' | 'student'
+            classroom_id: "", // classroom unique_id
+        };
     },
-    getters: {},
+    getters: {
+        getClassroomId(state) {
+            return state.classroom_id;
+        },
+        getUserMode(state) {
+            return state.user_mode;
+        },
+    },
+    mutations: {
+        updateClassroomId(state, id) {
+            state.classroom_id = id;
+        },
+        updateUserMode(state, mode) {
+            state.user_id = mode;
+        },
+    },
     actions: {},
-    mutations: {},
 });

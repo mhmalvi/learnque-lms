@@ -57,14 +57,15 @@ import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 
 export default {
-  props: ["classroom_id"],
-  setup({ classroom_id }) {
+  setup() {
     const students = ref([]);
     const student_select = ref("");
     const selected_students = ref([]);
     const isSubmitting = ref(false);
 
     const store = useStore();
+
+    const classroom_id = store.getters.getClassroomId;
 
     function getStudents() {
       axios

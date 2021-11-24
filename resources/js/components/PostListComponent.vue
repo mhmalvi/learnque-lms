@@ -32,11 +32,13 @@ import Swal from "sweetalert2";
 
 export default {
   components: { PostComponent },
-  props: ["classroom_id"],
-  setup({ classroom_id }) {
+  setup() {
+    const store = useStore();
+
+    const classroom_id = store.getters.getClassroomId;
+
     const posts = ref([]);
     const isLoading = ref(false);
-    const store = useStore();
     const loadingMore = ref(false);
     const meta = reactive({
       current_page: null,

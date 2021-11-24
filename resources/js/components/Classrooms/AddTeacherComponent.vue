@@ -41,13 +41,17 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 
 export default {
-  props: ["classroom_id"],
-  setup({ classroom_id }) {
+  setup() {
     const teachers = ref([]);
     const teacher_select = ref("");
     const isSubmitting = ref(false);
+
+    const store = useStore();
+
+    const classroom_id = store.getters.getClassroomId;
 
     function getTeachers() {
       axios

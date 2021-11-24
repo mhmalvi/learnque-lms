@@ -37,10 +37,14 @@
 <script>
 import { ref, onMounted } from "vue";
 import axios from "axios";
+import { useStore } from "vuex";
 
 export default {
-  props: ["classroom_id"],
-  setup({ classroom_id }) {
+  setup() {
+    const store = useStore();
+
+    const classroom_id = store.getters.getClassroomId;
+
     const action = "/admin/classroom/" + classroom_id + "/teachers";
     const teachers = ref([]);
     const isLoading = ref(false);

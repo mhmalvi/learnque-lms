@@ -71,8 +71,11 @@ import GoogleFilePickerComponent from "./GoogleFilePickerComponent.vue";
 
 export default {
   components: { QuillEditor, GoogleFilePickerComponent },
-  props: ["classroom_id"],
-  setup({ classroom_id }, context) {
+  setup() {
+    const store = useStore();
+
+    const classroom_id = store.getters.getClassroomId;
+
     const form = reactive({
       description: "",
       attachments: [],
@@ -85,8 +88,6 @@ export default {
     });
 
     const isOpened = ref(false);
-
-    const store = useStore();
 
     function handleFormSubmit() {
       if (description.value.getText().trim().length == 0) {

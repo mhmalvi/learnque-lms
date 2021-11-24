@@ -41,13 +41,15 @@ import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 
 export default {
-  props: ["classroom_id", "editable"],
-  setup({ classroom_id, editable }) {
+  setup() {
+    const store = useStore();
+
+    const classroom_id = store.getters.getClassroomId;
+    const editable = store.getters.getUserMode == "admin" ? true : false;
+
     const students = ref([]);
     const isLoading = ref(false);
     const isUpdating = ref(false);
-
-    const store = useStore();
 
     function getAddedStudents() {
       students.value = [];
