@@ -94,7 +94,7 @@ export default {
       }
       isSubmitting.value = true;
       axios
-        .post("/admin/classroom/" + classroom_id + "/posts", {
+        .post("/classrooms/posts/publish", {
           ...form,
           classroom_id,
         })

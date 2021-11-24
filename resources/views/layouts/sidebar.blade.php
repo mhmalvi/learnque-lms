@@ -11,7 +11,11 @@
 
         <div class="sidebar-heading">User Type</div>
         <ul class="sidebar-menu">
-            @include('components.student-nav-links')
+            @if(auth()->user()->user_type == 'student')
+                @include('components.student-nav-links')
+            @elseif(auth()->user()->user_type == 'teacher')
+                @include('components.teacher-nav-links')
+            @endif
 
             {{-- @include('components.teacher-nav-links') --}}
 

@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\ClassroomMembersController;
+use App\Http\Controllers\ClassroomsController;
 use App\Http\Controllers\ClassroomPostsController;
 use App\Http\Controllers\CoursesController;
 use App\Http\Controllers\ProfileController;
@@ -39,14 +41,19 @@ Route::get('course/{course:uuid}', [CoursesController::class, 'show']);
 require __DIR__ . '/auth.php';
 
 
-Route::middleware('auth')->group(function () {
+Route::middleware('auth:web')->group(function () {
     /**
      * User profile routes
      */
     Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::post('profile', [ProfileController::class, 'update']);
 
-    Route::prefix('classrooms')->group(function () {
+    Route::prefix('classrooms')->name('classrooms.')->group(function () {
+        Route::get('/', [ClassroomsController::class, 'index'])->name('index');
         Route::get('{classroom:unique_id}/posts/list', [ClassroomPostsController::class, 'getPaginatedList']);
+        Route::get('list', [ClassroomsController::class, 'getPaginatedList']);
+        Route::get('{classroom:unique_id}', [ClassroomsController::class, 'show']);
+        Route::post('posts/publish', [ClassroomPostsController::class, 'store']);
+        Route::get('{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
     });
 });

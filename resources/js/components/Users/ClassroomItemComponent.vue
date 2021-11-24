@@ -12,7 +12,7 @@
         data-trigger="click"
       >
         <a
-          href=""
+          :href="'/classrooms/' + classroom.unique_id"
           class="card-img-top js-image"
           data-position=""
           data-height="140"
@@ -31,7 +31,7 @@
             <div class="flex">
               <a
                 class="card-title"
-                :href="'/student/classrooms/' + classroom.unique_id"
+                :href="'/classrooms/' + classroom.unique_id"
                 >{{ classroom.title }}</a
               >
               <small class="text-50 font-weight-bold mb-4pt"

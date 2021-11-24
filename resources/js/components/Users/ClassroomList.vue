@@ -1,7 +1,7 @@
 <template>
   <div>
     <div class="d-flex justify-content-center" v-if="isLoading">
-      <h5>
+      <h5 class="mt-5">
         <i class="fas fa-circle-notch fa-spin"></i>
       </h5>
     </div>
@@ -42,7 +42,7 @@
 <script>
 import axios from "axios";
 import { ref, onMounted } from "vue";
-import ClassroomItem from "./StudentClassroomItemComponent.vue";
+import ClassroomItem from "./ClassroomItemComponent.vue";
 
 export default {
   components: { ClassroomItem },
@@ -51,7 +51,7 @@ export default {
     const isLoading = ref(false);
     const itemsPerPage = ref(5);
     const links = ref([]);
-    const action_link = "/student/classrooms/list";
+    const action_link = "/classrooms/list";
 
     function getClassrooms(link) {
       isLoading.value = true;

@@ -31,8 +31,8 @@ import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 /**
  * importing students components
  */
-import StudentClassroomList from './components/Users/StudentClassroomList.vue';
-import StudentClassroomView from './components/Users/StudentClassroomView.vue';
+import ClassroomList from "./components/Users/ClassroomList.vue";
+import StudentClassroomView from "./components/Users/ClassroomView.vue";
 
 const app = createApp({});
 
@@ -63,8 +63,8 @@ app.component("classroom-view", ClassroomView);
 // End of Admin components
 
 // Students components
-app.component('student-classroom-list', StudentClassroomList);
-app.component('student-classroom-view', StudentClassroomView);
+app.component("student-classroom-list", ClassroomList);
+app.component("student-classroom-view", StudentClassroomView);
 // End of students components
 
 /**

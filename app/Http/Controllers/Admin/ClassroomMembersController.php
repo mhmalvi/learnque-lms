@@ -18,7 +18,6 @@ class ClassroomMembersController extends Controller
         $users = User::whereIn('name', $usernames)->get();
         $classroom = Classroom::where('unique_id', $request->classroom_id)->first();
 
-        dd($users);
         foreach ($users as $user) {
             if (
                 ClassroomMember::where('user_id', $user->id)->count() == 0 // check if user is already added
@@ -36,14 +35,19 @@ class ClassroomMembersController extends Controller
         ], 200);
     }
 
-    public function getStudents(Classroom $classroom)
+    public function getTeachers(Classroom $classroom)
     {
-        $students = ClassroomMember::with('user')
+        $teachers = ClassroomMember::with('user')
             ->where('classroom_id', $classroom->id)
             ->get()
             ->filter(function ($res) {
-                return $res->user->user_type == 'student';
+                return $res->user->user_type == 'teacher';
             });
-        return new ClassroomMembersCollection($students);
+
+        try {
+            return new ClassroomMembersCollection($teachers);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 503);
+        }
     }
 }

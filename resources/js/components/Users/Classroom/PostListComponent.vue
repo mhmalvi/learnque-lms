@@ -13,6 +13,7 @@
 
 <script>
 import { ref, onMounted } from "vue";
+import { useStore } from "vuex";
 import axios from "axios";
 import PostComponent from "../../ClassroomPostComponent.vue";
 import Swal from "sweetalert2";
@@ -23,6 +24,7 @@ export default {
   setup({ classroom_id }) {
     const posts = ref([]);
     const isLoading = ref(false);
+    const store = useStore();
 
     onMounted(() => {
       getPosts();
@@ -46,6 +48,15 @@ export default {
           isLoading.value = false;
         });
     }
+
+    store.watch(
+      (state, _) => {
+        return state.classroomPosts.newPosts;
+      },
+      (newVal, oldVal) => {
+        getPosts();
+      }
+    );
 
     return {
       posts,

@@ -29,13 +29,15 @@
           </div>
         </div>
 
+        <teacher-list-component :classroom_id="classroom.unique_id" />
+
         <div class="card">
           <div class="card-body">
             <add-student-component :classroom_id="classroom.unique_id" />
           </div>
         </div>
 
-        <students-list-component :classroom_id="classroom.unique_id" />
+        <student-list-component :classroom_id="classroom.unique_id" />
       </div>
     </div>
   </div>
@@ -45,17 +47,19 @@
 import { ref } from "vue";
 import AddStudentComponent from "./AddStudentComponent.vue";
 import AddTeacherComponent from "./AddTeacherComponent.vue";
-import StudentsListComponent from "./StudentsListComponent.vue";
+import StudentListComponent from "./StudentListComponent.vue";
 import PublishPostComponent from "./PublishPostComponent.vue";
 import PostListComponent from "./ClassroomPostListComponent.vue";
+import TeacherListComponent from "./TeacherListComponent.vue";
 
 export default {
   components: {
     AddStudentComponent,
     AddTeacherComponent,
-    StudentsListComponent,
+    StudentListComponent,
     PublishPostComponent,
     PostListComponent,
+    TeacherListComponent,
   },
   props: ["classroom_data"],
   setup(props) {

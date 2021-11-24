@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Student;
+namespace App\Http\Controllers;
 
 use App\Http\Controllers\Controller;
 use App\Http\Resources\ClassroomsCollection;
@@ -15,7 +15,7 @@ class ClassroomsController extends Controller
 {
     public function index()
     {
-        return view('students.pages.classrooms.index');
+        return view('user.pages.classrooms.index');
     }
 
     public function getPaginatedList()
@@ -53,6 +53,6 @@ class ClassroomsController extends Controller
     public function show(Classroom $classroom)
     {
         $classroom->load('posts.user');
-        return view('students.pages.classrooms.show', compact('classroom'));
+        return view('user.pages.classrooms.show', compact('classroom'));
     }
 }

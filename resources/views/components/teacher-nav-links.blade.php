@@ -5,6 +5,13 @@
     </a>
 </li>
 <li class="sidebar-menu-item">
+    <a class="sidebar-menu-button"
+        href="{{ route('classrooms.index') }}">
+        <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">class</span>
+        <span class="sidebar-menu-text">My Classrooms</span>
+    </a>
+</li>
+<li class="sidebar-menu-item">
     <a class="sidebar-menu-button" data-toggle="collapse" href="#course_menu">
         <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">library_books</span>
         Course

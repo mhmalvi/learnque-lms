@@ -9,7 +9,7 @@
 
     <li class="sidebar-menu-item">
         <a class="sidebar-menu-button"
-            href="{{ route('student.classrooms.index') }}">
+            href="{{ route('classrooms.index') }}">
             <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">class</span>
             <span class="sidebar-menu-text">My Classrooms</span>
         </a>

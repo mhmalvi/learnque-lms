@@ -8,7 +8,7 @@
     </h4>
     <label class="form-label d-flex justify-content-between" v-else>
       <span>Students List</span>
-      <button class="btn btn-outline-primary btn-sm">
+      <button class="btn btn-outline-primary btn-sm" v-if="editable">
         <i class="fas fa-circle-notch mr-2 fa-spin" v-if="isUpdating"></i>
         <i class="fas fa-plus-circle mr-2" v-else></i>
         Update
@@ -24,7 +24,11 @@
         <span>
           {{ student }}
         </span>
-        <a href="javascript:void(0)" @click="removeStudent(index)">
+        <a
+          href="javascript:void(0)"
+          @click="removeStudent(index)"
+          v-if="editable"
+        >
           <i class="fas fa-times ml-2"></i>
         </a>
       </li>
@@ -37,8 +41,8 @@ import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 
 export default {
-  props: ["classroom_id"],
-  setup({ classroom_id }) {
+  props: ["classroom_id", "editable"],
+  setup({ classroom_id, editable }) {
     const students = ref([]);
     const isLoading = ref(false);
     const isUpdating = ref(false);
@@ -49,7 +53,7 @@ export default {
       students.value = [];
       isLoading.value = true;
       axios
-        .get("/admin/classroom/" + classroom_id + "/students")
+        .get("/classrooms/" + classroom_id + "/students")
         .then((res) => {
           for (let key in res.data.data) {
             students.value.push(res.data.data[key].user.username);
@@ -87,6 +91,7 @@ export default {
       isLoading,
       students,
       isUpdating,
+      editable,
     };
   },
 };
