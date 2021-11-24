@@ -20,8 +20,8 @@ class PostCreateRequest extends PostRequest
             ->where('user_id', auth()->user()->id)
             ->first();
 
-        return !empty($classroom_member) && ($classroom_member->user->user_type == 'teacher' ||
-            auth()->guard('admin')->check());
+        return !empty($classroom_member) && $classroom_member->user->user_type == 'teacher' ||
+            auth()->guard('admin')->check();
     }
 
     /**
