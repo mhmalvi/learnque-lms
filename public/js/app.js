@@ -27710,8 +27710,7 @@ var router = (0,vue_router__WEBPACK_IMPORTED_MODULE_23__.createRouter)({
   history: (0,vue_router__WEBPACK_IMPORTED_MODULE_23__.createWebHashHistory)(),
   routes: _routes__WEBPACK_IMPORTED_MODULE_22__.routes
 });
-app.use(router);
-app.use(_store__WEBPACK_IMPORTED_MODULE_1__["default"]).mount("#app");
+app.use(router).use(_store__WEBPACK_IMPORTED_MODULE_1__["default"]).mount("#app");
 
 __webpack_require__(/*! alpinejs */ "./node_modules/alpinejs/dist/alpine.js");
 
