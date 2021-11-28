@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
+use App\Http\Controllers\Admin\LiveClassesController;
 use App\Http\Controllers\Admin\StudentsController;
 use App\Http\Controllers\Admin\TeachersController;
 use Illuminate\Support\Facades\Route;
@@ -35,6 +36,11 @@ Route::prefix('classroom')->name('classroom.')->group(function () {
     Route::get('{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
     Route::post('{classroom:unique_id}/posts', [ClassroomPostsController::class, 'store']);
     Route::get('{classroom:unique_id}/posts', [ClassroomPostsController::class, 'getPaginatedList']);
+});
+
+//Live Class
+Route::prefix('liveclass')->name('liveclass.')->group(function () {
+    Route::get('/', [LiveClassesController::class, 'index'])->name('index');
 });
 
 // Category routes
