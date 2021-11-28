@@ -35,14 +35,15 @@
                     <span>
                       {{ student.username }}
                     </span>
-                    <div class="pt-1">
+                    <div class="pt-3 action-links">
                       <a
                         :href="'/admin/students/edit/' + student.username"
-                        class="btn text-primary pl-0"
+                        class="text-primary"
                         >Edit</a
                       >
                       <a
-                        class="btn text-primary pl-0"
+                        href="javascript:void(0)"
+                        class="text-primary"
                         @click.prevent="handleUserDelete(student)"
                         >Delete</a
                       >
@@ -133,3 +134,5 @@ export default {
   },
 };
 </script>
+<style scoped>
+</style>

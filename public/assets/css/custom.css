@@ -54,3 +54,7 @@
     align-items: center;
     z-index: 1000;
 }
+
+.action-links a:nth-child(even) {
+    margin: 0px 10px;
+}
