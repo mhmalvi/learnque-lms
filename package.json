@@ -14,15 +14,15 @@
         "alpinejs": "^2.7.3",
         "autoprefixer": "^10.1.0",
         "axios": "^0.21",
-        "laravel-mix": "^5.0.1",
         "lodash": "^4.17.19",
         "postcss": "^8.3.11",
         "postcss-import": "^12.0.1",
         "tailwindcss": "^2.0.2",
-        "vue-loader": "^16.8.2"
+        "vue-loader": "^16.2.0"
     },
     "dependencies": {
         "@vueup/vue-quill": "^1.0.0-beta.7",
+        "laravel-mix": "^6.0.39",
         "sweetalert2": "^11.1.9",
         "vue": "^3.2.20",
         "vuex": "^4.0.2"
