@@ -1,6 +1,7 @@
 import PostsTabComponent from "./components/Classrooms/ClassroomView/PostsTabComponent.vue";
 import StudentsTabComponent from "./components/Classrooms/ClassroomView/StudentsTabComponent.vue";
 import TeachersTabComponent from "./components/Classrooms/ClassroomView/TeacherTabComponent.vue";
+import NotFound from "./components/NotFound.vue";
 
 const routes = [
     {
@@ -27,6 +28,11 @@ const routes = [
     {
         path: "/admin/classrooms/:classroom_id/teachers",
         component: TeachersTabComponent,
+    },
+    // for removing the console.warn() for not matching to any route
+    {
+        path: "/:pathMatch(.*)",
+        component: NotFound,
     },
 ];
 
