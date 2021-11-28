@@ -72,7 +72,7 @@ export default {
     const itemsPerPage = ref(5);
     const isLoading = ref(false);
 
-    function getStudents() {
+    const getStudents = () => {
       isLoading.value = true;
       axios
         .get("admin/students/all", {
@@ -89,9 +89,9 @@ export default {
         .finally(() => {
           isLoading.value = false;
         });
-    }
+    };
 
-    function handleUserDelete(student) {
+    const handleUserDelete = (student) => {
       Swal.fire({
         icon: "warning",
         title: "Are you sure you want to delete this student?",
@@ -120,7 +120,7 @@ export default {
             });
         }
       });
-    }
+    };
     onMounted(() => {
       getStudents();
     });

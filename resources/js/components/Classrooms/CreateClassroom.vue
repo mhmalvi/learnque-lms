@@ -62,7 +62,7 @@ export default {
     const courses = ref([]);
     const isSubmitting = ref(false);
 
-    function getCourses() {
+    const getCourses = () => {
       axios
         .get("/admin/courses/raw")
         .then((res) => {
@@ -74,9 +74,9 @@ export default {
             title: "Something went wrong while fetching courses!",
           });
         });
-    }
+    };
 
-    function handleFormSubmit() {
+    const handleFormSubmit = () => {
       isSubmitting.value = true;
       axios
         .post("/admin/classroom", {
@@ -99,13 +99,13 @@ export default {
         .finally(() => {
           isSubmitting.value = false;
         });
-    }
+    };
 
-    function resetForm() {
+    const resetForm = () => {
       form.title = "";
       form.section = "";
       form.course = "";
-    }
+    };
 
     onMounted(() => {
       getCourses();

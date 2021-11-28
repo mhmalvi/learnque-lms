@@ -53,7 +53,7 @@ export default {
 
     const classroom_id = store.getters.getClassroomId;
 
-    function getTeachers() {
+    const getTeachers = () => {
       axios
         .get("/admin/teachers/raw")
         .then((res) => {
@@ -65,9 +65,9 @@ export default {
             title: "Something went wrong while fetching teachers!",
           });
         });
-    }
+    };
 
-    function save() {
+    const save = () => {
       isSubmitting.value = true;
       axios
         .post("/admin/classroom/members/add", {
@@ -85,11 +85,11 @@ export default {
         .finally(() => {
           isSubmitting.value = false;
         });
-    }
+    };
 
-    function resetForm() {
+    const resetForm = () => {
       teacher_select.value = [];
-    }
+    };
 
     onMounted(() => {
       getTeachers();

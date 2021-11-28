@@ -73,7 +73,7 @@ export default {
     const isLoading = ref(false);
     const itemsPerPage = ref(5);
 
-    function getTeachers() {
+    const getTeachers = () => {
       isLoading.value = true;
       axios
         .get("admin/teachers/all", {
@@ -94,9 +94,9 @@ export default {
         .finally(() => {
           isLoading.value = false;
         });
-    }
+    };
 
-    function handleUserDelete(teacher) {
+    const handleUserDelete = (teacher) => {
       Swal.fire({
         icon: "warning",
         title: "Are you sure you want to delete this instructor?",
@@ -109,9 +109,9 @@ export default {
           deleteUser(teacher);
         }
       });
-    }
+    };
 
-    function deleteUser(teacher) {
+    const deleteUser = (teacher) => {
       axios
         .post("admin/teachers/" + teacher.uuid, {
           _method: "DELETE",
@@ -131,7 +131,7 @@ export default {
             text: error.response.data.message,
           });
         });
-    }
+    };
 
     onMounted(() => {
       getTeachers();

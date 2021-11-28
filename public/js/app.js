@@ -22300,7 +22300,7 @@ __webpack_require__.r(__webpack_exports__);
     var store = (0,vuex__WEBPACK_IMPORTED_MODULE_3__.useStore)();
     var classroom_id = store.getters.getClassroomId;
 
-    function getStudents() {
+    var getStudents = function getStudents() {
       axios__WEBPACK_IMPORTED_MODULE_0___default().get("/admin/students/raw").then(function (res) {
         students.value = res.data.data;
       })["catch"](function (error) {
@@ -22310,9 +22310,9 @@ __webpack_require__.r(__webpack_exports__);
           text: error.response.data.message
         });
       });
-    }
+    };
 
-    function newUserAdded() {
+    var newUserAdded = function newUserAdded() {
       // check if there is a student who's username matches with user's input
       var found_student = students.value.filter(function (student) {
         return student.username == student_select.value;
@@ -22326,13 +22326,13 @@ __webpack_require__.r(__webpack_exports__);
       }
 
       student_select.value = "";
-    }
+    };
 
-    function removeStudent(index) {
+    var removeStudent = function removeStudent(index) {
       selected_students.value.splice(index, 1);
-    }
+    };
 
-    function save() {
+    var save = function save() {
       isSubmitting.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().post("/admin/classroom/members/add", {
         users: selected_students.value,
@@ -22346,7 +22346,7 @@ __webpack_require__.r(__webpack_exports__);
       })["catch"]()["finally"](function () {
         isSubmitting.value = false;
       });
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_2__.onMounted)(function () {
       getStudents();
@@ -22394,7 +22394,7 @@ __webpack_require__.r(__webpack_exports__);
     var store = (0,vuex__WEBPACK_IMPORTED_MODULE_3__.useStore)();
     var classroom_id = store.getters.getClassroomId;
 
-    function getTeachers() {
+    var getTeachers = function getTeachers() {
       axios__WEBPACK_IMPORTED_MODULE_0___default().get("/admin/teachers/raw").then(function (res) {
         teachers.value = res.data.data;
       })["catch"](function (error) {
@@ -22403,9 +22403,9 @@ __webpack_require__.r(__webpack_exports__);
           title: "Something went wrong while fetching teachers!"
         });
       });
-    }
+    };
 
-    function save() {
+    var save = function save() {
       isSubmitting.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().post("/admin/classroom/members/add", {
         users: [teacher_select.value],
@@ -22420,11 +22420,11 @@ __webpack_require__.r(__webpack_exports__);
       })["catch"]()["finally"](function () {
         isSubmitting.value = false;
       });
-    }
+    };
 
-    function resetForm() {
+    var resetForm = function resetForm() {
       teacher_select.value = [];
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_2__.onMounted)(function () {
       getTeachers();
@@ -22492,7 +22492,7 @@ __webpack_require__.r(__webpack_exports__);
     var links = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)();
     var action_link = "admin/classroom/all";
 
-    function getClassrooms(link) {
+    var getClassrooms = function getClassrooms(link) {
       isLoading.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().get(link, {
         params: {
@@ -22504,11 +22504,11 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isLoading.value = false;
       });
-    }
+    };
 
-    function getLink(action) {
+    var getLink = function getLink(action) {
       getClassrooms(action);
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_1__.onMounted)(function () {
       getClassrooms(action_link);
@@ -22666,7 +22666,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     var courses = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)([]);
     var isSubmitting = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(false);
 
-    function getCourses() {
+    var getCourses = function getCourses() {
       axios__WEBPACK_IMPORTED_MODULE_0___default().get("/admin/courses/raw").then(function (res) {
         courses.value = res.data.data;
       })["catch"](function (err) {
@@ -22675,9 +22675,9 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
           title: "Something went wrong while fetching courses!"
         });
       });
-    }
+    };
 
-    function handleFormSubmit() {
+    var handleFormSubmit = function handleFormSubmit() {
       isSubmitting.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().post("/admin/classroom", _objectSpread({}, form)).then(function (res) {
         sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
@@ -22694,13 +22694,13 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       })["finally"](function () {
         isSubmitting.value = false;
       });
-    }
+    };
 
-    function resetForm() {
+    var resetForm = function resetForm() {
       form.title = "";
       form.section = "";
       form.course = "";
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_2__.onMounted)(function () {
       getCourses();
@@ -22750,12 +22750,8 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
     });
     var picker_instance = null;
 
-    function driveIconClicked() {
-      return _driveIconClicked.apply(this, arguments);
-    }
-
-    function _driveIconClicked() {
-      _driveIconClicked = _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default().mark(function _callee() {
+    var driveIconClicked = /*#__PURE__*/function () {
+      var _ref = _asyncToGenerator( /*#__PURE__*/_babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default().mark(function _callee() {
         return _babel_runtime_regenerator__WEBPACK_IMPORTED_MODULE_0___default().wrap(function _callee$(_context) {
           while (1) {
             switch (_context.prev = _context.next) {
@@ -22782,30 +22778,33 @@ function _asyncToGenerator(fn) { return function () { var self = this, args = ar
           }
         }, _callee);
       }));
-      return _driveIconClicked.apply(this, arguments);
-    }
 
-    function handleAuthResult(authResult) {
+      return function driveIconClicked() {
+        return _ref.apply(this, arguments);
+      };
+    }();
+
+    var handleAuthResult = function handleAuthResult(authResult) {
       if (authResult && !authResult.error) {
         picker.oauthToken = authResult.access_token;
         createPicker();
       }
-    }
+    };
 
-    function createPicker() {
+    var createPicker = function createPicker() {
       if (picker.pickerApiLoaded && picker.oauthToken) {
         picker_instance = new google.picker.PickerBuilder().enableFeature(google.picker.Feature.MULTISELECT_ENABLED).addView(google.picker.ViewId.DOCS).addView(new google.picker.DocsUploadView()).setOAuthToken(picker.oauthToken).setDeveloperKey(picker.developerKey).setCallback(pickerCallback).build();
         picker_instance.setVisible(true);
       }
-    }
+    };
 
-    function pickerCallback(data) {
+    var pickerCallback = function pickerCallback(data) {
       if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
         // Array of Picked Files
         picker_instance.setVisible(false);
         context.emit("filesSelected", data.docs);
       }
-    }
+    };
 
     return {
       picker: picker,
@@ -22869,7 +22868,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     });
     var isOpened = (0,vue__WEBPACK_IMPORTED_MODULE_4__.ref)(false);
 
-    function handleFormSubmit() {
+    var handleFormSubmit = function handleFormSubmit() {
       if (description.value.getText().trim().length == 0) {
         return;
       }
@@ -22895,25 +22894,25 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       })["finally"](function () {
         return isSubmitting.value = false;
       });
-    }
+    };
 
-    function resetForm() {
+    var resetForm = function resetForm() {
       description.value.setHTML("");
       form.attachments = [];
       form.description = "";
-    }
+    };
 
-    function handleFilesUpload(files) {
+    var handleFilesUpload = function handleFilesUpload(files) {
       form.attachments = form.attachments.concat(files);
-    }
+    };
 
-    function removeAttachment(file) {
+    var removeAttachment = function removeAttachment(file) {
       form.attachments.forEach(function (item, index) {
         if (file.id == item.id) {
           form.attachments.splice(index, 1);
         }
       });
-    }
+    };
 
     return {
       form: form,
@@ -22954,7 +22953,7 @@ __webpack_require__.r(__webpack_exports__);
     var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
     var isUpdating = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
 
-    function getAddedStudents() {
+    var getAddedStudents = function getAddedStudents() {
       students.value = [];
       isLoading.value = true;
       axios.get("/classrooms/" + classroom_id + "/students").then(function (res) {
@@ -22971,7 +22970,7 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isLoading.value = false;
       });
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       getAddedStudents();
@@ -23231,7 +23230,7 @@ __webpack_require__.r(__webpack_exports__);
       getCourses();
     })();
 
-    function getCourses() {
+    var getCourses = function getCourses() {
       isLoading.value = true;
       axios__WEBPACK_IMPORTED_MODULE_1___default().get("admin/courses/all", {
         params: {
@@ -23245,9 +23244,9 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isLoading.value = false;
       });
-    }
+    };
 
-    function deleteCourse(course) {
+    var deleteCourse = function deleteCourse(course) {
       sweetalert2__WEBPACK_IMPORTED_MODULE_2___default().fire({
         icon: "warning",
         title: "Are you sure you want to delete this course?",
@@ -23272,7 +23271,7 @@ __webpack_require__.r(__webpack_exports__);
           });
         }
       });
-    }
+    };
 
     return {
       courses: courses,
@@ -23392,7 +23391,7 @@ __webpack_require__.r(__webpack_exports__);
       getPosts();
     });
 
-    function getPosts() {
+    var getPosts = function getPosts() {
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : null;
 
       if (!page) {
@@ -23420,7 +23419,7 @@ __webpack_require__.r(__webpack_exports__);
         isLoading.value = false;
         loadingMore.value = false;
       });
-    }
+    };
 
     var loadMore = function loadMore() {
       loadingMore.value = true;
@@ -23499,7 +23498,7 @@ __webpack_require__.r(__webpack_exports__);
     var links = (0,vue__WEBPACK_IMPORTED_MODULE_1__.ref)([]);
     var action_link = "/classrooms/list";
 
-    function getClassrooms(link) {
+    var getClassrooms = function getClassrooms(link) {
       isLoading.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().get(link, {
         items: itemsPerPage.value
@@ -23515,11 +23514,11 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         return isLoading.value = false;
       });
-    }
+    };
 
-    function getLink(link) {
+    var getLink = function getLink(link) {
       getClassrooms(link);
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_1__.onMounted)(function () {
       getClassrooms(action_link);
@@ -23527,7 +23526,8 @@ __webpack_require__.r(__webpack_exports__);
     return {
       classrooms: classrooms,
       isLoading: isLoading,
-      links: links
+      links: links,
+      getLink: getLink
     };
   }
 });
@@ -23684,7 +23684,7 @@ __webpack_require__.r(__webpack_exports__);
       return form.username && form.email && form.password && form.password_confirmation && form.user_type && email(form.email) && password(form.password, 5, 20) ? true : false;
     });
 
-    function handleFormSubmit() {
+    var handleFormSubmit = function handleFormSubmit() {
       isLoading.value = true;
       errors.validation = [];
       errors.message = "";
@@ -23703,15 +23703,15 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isLoading.value = false;
       });
-    }
+    };
 
-    function resetForm() {
+    var resetForm = function resetForm() {
       form.username = "";
       form.email = "";
       form.password = "";
       form.password_confirmation = "";
       form.user_type = "";
-    }
+    };
 
     return {
       form: form,
@@ -23774,7 +23774,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       return form.username && form.email && email(form.email);
     });
 
-    function handleUpdate() {
+    var handleUpdate = function handleUpdate() {
       isUpdating.value = true;
       success_message.value = "";
       errors.validation = {};
@@ -23794,7 +23794,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       })["finally"](function () {
         isUpdating.value = false;
       });
-    }
+    };
 
     return {
       student: student,
@@ -23837,7 +23837,7 @@ __webpack_require__.r(__webpack_exports__);
     var itemsPerPage = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(5);
     var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(false);
 
-    function getStudents() {
+    var getStudents = function getStudents() {
       isLoading.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().get("admin/students/all", {
         params: {
@@ -23850,9 +23850,9 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isLoading.value = false;
       });
-    }
+    };
 
-    function handleUserDelete(student) {
+    var handleUserDelete = function handleUserDelete(student) {
       sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
         icon: "warning",
         title: "Are you sure you want to delete this student?",
@@ -23878,7 +23878,7 @@ __webpack_require__.r(__webpack_exports__);
           });
         }
       });
-    }
+    };
 
     (0,_vue_runtime_core__WEBPACK_IMPORTED_MODULE_3__.onMounted)(function () {
       getStudents();
@@ -23939,7 +23939,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       return form.username && form.email && email(form.email);
     });
 
-    function handleUpdate() {
+    var handleUpdate = function handleUpdate() {
       isUpdating.value = true;
       success_message.value = "";
       errors.validation = {};
@@ -23959,7 +23959,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
       })["finally"](function () {
         isUpdating.value = false;
       });
-    }
+    };
 
     return {
       teacher: teacher,
@@ -24000,7 +24000,7 @@ __webpack_require__.r(__webpack_exports__);
     var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(false);
     var itemsPerPage = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(5);
 
-    function getTeachers() {
+    var getTeachers = function getTeachers() {
       isLoading.value = true;
       axios__WEBPACK_IMPORTED_MODULE_0___default().get("admin/teachers/all", {
         params: {
@@ -24017,9 +24017,9 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isLoading.value = false;
       });
-    }
+    };
 
-    function handleUserDelete(teacher) {
+    var handleUserDelete = function handleUserDelete(teacher) {
       sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
         icon: "warning",
         title: "Are you sure you want to delete this instructor?",
@@ -24032,9 +24032,9 @@ __webpack_require__.r(__webpack_exports__);
           deleteUser(teacher);
         }
       });
-    }
+    };
 
-    function deleteUser(teacher) {
+    var deleteUser = function deleteUser(teacher) {
       axios__WEBPACK_IMPORTED_MODULE_0___default().post("admin/teachers/" + teacher.uuid, {
         _method: "DELETE"
       }).then(function (res) {
@@ -24050,7 +24050,7 @@ __webpack_require__.r(__webpack_exports__);
           text: error.response.data.message
         });
       });
-    }
+    };
 
     (0,vue__WEBPACK_IMPORTED_MODULE_2__.onMounted)(function () {
       getTeachers();
@@ -26602,7 +26602,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       "class": "page-link",
       href: "javascript:void(0)",
       onClick: function onClick($event) {
-        return _ctx.getLink(page.url);
+        return $setup.getLink(page.url);
       },
       innerHTML: page.label
     }, null, 8

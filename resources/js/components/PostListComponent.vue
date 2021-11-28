@@ -50,7 +50,7 @@ export default {
       getPosts();
     });
 
-    function getPosts(page = null) {
+    const getPosts = (page = null) => {
       if (!page) {
         isLoading.value = true;
       }
@@ -79,7 +79,7 @@ export default {
           isLoading.value = false;
           loadingMore.value = false;
         });
-    }
+    };
 
     const loadMore = () => {
       loadingMore.value = true;

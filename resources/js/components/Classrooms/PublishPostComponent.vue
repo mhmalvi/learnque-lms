@@ -89,7 +89,7 @@ export default {
 
     const isOpened = ref(false);
 
-    function handleFormSubmit() {
+    const handleFormSubmit = () => {
       if (description.value.getText().trim().length == 0) {
         return;
       }
@@ -117,25 +117,25 @@ export default {
           console.error(err);
         })
         .finally(() => (isSubmitting.value = false));
-    }
+    };
 
-    function resetForm() {
+    const resetForm = () => {
       description.value.setHTML("");
       form.attachments = [];
       form.description = "";
-    }
+    };
 
-    function handleFilesUpload(files) {
+    const handleFilesUpload = (files) => {
       form.attachments = form.attachments.concat(files);
-    }
+    };
 
-    function removeAttachment(file) {
+    const removeAttachment = (file) => {
       form.attachments.forEach((item, index) => {
         if (file.id == item.id) {
           form.attachments.splice(index, 1);
         }
       });
-    }
+    };
 
     return {
       form,

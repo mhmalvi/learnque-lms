@@ -68,7 +68,7 @@ export default {
       getCourses();
     })();
 
-    function getCourses() {
+    const getCourses = () => {
       isLoading.value = true;
       axios
         .get("admin/courses/all", {
@@ -86,9 +86,9 @@ export default {
         .finally(() => {
           isLoading.value = false;
         });
-    }
+    };
 
-    function deleteCourse(course) {
+    const deleteCourse = (course) => {
       Swal.fire({
         icon: "warning",
         title: "Are you sure you want to delete this course?",
@@ -116,7 +116,7 @@ export default {
             });
         }
       });
-    }
+    };
 
     return {
       courses,

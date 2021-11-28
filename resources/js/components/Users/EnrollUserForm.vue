@@ -183,7 +183,7 @@ export default {
         : false;
     });
 
-    function handleFormSubmit() {
+    const handleFormSubmit = () => {
       isLoading.value = true;
       errors.validation = [];
       errors.message = "";
@@ -206,15 +206,15 @@ export default {
         .finally(() => {
           isLoading.value = false;
         });
-    }
+    };
 
-    function resetForm() {
+    const resetForm = () => {
       form.username = "";
       form.email = "";
       form.password = "";
       form.password_confirmation = "";
       form.user_type = "";
-    }
+    };
 
     return {
       form,

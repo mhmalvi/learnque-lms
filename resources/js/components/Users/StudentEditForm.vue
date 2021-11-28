@@ -112,7 +112,7 @@ export default {
       return form.username && form.email && email(form.email);
     });
 
-    function handleUpdate() {
+    const handleUpdate = () => {
       isUpdating.value = true;
       success_message.value = "";
       errors.validation = {};
@@ -137,7 +137,7 @@ export default {
         .finally(() => {
           isUpdating.value = false;
         });
-    }
+    };
 
     return {
       student,

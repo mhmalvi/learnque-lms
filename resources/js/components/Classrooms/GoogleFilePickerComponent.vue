@@ -28,7 +28,7 @@ export default {
 
     let picker_instance = null;
 
-    async function driveIconClicked() {
+    const driveIconClicked = async () => {
       await gapi.load("auth2", () => {
         gapi.auth2.authorize(
           {
@@ -43,16 +43,16 @@ export default {
         picker.pickerApiLoaded = true;
         createPicker();
       });
-    }
+    };
 
-    function handleAuthResult(authResult) {
+    const handleAuthResult = (authResult) => {
       if (authResult && !authResult.error) {
         picker.oauthToken = authResult.access_token;
         createPicker();
       }
-    }
+    };
 
-    function createPicker() {
+    const createPicker = () => {
       if (picker.pickerApiLoaded && picker.oauthToken) {
         picker_instance = new google.picker.PickerBuilder()
           .enableFeature(google.picker.Feature.MULTISELECT_ENABLED)
@@ -64,16 +64,16 @@ export default {
           .build();
         picker_instance.setVisible(true);
       }
-    }
+    };
 
-    function pickerCallback(data) {
+    const pickerCallback = (data) => {
       if (data[google.picker.Response.ACTION] === google.picker.Action.PICKED) {
         // Array of Picked Files
         picker_instance.setVisible(false);
 
         context.emit("filesSelected", data.docs);
       }
-    }
+    };
 
     return {
       picker,

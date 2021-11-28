@@ -51,7 +51,7 @@ export default {
     const isLoading = ref(false);
     const isUpdating = ref(false);
 
-    function getAddedStudents() {
+    const getAddedStudents = () => {
       students.value = [];
       isLoading.value = true;
       axios
@@ -73,7 +73,7 @@ export default {
         .finally(() => {
           isLoading.value = false;
         });
-    }
+    };
 
     onMounted(() => {
       getAddedStudents();

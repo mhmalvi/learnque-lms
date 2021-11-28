@@ -54,7 +54,7 @@ export default {
     const links = ref();
     const action_link = "admin/classroom/all";
 
-    function getClassrooms(link) {
+    const getClassrooms = (link) => {
       isLoading.value = true;
       axios
         .get(link, {
@@ -69,11 +69,11 @@ export default {
         .finally(() => {
           isLoading.value = false;
         });
-    }
+    };
 
-    function getLink(action) {
+    const getLink = (action) => {
       getClassrooms(action);
-    }
+    };
 
     onMounted(() => {
       getClassrooms(action_link);

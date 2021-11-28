@@ -67,7 +67,7 @@ export default {
 
     const classroom_id = store.getters.getClassroomId;
 
-    function getStudents() {
+    const getStudents = () => {
       axios
         .get("/admin/students/raw")
         .then((res) => {
@@ -80,9 +80,9 @@ export default {
             text: error.response.data.message,
           });
         });
-    }
+    };
 
-    function newUserAdded() {
+    const newUserAdded = () => {
       // check if there is a student who's username matches with user's input
       let found_student = students.value.filter((student) => {
         return student.username == student_select.value;
@@ -99,13 +99,13 @@ export default {
         selected_students.value.push(student_select.value);
       }
       student_select.value = "";
-    }
+    };
 
-    function removeStudent(index) {
+    const removeStudent = (index) => {
       selected_students.value.splice(index, 1);
-    }
+    };
 
-    function save() {
+    const save = () => {
       isSubmitting.value = true;
 
       axios
@@ -125,7 +125,7 @@ export default {
         .finally(() => {
           isSubmitting.value = false;
         });
-    }
+    };
 
     onMounted(() => {
       getStudents();
