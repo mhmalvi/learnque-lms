@@ -56,7 +56,7 @@ export default {
     const classroom = props.classroom;
 
     const getClassroomLink = () => {
-      return "/admin/classrooms/" + classroom.unique_id;
+      return "/admin/classrooms/" + classroom.unique_id + "/posts";
     };
 
     return {
