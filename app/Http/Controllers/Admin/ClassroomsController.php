@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\Classrooms\RemoveStudentsRequest;
+use App\Http\Requests\Admin\Classrooms\RemoveTeachersRequest;
 use App\Http\Requests\CreateClassroomRequest;
 use App\Http\Resources\ClassroomResource;
 use App\Http\Resources\ClassroomsCollection;
@@ -48,6 +49,18 @@ class ClassroomsController extends Controller
 
         return response()->json([
             'message' => "Successfully updated the student list!"
+        ], 200);
+    }
+
+    public function updateTeachers(Classroom $classroom, RemoveTeachersRequest $request)
+    {
+        try {
+            $request->remove($classroom);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+        return response()->json([
+            'message' => "Successfully updated the teacher list!"
         ], 200);
     }
 }

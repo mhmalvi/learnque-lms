@@ -22418,6 +22418,7 @@ __webpack_require__.r(__webpack_exports__);
           title: res.data.message
         });
         resetForm();
+        store.dispatch("classroomTeachers/newTeacherAdded");
       })["catch"]()["finally"](function () {
         isSubmitting.value = false;
       });
@@ -23505,24 +23506,39 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_1__);
-/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_2__);
+
 
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   setup: function setup() {
-    var store = (0,vuex__WEBPACK_IMPORTED_MODULE_2__.useStore)();
+    var store = (0,vuex__WEBPACK_IMPORTED_MODULE_3__.useStore)();
     var classroom_id = store.getters.getClassroomId;
     var user_mode = store.getters.getUserMode;
     var action = "/classrooms/" + classroom_id + "/teachers/list";
     var teachers = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([]);
     var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
     var isUpdating = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
+    var removed_teacher_list = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([]);
+    var hadTeachers = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
 
     var getAddedTeachers = function getAddedTeachers(action) {
       isLoading.value = true;
+      teachers.value = [];
+      hadTeachers.value = false;
       axios__WEBPACK_IMPORTED_MODULE_1___default().get(action).then(function (res) {
-        teachers.value = res.data.data;
+        Object.keys(res.data.data).forEach(function (key) {
+          teachers.value.push(res.data.data[key]);
+        });
+
+        if (teachers.value.length > 0) {
+          hadTeachers.value = true;
+        } else {
+          hadTeachers.value = false;
+        }
       })["finally"](function () {
         isLoading.value = false;
       });
@@ -23532,6 +23548,32 @@ __webpack_require__.r(__webpack_exports__);
       return user_mode == "admin";
     };
 
+    var removeTeacher = function removeTeacher(index) {
+      removed_teacher_list.value.push(teachers.value[index].user_id);
+      teachers.value.splice(index);
+    };
+
+    var updateTeacherList = function updateTeacherList() {
+      isUpdating.value = true;
+      axios__WEBPACK_IMPORTED_MODULE_1___default().post("/admin/classrooms/" + classroom_id + "/teachers/update", {
+        _method: "PATCH",
+        removed_teacher_list: removed_teacher_list.value
+      }).then(function (res) {
+        sweetalert2__WEBPACK_IMPORTED_MODULE_2___default().fire({
+          icon: "success",
+          title: res.data.message
+        });
+        getAddedTeachers(action);
+      })["finally"](function () {
+        isUpdating.value = false;
+      });
+    };
+
+    store.watch(function (state, _) {
+      return state.classroomTeachers.newTeachers;
+    }, function (newVal, oldVal) {
+      getAddedTeachers(action);
+    });
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       getAddedTeachers(action);
     });
@@ -23539,7 +23581,11 @@ __webpack_require__.r(__webpack_exports__);
       teachers: teachers,
       isLoading: isLoading,
       isUpdating: isUpdating,
-      isAdmin: isAdmin
+      isAdmin: isAdmin,
+      removeTeacher: removeTeacher,
+      updateTeacherList: updateTeacherList,
+      removed_teacher_list: removed_teacher_list,
+      hadTeachers: hadTeachers
     };
   }
 });
@@ -26580,17 +26626,16 @@ var _hoisted_4 = {
 };
 var _hoisted_5 = {
   key: 2,
-  "class": "form-label d-flex justify-content-between"
+  "class": "d-flex justify-content-between mb-2"
 };
 
-var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Teacher List", -1
+var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "class": "form-label"
+}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span", null, "Added Teacher")], -1
 /* HOISTED */
 );
 
-var _hoisted_7 = {
-  key: 0,
-  "class": "btn btn-outline-primary btn-sm"
-};
+var _hoisted_7 = ["disabled"];
 var _hoisted_8 = {
   key: 0,
   "class": "fas fa-circle-notch mr-2 fa-spin"
@@ -26603,19 +26648,42 @@ var _hoisted_9 = {
 var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Update ");
 
 var _hoisted_11 = {
+  key: 3
+};
+
+var _hoisted_12 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("p", {
+  "class": "text-muted"
+}, " All teacher has been removed. Click on update button to save the changes! ", -1
+/* HOISTED */
+);
+
+var _hoisted_13 = [_hoisted_12];
+var _hoisted_14 = {
+  key: 4
+};
+var _hoisted_15 = {
   "class": "list-group"
 };
-var _hoisted_12 = ["onClick"];
+var _hoisted_16 = ["onClick"];
 
-var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+var _hoisted_17 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
   "class": "fas fa-times ml-2"
 }, null, -1
 /* HOISTED */
 );
 
-var _hoisted_14 = [_hoisted_13];
+var _hoisted_18 = [_hoisted_17];
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [$setup.isLoading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_1, _hoisted_3)) : $setup.teachers.length == 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("h4", _hoisted_4, " No teacher here ")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_5, [_hoisted_6, $setup.isAdmin() ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", _hoisted_7, [$setup.isUpdating ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_8)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_9)), _hoisted_10])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_11, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.teachers, function (teacher, index) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [$setup.isLoading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_1, _hoisted_3)) : $setup.teachers.length == 0 && !$setup.hadTeachers ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("h4", _hoisted_4, " No teacher here ")) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [_hoisted_6, $setup.isAdmin() ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button", {
+    key: 0,
+    "class": "btn btn-outline-primary btn-sm",
+    onClick: _cache[0] || (_cache[0] = function () {
+      return $setup.updateTeacherList && $setup.updateTeacherList.apply($setup, arguments);
+    }),
+    disabled: $setup.removed_teacher_list.length < 1 || $setup.isUpdating
+  }, [$setup.isUpdating ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_8)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_9)), _hoisted_10], 8
+  /* PROPS */
+  , _hoisted_7)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])), $setup.teachers.length == 0 && $setup.hadTeachers ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_11, _hoisted_13)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_14, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("ul", _hoisted_15, [((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)($setup.teachers, function (teacher, index) {
     return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("li", {
       "class": "list-group-item",
       key: index
@@ -26625,14 +26693,14 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
       key: 0,
       href: "javascript:void(0)",
       onClick: function onClick($event) {
-        return _ctx.removeTeacher(index);
+        return $setup.removeTeacher(index);
       }
-    }, _hoisted_14, 8
+    }, _hoisted_18, 8
     /* PROPS */
-    , _hoisted_12)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
+    , _hoisted_16)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))])]);
+  ))])]))]);
 }
 
 /***/ }),
@@ -28134,6 +28202,36 @@ var student = {
 
 /***/ }),
 
+/***/ "./resources/js/store/classroom/teacher.js":
+/*!*************************************************!*\
+  !*** ./resources/js/store/classroom/teacher.js ***!
+  \*************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "teacher": () => (/* binding */ teacher)
+/* harmony export */ });
+var teacher = {
+  namespaced: true,
+  state: {
+    newTeachers: 0
+  },
+  mutations: {
+    incrementTeachers: function incrementTeachers(state) {
+      state.newTeachers++;
+    }
+  },
+  actions: {
+    newTeacherAdded: function newTeacherAdded(context) {
+      context.commit("incrementTeachers");
+    }
+  }
+};
+
+/***/ }),
+
 /***/ "./resources/js/store/course/category.js":
 /*!***********************************************!*\
   !*** ./resources/js/store/course/category.js ***!
@@ -28175,19 +28273,22 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
+/* harmony import */ var vuex__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! vuex */ "./node_modules/vuex/dist/vuex.esm-bundler.js");
 /* harmony import */ var _course_category__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./course/category */ "./resources/js/store/course/category.js");
 /* harmony import */ var _classroom_post_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./classroom/post.js */ "./resources/js/store/classroom/post.js");
 /* harmony import */ var _classroom_student__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./classroom/student */ "./resources/js/store/classroom/student.js");
+/* harmony import */ var _classroom_teacher__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./classroom/teacher */ "./resources/js/store/classroom/teacher.js");
 
 
 
 
-/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ((0,vuex__WEBPACK_IMPORTED_MODULE_3__.createStore)({
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ((0,vuex__WEBPACK_IMPORTED_MODULE_4__.createStore)({
   modules: {
     courseCategories: _course_category__WEBPACK_IMPORTED_MODULE_0__.category,
     classroomPosts: _classroom_post_js__WEBPACK_IMPORTED_MODULE_1__.post,
-    classroomStudents: _classroom_student__WEBPACK_IMPORTED_MODULE_2__.student
+    classroomStudents: _classroom_student__WEBPACK_IMPORTED_MODULE_2__.student,
+    classroomTeachers: _classroom_teacher__WEBPACK_IMPORTED_MODULE_3__.teacher
   },
   state: function state() {
     return {

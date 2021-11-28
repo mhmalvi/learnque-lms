@@ -80,6 +80,7 @@ export default {
             title: res.data.message,
           });
           resetForm();
+          store.dispatch("classroomTeachers/newTeacherAdded");
         })
         .catch()
         .finally(() => {

@@ -42,6 +42,7 @@ Route::prefix('classrooms')->name('classroom.')->group(function () {
     Route::get('{classroom:unique_id}/teachers', [ClassroomsController::class, 'show']);
 
     Route::patch('{classroom:unique_id}/students/update', [ClassroomsController::class, 'updateStudents']);
+    Route::patch('{classroom:unique_id}/teachers/update', [ClassroomsController::class, 'updateTeachers']);
 });
 
 // Category routes

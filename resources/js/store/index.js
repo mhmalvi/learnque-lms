@@ -2,12 +2,14 @@ import { createStore } from "vuex";
 import { category } from "./course/category";
 import { post } from "./classroom/post.js";
 import { student } from "./classroom/student";
+import { teacher } from "./classroom/teacher";
 
 export default createStore({
     modules: {
         courseCategories: category,
         classroomPosts: post,
         classroomStudents: student,
+        classroomTeachers: teacher,
     },
     state() {
         return {
