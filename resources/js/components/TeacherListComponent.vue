@@ -10,7 +10,7 @@
 
     <label class="form-label d-flex justify-content-between" v-else>
       <span>Teacher List</span>
-      <button class="btn btn-outline-primary btn-sm">
+      <button class="btn btn-outline-primary btn-sm" v-if="isAdmin()">
         <i class="fas fa-circle-notch mr-2 fa-spin" v-if="isUpdating"></i>
         <i class="fas fa-plus-circle mr-2" v-else></i>
         Update
@@ -26,7 +26,11 @@
         <span>
           {{ teacher.user.username }}
         </span>
-        <a href="javascript:void(0)" @click="removeTeacher(index)">
+        <a
+          href="javascript:void(0)"
+          @click="removeTeacher(index)"
+          v-if="isAdmin()"
+        >
           <i class="fas fa-times ml-2"></i>
         </a>
       </li>
@@ -44,8 +48,9 @@ export default {
     const store = useStore();
 
     const classroom_id = store.getters.getClassroomId;
+    const user_mode = store.getters.getUserMode;
 
-    const action = "/admin/classroom/" + classroom_id + "/teachers";
+    const action = "/classrooms/" + classroom_id + "/teachers/list";
     const teachers = ref([]);
     const isLoading = ref(false);
     const isUpdating = ref(false);
@@ -62,6 +67,10 @@ export default {
         });
     };
 
+    const isAdmin = () => {
+      return user_mode == "admin";
+    };
+
     onMounted(() => {
       getAddedTeachers(action);
     });
@@ -70,6 +79,7 @@ export default {
       teachers,
       isLoading,
       isUpdating,
+      isAdmin,
     };
   },
 };

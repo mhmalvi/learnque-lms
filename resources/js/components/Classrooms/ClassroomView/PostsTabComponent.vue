@@ -1,8 +1,10 @@
 <template>
   <div class="fadeIn">
-    <publish-post-component />
+    <div v-if="isAdmin()" class="mb-4">
+      <publish-post-component />
+    </div>
 
-    <div class="mt-4">
+    <div class="">
       <post-list-component />
     </div>
   </div>
@@ -11,11 +13,22 @@
 <script>
 import PublishPostComponent from "../PublishPostComponent.vue";
 import PostListComponent from "../../PostListComponent.vue";
+import { useStore } from "vuex";
 
 export default {
   components: { PublishPostComponent, PostListComponent },
   setup() {
-    return {};
+    const store = useStore();
+
+    const user_mode = store.getters.getUserMode;
+
+    const isAdmin = () => {
+      return user_mode == "admin";
+    };
+
+    return {
+      isAdmin,
+    };
   },
 };
 </script>

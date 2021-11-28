@@ -2,7 +2,7 @@ require("./bootstrap");
 import { createApp } from "vue";
 import store from "./store";
 import axios from "axios";
-import { createRouter, createWebHashHistory } from "vue-router";
+import { createRouter, createWebHistory } from "vue-router";
 
 import CopyWrite from "./components/CopyWrite.vue";
 import UserLogin from "./components/Auth/Users/LoginComponent.vue";
@@ -87,7 +87,7 @@ app.component("admin-login", AdminLogin);
  */
 import { routes } from "./routes";
 const router = createRouter({
-    history: createWebHashHistory(),
+    history: createWebHistory(),
     routes,
 });
 

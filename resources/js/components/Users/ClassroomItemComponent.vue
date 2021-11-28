@@ -12,7 +12,7 @@
         data-trigger="click"
       >
         <a
-          :href="'/classrooms/' + classroom.unique_id"
+          :href="getClassroomLink()"
           class="card-img-top js-image"
           data-position=""
           data-height="140"
@@ -29,11 +29,9 @@
         <div class="card-body flex">
           <div class="d-flex">
             <div class="flex">
-              <a
-                class="card-title"
-                :href="'/classrooms/' + classroom.unique_id"
-                >{{ classroom.title }}</a
-              >
+              <a class="card-title" :href="getClassroomLink()">{{
+                classroom.title
+              }}</a>
               <small class="text-50 font-weight-bold mb-4pt"
                 >Elijah Murray</small
               >
@@ -74,8 +72,12 @@
 export default {
   props: ["classroom"],
   setup({ classroom }) {
+    const getClassroomLink = () => {
+      return "/classrooms/" + classroom.unique_id + "/posts";
+    };
+
     return {
-      classroom,
+      getClassroomLink,
     };
   },
 };

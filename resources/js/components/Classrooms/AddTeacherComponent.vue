@@ -70,7 +70,7 @@ export default {
     const save = () => {
       isSubmitting.value = true;
       axios
-        .post("/admin/classroom/members/add", {
+        .post("/admin/classrooms/members/add", {
           users: [teacher_select.value], // the api expects an array of usernames here
           classroom_id,
         })

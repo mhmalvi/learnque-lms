@@ -109,7 +109,7 @@ export default {
       isSubmitting.value = true;
 
       axios
-        .post("/admin/classroom/members/add", {
+        .post("/admin/classrooms/members/add", {
           users: selected_students.value,
           classroom_id,
         })
@@ -120,6 +120,8 @@ export default {
           });
 
           store.dispatch("classroomStudents/newStudentAdded");
+
+          selected_students.value = [];
         })
         .catch()
         .finally(() => {

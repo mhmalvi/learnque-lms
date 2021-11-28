@@ -15,13 +15,13 @@
         <div class="card">
           <div class="list-group list-group-flush">
             <li class="list-group-item">
-              <router-link to="/posts">Posts</router-link>
+              <router-link :to="getLink('posts')">Posts</router-link>
             </li>
             <li class="list-group-item">
-              <router-link to="/students">Students</router-link>
+              <router-link :to="getLink('students')">Students</router-link>
             </li>
             <li class="list-group-item">
-              <router-link to="/teachers">Teachers</router-link>
+              <router-link :to="getLink('teachers')">Teachers</router-link>
             </li>
           </div>
         </div>
@@ -45,9 +45,20 @@ export default {
     store.commit("updateClassroomId", classroom.unique_id);
     store.commit("updateUserMode", "admin");
 
+    const getLink = (name) => {
+      return "/admin/classrooms/" + classroom.unique_id + "/" + name;
+    };
+
     return {
       classroom,
+      getLink,
     };
   },
 };
 </script>
+
+<style scoped>
+.router-link-active {
+  font-weight: bold;
+}
+</style>

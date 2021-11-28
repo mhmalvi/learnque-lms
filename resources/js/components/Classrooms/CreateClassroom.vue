@@ -79,7 +79,7 @@ export default {
     const handleFormSubmit = () => {
       isSubmitting.value = true;
       axios
-        .post("/admin/classroom", {
+        .post("/admin/classrooms", {
           ...form,
         })
         .then((res) => {

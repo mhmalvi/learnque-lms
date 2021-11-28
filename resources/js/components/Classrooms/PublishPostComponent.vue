@@ -95,12 +95,14 @@ export default {
       }
       isSubmitting.value = true;
       axios
-        .post("/classrooms/posts/publish", {
+        .post("/admin/classrooms/posts/publish", {
           ...form,
           classroom_id,
         })
         .then((res) => {
-          store.dispatch("classroomPosts/newPostAdded");
+          setTimeout(() => {
+            store.dispatch("classroomPosts/newPostAdded");
+          }, 2000);
           resetForm();
           Swal.fire({
             icon: "success",

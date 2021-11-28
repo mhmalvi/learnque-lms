@@ -4,15 +4,28 @@ import TeachersTabComponent from "./components/Classrooms/ClassroomView/TeacherT
 
 const routes = [
     {
-        path: "/posts",
+        path: "/classrooms/:classroom_id/posts",
         component: PostsTabComponent,
     },
     {
-        path: "/students",
+        path: "/classrooms/:classroom_id/students",
         component: StudentsTabComponent,
     },
     {
-        path: "/teachers",
+        path: "/classrooms/:classroom_id/teachers",
+        component: TeachersTabComponent,
+    },
+    // same components and logics, different route path (for admin)
+    {
+        path: "/admin/classrooms/:classroom_id/posts",
+        component: PostsTabComponent,
+    },
+    {
+        path: "/admin/classrooms/:classroom_id/students",
+        component: StudentsTabComponent,
+    },
+    {
+        path: "/admin/classrooms/:classroom_id/teachers",
         component: TeachersTabComponent,
     },
 ];

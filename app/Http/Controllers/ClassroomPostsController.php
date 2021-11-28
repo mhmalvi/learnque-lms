@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\Classroom\PostCreateRequest;
+use App\Http\Resources\ClassroomMembersCollection;
 use App\Http\Resources\ClassroomPostsCollection;
+use App\Http\Resources\UsersCollection;
 use App\Models\Classroom;
+use App\Models\ClassroomMember;
 use Illuminate\Http\Request;
 
 class ClassroomPostsController extends Controller
@@ -16,12 +19,20 @@ class ClassroomPostsController extends Controller
         );
     }
 
-    public function store(PostCreateRequest $request)
+    public function getTeacherList(Classroom $classroom)
     {
-        $request->save();
-
-        return response()->json([
-            'message' => "Successfully published the post!"
-        ], 200);
+        $teachers = ClassroomMember::with('user')
+            ->where('classroom_id', $classroom->id)
+            ->get()
+            ->filter(function ($member) {
+                return $member->user->user_type == 'teacher';
+            });
+        try {
+            return new ClassroomMembersCollection($teachers);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 503);
+        }
     }
 }

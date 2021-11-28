@@ -52,7 +52,7 @@ export default {
     const classrooms = ref([]);
     const isLoading = ref(false);
     const links = ref();
-    const action_link = "admin/classroom/all";
+    const action_link = "admin/classrooms/all";
 
     const getClassrooms = (link) => {
       isLoading.value = true;

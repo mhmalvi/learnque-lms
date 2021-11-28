@@ -2,7 +2,7 @@
   <div class="col-md-3">
     <div class="card card-sm card--elevated p-relative card-group-row__card">
       <a
-        :href="'/admin/classroom/' + classroom.unique_id"
+        :href="getClassroomLink()"
         class="card-img-top js-image"
         data-position="center"
         data-height="150"
@@ -22,10 +22,7 @@
       <div class="card-body flex">
         <div class="d-flex">
           <div class="flex">
-            <a
-              class="card-title"
-              :href="'/admin/classroom/' + classroom.unique_id"
-            >
+            <a class="card-title" :href="getClassroomLink()">
               {{ classroom.title }}
             </a>
             <small class="text-50 font-weight-bold mb-4pt"></small>
@@ -58,8 +55,13 @@ export default {
   setup(props) {
     const classroom = props.classroom;
 
+    const getClassroomLink = () => {
+      return "/admin/classrooms/" + classroom.unique_id;
+    };
+
     return {
       classroom,
+      getClassroomLink,
     };
   },
 };

@@ -25,15 +25,23 @@ Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard'
  * Classroom
  */
 Route::view('classroom', 'admin.pages.classrooms.index')->name('classrooms');
-Route::prefix('classroom')->name('classroom.')->group(function () {
+Route::prefix('classrooms')->name('classroom.')->group(function () {
     Route::view('create', 'admin.pages.classrooms.create')->name('create');
     Route::post('/', [ClassroomsController::class, 'store']);
     Route::get('all', [ClassroomsController::class, 'getPaginatedList']);
-    Route::view('test', 'admin.pages.classrooms.show');
-    Route::get('{classroom:unique_id}', [ClassroomsController::class, 'show']);
     Route::post('members/add', [ClassroomMembersController::class, 'store']);
-    Route::get('{classroom:unique_id}/teachers', [ClassroomMembersController::class, 'getTeachers']);
-    Route::get('{classroom:unique_id}/posts', [ClassroomPostsController::class, 'getPaginatedList']);
+
+    Route::post('posts/publish', [ClassroomPostsController::class, 'store']);
+
+    Route::get('{classroom:unique_id}', [ClassroomsController::class, 'show']);
+    /**
+     * For the vue routes situated in ClassroomsController@show
+     */
+    Route::get('{classroom:unique_id}/posts', [ClassroomsController::class, 'show']);
+    Route::get('{classroom:unique_id}/students', [ClassroomsController::class, 'show']);
+    Route::get('{classroom:unique_id}/teachers', [ClassroomsController::class, 'show']);
+
+    Route::patch('{classroom:unique_id}/students/update', [ClassroomsController::class, 'updateStudents']);
 });
 
 // Category routes

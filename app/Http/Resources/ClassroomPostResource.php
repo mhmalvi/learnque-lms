@@ -24,7 +24,18 @@ class ClassroomPostResource extends JsonResource
             'classroom_id' => $classroom->unique_id,
             'description' => $this->description,
             'attachments' => $this->attachments,
-            'created_at' => $this->created_at->format("d M, Y"),
+            'created_at' => $this->getCreatedTime(),
         ];
+    }
+
+    private function getCreatedTime()
+    {
+        $created_time = strtotime($this->created_at);
+
+        if ((time() - $created_time) > (60 * 60 * 24)) {
+            return $this->created_at->format('d M, Y');
+        } else {
+            return $this->created_at->diffForHumans();
+        }
     }
 }

@@ -28,7 +28,7 @@ export default createStore({
             state.classroom_id = id;
         },
         updateUserMode(state, mode) {
-            state.user_id = mode;
+            state.user_mode = mode;
         },
     },
     actions: {},

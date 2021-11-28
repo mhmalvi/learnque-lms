@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Admin\Classrooms\RemoveStudentsRequest;
 use App\Http\Requests\CreateClassroomRequest;
 use App\Http\Resources\ClassroomResource;
 use App\Http\Resources\ClassroomsCollection;
@@ -35,5 +36,18 @@ class ClassroomsController extends Controller
     {
         $classroom = (new ClassroomResource($classroom))->jsonSerialize();
         return view('admin.pages.classrooms.show', compact('classroom'));
+    }
+
+    public function updateStudents(Classroom $classroom, RemoveStudentsRequest $request)
+    {
+        try {
+            $request->remove($classroom);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => $e->getMessage()], 500);
+        }
+
+        return response()->json([
+            'message' => "Successfully updated the student list!"
+        ], 200);
     }
 }

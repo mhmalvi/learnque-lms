@@ -51,9 +51,17 @@ Route::middleware('auth:web,admin')->group(function () {
     Route::prefix('classrooms')->name('classrooms.')->group(function () {
         Route::get('/', [ClassroomsController::class, 'index'])->name('index');
         Route::get('{classroom:unique_id}/posts/list', [ClassroomPostsController::class, 'getPaginatedList']);
+        Route::get('{classroom:unique_id}/teachers/list', [ClassroomPostsController::class, 'getTeacherList']);
         Route::get('list', [ClassroomsController::class, 'getPaginatedList']);
+
         Route::get('{classroom:unique_id}', [ClassroomsController::class, 'show']);
-        Route::post('posts/publish', [ClassroomPostsController::class, 'store']);
+        /**
+         * For the vue routes situated in ClassroomsController@show
+         */
+        Route::get('{classroom:unique_id}/posts', [ClassroomsController::class, 'show']);
+        Route::get('{classroom:unique_id}/students', [ClassroomsController::class, 'show']);
+        Route::get('{classroom:unique_id}/teachers', [ClassroomsController::class, 'show']);
+
         Route::get('{classroom:unique_id}/students', [ClassroomMembersController::class, 'getStudents']);
     });
 });

@@ -22,4 +22,13 @@ class ClassroomPostsController extends Controller
             return $e->getMessage();
         }
     }
+
+    public function store(PostCreateRequest $request)
+    {
+        $request->save();
+
+        return response()->json([
+            'message' => "Successfully published the post!"
+        ], 200);
+    }
 }
