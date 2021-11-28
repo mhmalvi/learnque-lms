@@ -82,7 +82,12 @@ export default {
           resetForm();
           store.dispatch("classroomTeachers/newTeacherAdded");
         })
-        .catch()
+        .catch((err) => {
+          Swal.fire({
+            icon: "error",
+            title: err.response.data.message,
+          });
+        })
         .finally(() => {
           isSubmitting.value = false;
         });

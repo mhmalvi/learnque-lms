@@ -9,6 +9,7 @@ use App\Http\Requests\CreateClassroomRequest;
 use App\Http\Resources\ClassroomResource;
 use App\Http\Resources\ClassroomsCollection;
 use App\Models\Classroom;
+use App\Models\ClassroomMember;
 use Illuminate\Http\Request;
 
 class ClassroomsController extends Controller

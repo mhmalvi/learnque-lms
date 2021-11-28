@@ -18,7 +18,22 @@ class ClassroomMembersController extends Controller
         $users = User::whereIn('name', $usernames)->get();
         $classroom = Classroom::where('unique_id', $request->classroom_id)->first();
 
+        // adding multiple teacher in a classroom is disabled for now.
+        // if the request is from add-teacher component
+        if ($users[0]->user_type == 'teacher') {
+            foreach ($classroom->members as $member) {
+                if ($member->user->user_type == 'teacher') {
+                    // if found an existing teacher in the classroom, abort this action
+                    return response()->json([
+                        'message' => "A teacher is already added to the classroom. You can't add more than 1 teacher!"
+                    ], 400);
+                    // ----
+                }
+            }
+        }
+
         foreach ($users as $user) {
+
             if (
                 ClassroomMember::where('user_id', $user->id)->count() == 0 // check if user is already added
             ) {

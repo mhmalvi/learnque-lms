@@ -22419,7 +22419,12 @@ __webpack_require__.r(__webpack_exports__);
         });
         resetForm();
         store.dispatch("classroomTeachers/newTeacherAdded");
-      })["catch"]()["finally"](function () {
+      })["catch"](function (err) {
+        sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
+          icon: "error",
+          title: err.response.data.message
+        });
+      })["finally"](function () {
         isSubmitting.value = false;
       });
     };
