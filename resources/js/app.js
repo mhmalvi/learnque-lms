@@ -91,8 +91,6 @@ const router = createRouter({
     routes,
 });
 
-app.use(router);
-
-app.use(store).mount("#app");
+app.use(router).use(store).mount("#app");
 
 require("alpinejs");
