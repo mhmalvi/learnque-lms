@@ -12,7 +12,7 @@
 
 <script>
 import AddStudentComponent from "../AddStudentComponent.vue";
-import StudentListComponent from "../StudentListComponent.vue";
+import StudentListComponent from "../../StudentListComponent.vue";
 import { useStore } from "vuex";
 
 export default {
