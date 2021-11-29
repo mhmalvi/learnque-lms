@@ -35,7 +35,7 @@
 <script>
 import PostListComponent from "../PostListComponent.vue";
 import PublishPostComponent from "../Classrooms/PublishPostComponent.vue";
-import StudentListComponent from "../Classrooms/StudentListComponent.vue";
+import StudentListComponent from "../StudentListComponent.vue";
 import { useStore } from "vuex";
 
 export default {
