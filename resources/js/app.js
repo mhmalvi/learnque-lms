@@ -30,6 +30,8 @@ import ClassroomView from "./components/Classrooms/ClassroomView.vue";
 
 import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
+import EventCalendar from "./components/EventCalendar.vue";
+
 /**
  * importing students components
  */
@@ -68,6 +70,8 @@ app.component("classroom-view", ClassroomView);
 app.component("student-classroom-list", ClassroomList);
 app.component("student-classroom-view", StudentClassroomView);
 // End of students components
+
+app.component("event-calendar-component", EventCalendar);
 
 /**
  * Guest
