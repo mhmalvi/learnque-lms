@@ -28,6 +28,7 @@
 import FullCalendar from "@fullcalendar/vue3";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
+import timeGridPlugin from "@fullcalendar/timegrid";
 import bootstrapTheme from "@fullcalendar/bootstrap";
 import { reactive, ref, onMounted } from "vue";
 import "vue3-date-time-picker/dist/main.css";
@@ -43,11 +44,21 @@ export default {
   setup() {
     const fetchingData = ref(false);
     const calendarOptions = reactive({
-      plugins: [dayGridPlugin, bootstrapTheme, interactionPlugin],
+      plugins: [
+        dayGridPlugin,
+        bootstrapTheme,
+        interactionPlugin,
+        timeGridPlugin,
+      ],
+      headerToolbar: {
+        left: "prev,next today",
+        center: "title",
+        right: "dayGridMonth,timeGridWeek",
+      },
       initialView: "dayGridMonth",
       themeSystem: "bootstrap",
       events: [],
-      eventColor: "#26c920",
+      eventColor: "#402cdb",
       eventClick: (info) => {
         attemptEventDelete(info);
       },
@@ -73,6 +84,7 @@ export default {
       axios
         .get("/admin/calendar-events/list")
         .then((res) => {
+          calendarApi.removeAllEvents();
           putEventsInCalendar(res.data.data);
         })
         .catch((err) => {
@@ -92,38 +104,59 @@ export default {
       });
     };
 
-    const addEvent = (event) => {
-      calendarApi.addEvent({
-        id: event.id,
-        title: event.title,
-        start: event.start_date,
-        end: event.end_date,
-      });
+    const addEvent = (data) => {
+      let event = {
+        id: data.id,
+        title: data.title,
+        start: data.start_date,
+        end: data.end_date,
+      };
+
+      if (data.start_time) {
+        event.start = new Date(event.start + " " + data.start_time);
+      }
+      if (data.end_time) {
+        event.end = new Date(event.end + " " + data.end_time);
+      }
+
+      calendarApi.addEvent(event);
     };
 
     const handleNewEvent = () => {
-      calendarApi.removeAllEvents();
       getEvents();
     };
 
-    const attemptEventDelete = (event) => {
-      console.log(event);
+    const attemptEventDelete = (data) => {
       Swal.fire({
         icon: "question",
         title: "Are you sure want you to delete this event?",
-        text: "Event name: " + event.title,
-        isConfirmed: true,
+        text: "Event name: " + data.event.title,
+        showCancelButton: true,
       }).then((res) => {
         if (res.isConfirmed) {
-          deleteEvent(event.id);
+          deleteEvent(data.event.id);
         }
       });
     };
 
     const deleteEvent = (event_id) => {
-      axios.post("/admin/calendar-events/destroy/" + event_id, {
-        _method: "DELETE",
-      });
+      axios
+        .post("/admin/calendar-events/destroy/" + event_id, {
+          _method: "DELETE",
+        })
+        .then((res) => {
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+          });
+          getEvents();
+        })
+        .catch((err) => {
+          Swal.fire({
+            icon: "error",
+            title: err.response.data.message,
+          });
+        });
     };
 
     return {
