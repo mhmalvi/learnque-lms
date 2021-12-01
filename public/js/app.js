@@ -11455,6 +11455,2186 @@ var main = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_1__.createPlugin)({
 
 /***/ }),
 
+/***/ "./node_modules/@fullcalendar/interaction/main.js":
+/*!********************************************************!*\
+  !*** ./node_modules/@fullcalendar/interaction/main.js ***!
+  \********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__),
+/* harmony export */   "Draggable": () => (/* binding */ ExternalDraggable),
+/* harmony export */   "FeaturefulElementDragging": () => (/* binding */ FeaturefulElementDragging),
+/* harmony export */   "PointerDragging": () => (/* binding */ PointerDragging),
+/* harmony export */   "ThirdPartyDraggable": () => (/* binding */ ThirdPartyDraggable)
+/* harmony export */ });
+/* harmony import */ var _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @fullcalendar/common */ "./node_modules/@fullcalendar/common/main.js");
+/* harmony import */ var tslib__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! tslib */ "./node_modules/tslib/tslib.es6.js");
+/*!
+FullCalendar v5.10.1
+Docs & License: https://fullcalendar.io/
+(c) 2021 Adam Shaw
+*/
+
+
+
+_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.config.touchMouseIgnoreWait = 500;
+var ignoreMouseDepth = 0;
+var listenerCnt = 0;
+var isWindowTouchMoveCancelled = false;
+/*
+Uses a "pointer" abstraction, which monitors UI events for both mouse and touch.
+Tracks when the pointer "drags" on a certain element, meaning down+move+up.
+
+Also, tracks if there was touch-scrolling.
+Also, can prevent touch-scrolling from happening.
+Also, can fire pointermove events when scrolling happens underneath, even when no real pointer movement.
+
+emits:
+- pointerdown
+- pointermove
+- pointerup
+*/
+var PointerDragging = /** @class */ (function () {
+    function PointerDragging(containerEl) {
+        var _this = this;
+        this.subjectEl = null;
+        // options that can be directly assigned by caller
+        this.selector = ''; // will cause subjectEl in all emitted events to be this element
+        this.handleSelector = '';
+        this.shouldIgnoreMove = false;
+        this.shouldWatchScroll = true; // for simulating pointermove on scroll
+        // internal states
+        this.isDragging = false;
+        this.isTouchDragging = false;
+        this.wasTouchScroll = false;
+        // Mouse
+        // ----------------------------------------------------------------------------------------------------
+        this.handleMouseDown = function (ev) {
+            if (!_this.shouldIgnoreMouse() &&
+                isPrimaryMouseButton(ev) &&
+                _this.tryStart(ev)) {
+                var pev = _this.createEventFromMouse(ev, true);
+                _this.emitter.trigger('pointerdown', pev);
+                _this.initScrollWatch(pev);
+                if (!_this.shouldIgnoreMove) {
+                    document.addEventListener('mousemove', _this.handleMouseMove);
+                }
+                document.addEventListener('mouseup', _this.handleMouseUp);
+            }
+        };
+        this.handleMouseMove = function (ev) {
+            var pev = _this.createEventFromMouse(ev);
+            _this.recordCoords(pev);
+            _this.emitter.trigger('pointermove', pev);
+        };
+        this.handleMouseUp = function (ev) {
+            document.removeEventListener('mousemove', _this.handleMouseMove);
+            document.removeEventListener('mouseup', _this.handleMouseUp);
+            _this.emitter.trigger('pointerup', _this.createEventFromMouse(ev));
+            _this.cleanup(); // call last so that pointerup has access to props
+        };
+        // Touch
+        // ----------------------------------------------------------------------------------------------------
+        this.handleTouchStart = function (ev) {
+            if (_this.tryStart(ev)) {
+                _this.isTouchDragging = true;
+                var pev = _this.createEventFromTouch(ev, true);
+                _this.emitter.trigger('pointerdown', pev);
+                _this.initScrollWatch(pev);
+                // unlike mouse, need to attach to target, not document
+                // https://stackoverflow.com/a/45760014
+                var targetEl = ev.target;
+                if (!_this.shouldIgnoreMove) {
+                    targetEl.addEventListener('touchmove', _this.handleTouchMove);
+                }
+                targetEl.addEventListener('touchend', _this.handleTouchEnd);
+                targetEl.addEventListener('touchcancel', _this.handleTouchEnd); // treat it as a touch end
+                // attach a handler to get called when ANY scroll action happens on the page.
+                // this was impossible to do with normal on/off because 'scroll' doesn't bubble.
+                // http://stackoverflow.com/a/32954565/96342
+                window.addEventListener('scroll', _this.handleTouchScroll, true);
+            }
+        };
+        this.handleTouchMove = function (ev) {
+            var pev = _this.createEventFromTouch(ev);
+            _this.recordCoords(pev);
+            _this.emitter.trigger('pointermove', pev);
+        };
+        this.handleTouchEnd = function (ev) {
+            if (_this.isDragging) { // done to guard against touchend followed by touchcancel
+                var targetEl = ev.target;
+                targetEl.removeEventListener('touchmove', _this.handleTouchMove);
+                targetEl.removeEventListener('touchend', _this.handleTouchEnd);
+                targetEl.removeEventListener('touchcancel', _this.handleTouchEnd);
+                window.removeEventListener('scroll', _this.handleTouchScroll, true); // useCaptured=true
+                _this.emitter.trigger('pointerup', _this.createEventFromTouch(ev));
+                _this.cleanup(); // call last so that pointerup has access to props
+                _this.isTouchDragging = false;
+                startIgnoringMouse();
+            }
+        };
+        this.handleTouchScroll = function () {
+            _this.wasTouchScroll = true;
+        };
+        this.handleScroll = function (ev) {
+            if (!_this.shouldIgnoreMove) {
+                var pageX = (window.pageXOffset - _this.prevScrollX) + _this.prevPageX;
+                var pageY = (window.pageYOffset - _this.prevScrollY) + _this.prevPageY;
+                _this.emitter.trigger('pointermove', {
+                    origEvent: ev,
+                    isTouch: _this.isTouchDragging,
+                    subjectEl: _this.subjectEl,
+                    pageX: pageX,
+                    pageY: pageY,
+                    deltaX: pageX - _this.origPageX,
+                    deltaY: pageY - _this.origPageY,
+                });
+            }
+        };
+        this.containerEl = containerEl;
+        this.emitter = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.Emitter();
+        containerEl.addEventListener('mousedown', this.handleMouseDown);
+        containerEl.addEventListener('touchstart', this.handleTouchStart, { passive: true });
+        listenerCreated();
+    }
+    PointerDragging.prototype.destroy = function () {
+        this.containerEl.removeEventListener('mousedown', this.handleMouseDown);
+        this.containerEl.removeEventListener('touchstart', this.handleTouchStart, { passive: true });
+        listenerDestroyed();
+    };
+    PointerDragging.prototype.tryStart = function (ev) {
+        var subjectEl = this.querySubjectEl(ev);
+        var downEl = ev.target;
+        if (subjectEl &&
+            (!this.handleSelector || (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(downEl, this.handleSelector))) {
+            this.subjectEl = subjectEl;
+            this.isDragging = true; // do this first so cancelTouchScroll will work
+            this.wasTouchScroll = false;
+            return true;
+        }
+        return false;
+    };
+    PointerDragging.prototype.cleanup = function () {
+        isWindowTouchMoveCancelled = false;
+        this.isDragging = false;
+        this.subjectEl = null;
+        // keep wasTouchScroll around for later access
+        this.destroyScrollWatch();
+    };
+    PointerDragging.prototype.querySubjectEl = function (ev) {
+        if (this.selector) {
+            return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(ev.target, this.selector);
+        }
+        return this.containerEl;
+    };
+    PointerDragging.prototype.shouldIgnoreMouse = function () {
+        return ignoreMouseDepth || this.isTouchDragging;
+    };
+    // can be called by user of this class, to cancel touch-based scrolling for the current drag
+    PointerDragging.prototype.cancelTouchScroll = function () {
+        if (this.isDragging) {
+            isWindowTouchMoveCancelled = true;
+        }
+    };
+    // Scrolling that simulates pointermoves
+    // ----------------------------------------------------------------------------------------------------
+    PointerDragging.prototype.initScrollWatch = function (ev) {
+        if (this.shouldWatchScroll) {
+            this.recordCoords(ev);
+            window.addEventListener('scroll', this.handleScroll, true); // useCapture=true
+        }
+    };
+    PointerDragging.prototype.recordCoords = function (ev) {
+        if (this.shouldWatchScroll) {
+            this.prevPageX = ev.pageX;
+            this.prevPageY = ev.pageY;
+            this.prevScrollX = window.pageXOffset;
+            this.prevScrollY = window.pageYOffset;
+        }
+    };
+    PointerDragging.prototype.destroyScrollWatch = function () {
+        if (this.shouldWatchScroll) {
+            window.removeEventListener('scroll', this.handleScroll, true); // useCaptured=true
+        }
+    };
+    // Event Normalization
+    // ----------------------------------------------------------------------------------------------------
+    PointerDragging.prototype.createEventFromMouse = function (ev, isFirst) {
+        var deltaX = 0;
+        var deltaY = 0;
+        // TODO: repeat code
+        if (isFirst) {
+            this.origPageX = ev.pageX;
+            this.origPageY = ev.pageY;
+        }
+        else {
+            deltaX = ev.pageX - this.origPageX;
+            deltaY = ev.pageY - this.origPageY;
+        }
+        return {
+            origEvent: ev,
+            isTouch: false,
+            subjectEl: this.subjectEl,
+            pageX: ev.pageX,
+            pageY: ev.pageY,
+            deltaX: deltaX,
+            deltaY: deltaY,
+        };
+    };
+    PointerDragging.prototype.createEventFromTouch = function (ev, isFirst) {
+        var touches = ev.touches;
+        var pageX;
+        var pageY;
+        var deltaX = 0;
+        var deltaY = 0;
+        // if touch coords available, prefer,
+        // because FF would give bad ev.pageX ev.pageY
+        if (touches && touches.length) {
+            pageX = touches[0].pageX;
+            pageY = touches[0].pageY;
+        }
+        else {
+            pageX = ev.pageX;
+            pageY = ev.pageY;
+        }
+        // TODO: repeat code
+        if (isFirst) {
+            this.origPageX = pageX;
+            this.origPageY = pageY;
+        }
+        else {
+            deltaX = pageX - this.origPageX;
+            deltaY = pageY - this.origPageY;
+        }
+        return {
+            origEvent: ev,
+            isTouch: true,
+            subjectEl: this.subjectEl,
+            pageX: pageX,
+            pageY: pageY,
+            deltaX: deltaX,
+            deltaY: deltaY,
+        };
+    };
+    return PointerDragging;
+}());
+// Returns a boolean whether this was a left mouse click and no ctrl key (which means right click on Mac)
+function isPrimaryMouseButton(ev) {
+    return ev.button === 0 && !ev.ctrlKey;
+}
+// Ignoring fake mouse events generated by touch
+// ----------------------------------------------------------------------------------------------------
+function startIgnoringMouse() {
+    ignoreMouseDepth += 1;
+    setTimeout(function () {
+        ignoreMouseDepth -= 1;
+    }, _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.config.touchMouseIgnoreWait);
+}
+// We want to attach touchmove as early as possible for Safari
+// ----------------------------------------------------------------------------------------------------
+function listenerCreated() {
+    listenerCnt += 1;
+    if (listenerCnt === 1) {
+        window.addEventListener('touchmove', onWindowTouchMove, { passive: false });
+    }
+}
+function listenerDestroyed() {
+    listenerCnt -= 1;
+    if (!listenerCnt) {
+        window.removeEventListener('touchmove', onWindowTouchMove, { passive: false });
+    }
+}
+function onWindowTouchMove(ev) {
+    if (isWindowTouchMoveCancelled) {
+        ev.preventDefault();
+    }
+}
+
+/*
+An effect in which an element follows the movement of a pointer across the screen.
+The moving element is a clone of some other element.
+Must call start + handleMove + stop.
+*/
+var ElementMirror = /** @class */ (function () {
+    function ElementMirror() {
+        this.isVisible = false; // must be explicitly enabled
+        this.sourceEl = null;
+        this.mirrorEl = null;
+        this.sourceElRect = null; // screen coords relative to viewport
+        // options that can be set directly by caller
+        this.parentNode = document.body; // HIGHLY SUGGESTED to set this to sidestep ShadowDOM issues
+        this.zIndex = 9999;
+        this.revertDuration = 0;
+    }
+    ElementMirror.prototype.start = function (sourceEl, pageX, pageY) {
+        this.sourceEl = sourceEl;
+        this.sourceElRect = this.sourceEl.getBoundingClientRect();
+        this.origScreenX = pageX - window.pageXOffset;
+        this.origScreenY = pageY - window.pageYOffset;
+        this.deltaX = 0;
+        this.deltaY = 0;
+        this.updateElPosition();
+    };
+    ElementMirror.prototype.handleMove = function (pageX, pageY) {
+        this.deltaX = (pageX - window.pageXOffset) - this.origScreenX;
+        this.deltaY = (pageY - window.pageYOffset) - this.origScreenY;
+        this.updateElPosition();
+    };
+    // can be called before start
+    ElementMirror.prototype.setIsVisible = function (bool) {
+        if (bool) {
+            if (!this.isVisible) {
+                if (this.mirrorEl) {
+                    this.mirrorEl.style.display = '';
+                }
+                this.isVisible = bool; // needs to happen before updateElPosition
+                this.updateElPosition(); // because was not updating the position while invisible
+            }
+        }
+        else if (this.isVisible) {
+            if (this.mirrorEl) {
+                this.mirrorEl.style.display = 'none';
+            }
+            this.isVisible = bool;
+        }
+    };
+    // always async
+    ElementMirror.prototype.stop = function (needsRevertAnimation, callback) {
+        var _this = this;
+        var done = function () {
+            _this.cleanup();
+            callback();
+        };
+        if (needsRevertAnimation &&
+            this.mirrorEl &&
+            this.isVisible &&
+            this.revertDuration && // if 0, transition won't work
+            (this.deltaX || this.deltaY) // if same coords, transition won't work
+        ) {
+            this.doRevertAnimation(done, this.revertDuration);
+        }
+        else {
+            setTimeout(done, 0);
+        }
+    };
+    ElementMirror.prototype.doRevertAnimation = function (callback, revertDuration) {
+        var mirrorEl = this.mirrorEl;
+        var finalSourceElRect = this.sourceEl.getBoundingClientRect(); // because autoscrolling might have happened
+        mirrorEl.style.transition =
+            'top ' + revertDuration + 'ms,' +
+                'left ' + revertDuration + 'ms';
+        (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.applyStyle)(mirrorEl, {
+            left: finalSourceElRect.left,
+            top: finalSourceElRect.top,
+        });
+        (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.whenTransitionDone)(mirrorEl, function () {
+            mirrorEl.style.transition = '';
+            callback();
+        });
+    };
+    ElementMirror.prototype.cleanup = function () {
+        if (this.mirrorEl) {
+            (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.removeElement)(this.mirrorEl);
+            this.mirrorEl = null;
+        }
+        this.sourceEl = null;
+    };
+    ElementMirror.prototype.updateElPosition = function () {
+        if (this.sourceEl && this.isVisible) {
+            (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.applyStyle)(this.getMirrorEl(), {
+                left: this.sourceElRect.left + this.deltaX,
+                top: this.sourceElRect.top + this.deltaY,
+            });
+        }
+    };
+    ElementMirror.prototype.getMirrorEl = function () {
+        var sourceElRect = this.sourceElRect;
+        var mirrorEl = this.mirrorEl;
+        if (!mirrorEl) {
+            mirrorEl = this.mirrorEl = this.sourceEl.cloneNode(true); // cloneChildren=true
+            // we don't want long taps or any mouse interaction causing selection/menus.
+            // would use preventSelection(), but that prevents selectstart, causing problems.
+            mirrorEl.classList.add('fc-unselectable');
+            mirrorEl.classList.add('fc-event-dragging');
+            (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.applyStyle)(mirrorEl, {
+                position: 'fixed',
+                zIndex: this.zIndex,
+                visibility: '',
+                boxSizing: 'border-box',
+                width: sourceElRect.right - sourceElRect.left,
+                height: sourceElRect.bottom - sourceElRect.top,
+                right: 'auto',
+                bottom: 'auto',
+                margin: 0,
+            });
+            this.parentNode.appendChild(mirrorEl);
+        }
+        return mirrorEl;
+    };
+    return ElementMirror;
+}());
+
+/*
+Is a cache for a given element's scroll information (all the info that ScrollController stores)
+in addition the "client rectangle" of the element.. the area within the scrollbars.
+
+The cache can be in one of two modes:
+- doesListening:false - ignores when the container is scrolled by someone else
+- doesListening:true - watch for scrolling and update the cache
+*/
+var ScrollGeomCache = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(ScrollGeomCache, _super);
+    function ScrollGeomCache(scrollController, doesListening) {
+        var _this = _super.call(this) || this;
+        _this.handleScroll = function () {
+            _this.scrollTop = _this.scrollController.getScrollTop();
+            _this.scrollLeft = _this.scrollController.getScrollLeft();
+            _this.handleScrollChange();
+        };
+        _this.scrollController = scrollController;
+        _this.doesListening = doesListening;
+        _this.scrollTop = _this.origScrollTop = scrollController.getScrollTop();
+        _this.scrollLeft = _this.origScrollLeft = scrollController.getScrollLeft();
+        _this.scrollWidth = scrollController.getScrollWidth();
+        _this.scrollHeight = scrollController.getScrollHeight();
+        _this.clientWidth = scrollController.getClientWidth();
+        _this.clientHeight = scrollController.getClientHeight();
+        _this.clientRect = _this.computeClientRect(); // do last in case it needs cached values
+        if (_this.doesListening) {
+            _this.getEventTarget().addEventListener('scroll', _this.handleScroll);
+        }
+        return _this;
+    }
+    ScrollGeomCache.prototype.destroy = function () {
+        if (this.doesListening) {
+            this.getEventTarget().removeEventListener('scroll', this.handleScroll);
+        }
+    };
+    ScrollGeomCache.prototype.getScrollTop = function () {
+        return this.scrollTop;
+    };
+    ScrollGeomCache.prototype.getScrollLeft = function () {
+        return this.scrollLeft;
+    };
+    ScrollGeomCache.prototype.setScrollTop = function (top) {
+        this.scrollController.setScrollTop(top);
+        if (!this.doesListening) {
+            // we are not relying on the element to normalize out-of-bounds scroll values
+            // so we need to sanitize ourselves
+            this.scrollTop = Math.max(Math.min(top, this.getMaxScrollTop()), 0);
+            this.handleScrollChange();
+        }
+    };
+    ScrollGeomCache.prototype.setScrollLeft = function (top) {
+        this.scrollController.setScrollLeft(top);
+        if (!this.doesListening) {
+            // we are not relying on the element to normalize out-of-bounds scroll values
+            // so we need to sanitize ourselves
+            this.scrollLeft = Math.max(Math.min(top, this.getMaxScrollLeft()), 0);
+            this.handleScrollChange();
+        }
+    };
+    ScrollGeomCache.prototype.getClientWidth = function () {
+        return this.clientWidth;
+    };
+    ScrollGeomCache.prototype.getClientHeight = function () {
+        return this.clientHeight;
+    };
+    ScrollGeomCache.prototype.getScrollWidth = function () {
+        return this.scrollWidth;
+    };
+    ScrollGeomCache.prototype.getScrollHeight = function () {
+        return this.scrollHeight;
+    };
+    ScrollGeomCache.prototype.handleScrollChange = function () {
+    };
+    return ScrollGeomCache;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.ScrollController));
+
+var ElementScrollGeomCache = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(ElementScrollGeomCache, _super);
+    function ElementScrollGeomCache(el, doesListening) {
+        return _super.call(this, new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.ElementScrollController(el), doesListening) || this;
+    }
+    ElementScrollGeomCache.prototype.getEventTarget = function () {
+        return this.scrollController.el;
+    };
+    ElementScrollGeomCache.prototype.computeClientRect = function () {
+        return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.computeInnerRect)(this.scrollController.el);
+    };
+    return ElementScrollGeomCache;
+}(ScrollGeomCache));
+
+var WindowScrollGeomCache = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(WindowScrollGeomCache, _super);
+    function WindowScrollGeomCache(doesListening) {
+        return _super.call(this, new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.WindowScrollController(), doesListening) || this;
+    }
+    WindowScrollGeomCache.prototype.getEventTarget = function () {
+        return window;
+    };
+    WindowScrollGeomCache.prototype.computeClientRect = function () {
+        return {
+            left: this.scrollLeft,
+            right: this.scrollLeft + this.clientWidth,
+            top: this.scrollTop,
+            bottom: this.scrollTop + this.clientHeight,
+        };
+    };
+    // the window is the only scroll object that changes it's rectangle relative
+    // to the document's topleft as it scrolls
+    WindowScrollGeomCache.prototype.handleScrollChange = function () {
+        this.clientRect = this.computeClientRect();
+    };
+    return WindowScrollGeomCache;
+}(ScrollGeomCache));
+
+// If available we are using native "performance" API instead of "Date"
+// Read more about it on MDN:
+// https://developer.mozilla.org/en-US/docs/Web/API/Performance
+var getTime = typeof performance === 'function' ? performance.now : Date.now;
+/*
+For a pointer interaction, automatically scrolls certain scroll containers when the pointer
+approaches the edge.
+
+The caller must call start + handleMove + stop.
+*/
+var AutoScroller = /** @class */ (function () {
+    function AutoScroller() {
+        var _this = this;
+        // options that can be set by caller
+        this.isEnabled = true;
+        this.scrollQuery = [window, '.fc-scroller'];
+        this.edgeThreshold = 50; // pixels
+        this.maxVelocity = 300; // pixels per second
+        // internal state
+        this.pointerScreenX = null;
+        this.pointerScreenY = null;
+        this.isAnimating = false;
+        this.scrollCaches = null;
+        // protect against the initial pointerdown being too close to an edge and starting the scroll
+        this.everMovedUp = false;
+        this.everMovedDown = false;
+        this.everMovedLeft = false;
+        this.everMovedRight = false;
+        this.animate = function () {
+            if (_this.isAnimating) { // wasn't cancelled between animation calls
+                var edge = _this.computeBestEdge(_this.pointerScreenX + window.pageXOffset, _this.pointerScreenY + window.pageYOffset);
+                if (edge) {
+                    var now = getTime();
+                    _this.handleSide(edge, (now - _this.msSinceRequest) / 1000);
+                    _this.requestAnimation(now);
+                }
+                else {
+                    _this.isAnimating = false; // will stop animation
+                }
+            }
+        };
+    }
+    AutoScroller.prototype.start = function (pageX, pageY, scrollStartEl) {
+        if (this.isEnabled) {
+            this.scrollCaches = this.buildCaches(scrollStartEl);
+            this.pointerScreenX = null;
+            this.pointerScreenY = null;
+            this.everMovedUp = false;
+            this.everMovedDown = false;
+            this.everMovedLeft = false;
+            this.everMovedRight = false;
+            this.handleMove(pageX, pageY);
+        }
+    };
+    AutoScroller.prototype.handleMove = function (pageX, pageY) {
+        if (this.isEnabled) {
+            var pointerScreenX = pageX - window.pageXOffset;
+            var pointerScreenY = pageY - window.pageYOffset;
+            var yDelta = this.pointerScreenY === null ? 0 : pointerScreenY - this.pointerScreenY;
+            var xDelta = this.pointerScreenX === null ? 0 : pointerScreenX - this.pointerScreenX;
+            if (yDelta < 0) {
+                this.everMovedUp = true;
+            }
+            else if (yDelta > 0) {
+                this.everMovedDown = true;
+            }
+            if (xDelta < 0) {
+                this.everMovedLeft = true;
+            }
+            else if (xDelta > 0) {
+                this.everMovedRight = true;
+            }
+            this.pointerScreenX = pointerScreenX;
+            this.pointerScreenY = pointerScreenY;
+            if (!this.isAnimating) {
+                this.isAnimating = true;
+                this.requestAnimation(getTime());
+            }
+        }
+    };
+    AutoScroller.prototype.stop = function () {
+        if (this.isEnabled) {
+            this.isAnimating = false; // will stop animation
+            for (var _i = 0, _a = this.scrollCaches; _i < _a.length; _i++) {
+                var scrollCache = _a[_i];
+                scrollCache.destroy();
+            }
+            this.scrollCaches = null;
+        }
+    };
+    AutoScroller.prototype.requestAnimation = function (now) {
+        this.msSinceRequest = now;
+        requestAnimationFrame(this.animate);
+    };
+    AutoScroller.prototype.handleSide = function (edge, seconds) {
+        var scrollCache = edge.scrollCache;
+        var edgeThreshold = this.edgeThreshold;
+        var invDistance = edgeThreshold - edge.distance;
+        var velocity = // the closer to the edge, the faster we scroll
+         ((invDistance * invDistance) / (edgeThreshold * edgeThreshold)) * // quadratic
+            this.maxVelocity * seconds;
+        var sign = 1;
+        switch (edge.name) {
+            case 'left':
+                sign = -1;
+            // falls through
+            case 'right':
+                scrollCache.setScrollLeft(scrollCache.getScrollLeft() + velocity * sign);
+                break;
+            case 'top':
+                sign = -1;
+            // falls through
+            case 'bottom':
+                scrollCache.setScrollTop(scrollCache.getScrollTop() + velocity * sign);
+                break;
+        }
+    };
+    // left/top are relative to document topleft
+    AutoScroller.prototype.computeBestEdge = function (left, top) {
+        var edgeThreshold = this.edgeThreshold;
+        var bestSide = null;
+        for (var _i = 0, _a = this.scrollCaches; _i < _a.length; _i++) {
+            var scrollCache = _a[_i];
+            var rect = scrollCache.clientRect;
+            var leftDist = left - rect.left;
+            var rightDist = rect.right - left;
+            var topDist = top - rect.top;
+            var bottomDist = rect.bottom - top;
+            // completely within the rect?
+            if (leftDist >= 0 && rightDist >= 0 && topDist >= 0 && bottomDist >= 0) {
+                if (topDist <= edgeThreshold && this.everMovedUp && scrollCache.canScrollUp() &&
+                    (!bestSide || bestSide.distance > topDist)) {
+                    bestSide = { scrollCache: scrollCache, name: 'top', distance: topDist };
+                }
+                if (bottomDist <= edgeThreshold && this.everMovedDown && scrollCache.canScrollDown() &&
+                    (!bestSide || bestSide.distance > bottomDist)) {
+                    bestSide = { scrollCache: scrollCache, name: 'bottom', distance: bottomDist };
+                }
+                if (leftDist <= edgeThreshold && this.everMovedLeft && scrollCache.canScrollLeft() &&
+                    (!bestSide || bestSide.distance > leftDist)) {
+                    bestSide = { scrollCache: scrollCache, name: 'left', distance: leftDist };
+                }
+                if (rightDist <= edgeThreshold && this.everMovedRight && scrollCache.canScrollRight() &&
+                    (!bestSide || bestSide.distance > rightDist)) {
+                    bestSide = { scrollCache: scrollCache, name: 'right', distance: rightDist };
+                }
+            }
+        }
+        return bestSide;
+    };
+    AutoScroller.prototype.buildCaches = function (scrollStartEl) {
+        return this.queryScrollEls(scrollStartEl).map(function (el) {
+            if (el === window) {
+                return new WindowScrollGeomCache(false); // false = don't listen to user-generated scrolls
+            }
+            return new ElementScrollGeomCache(el, false); // false = don't listen to user-generated scrolls
+        });
+    };
+    AutoScroller.prototype.queryScrollEls = function (scrollStartEl) {
+        var els = [];
+        for (var _i = 0, _a = this.scrollQuery; _i < _a.length; _i++) {
+            var query = _a[_i];
+            if (typeof query === 'object') {
+                els.push(query);
+            }
+            else {
+                els.push.apply(els, Array.prototype.slice.call((0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getElRoot)(scrollStartEl).querySelectorAll(query)));
+            }
+        }
+        return els;
+    };
+    return AutoScroller;
+}());
+
+/*
+Monitors dragging on an element. Has a number of high-level features:
+- minimum distance required before dragging
+- minimum wait time ("delay") before dragging
+- a mirror element that follows the pointer
+*/
+var FeaturefulElementDragging = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(FeaturefulElementDragging, _super);
+    function FeaturefulElementDragging(containerEl, selector) {
+        var _this = _super.call(this, containerEl) || this;
+        _this.containerEl = containerEl;
+        // options that can be directly set by caller
+        // the caller can also set the PointerDragging's options as well
+        _this.delay = null;
+        _this.minDistance = 0;
+        _this.touchScrollAllowed = true; // prevents drag from starting and blocks scrolling during drag
+        _this.mirrorNeedsRevert = false;
+        _this.isInteracting = false; // is the user validly moving the pointer? lasts until pointerup
+        _this.isDragging = false; // is it INTENTFULLY dragging? lasts until after revert animation
+        _this.isDelayEnded = false;
+        _this.isDistanceSurpassed = false;
+        _this.delayTimeoutId = null;
+        _this.onPointerDown = function (ev) {
+            if (!_this.isDragging) { // so new drag doesn't happen while revert animation is going
+                _this.isInteracting = true;
+                _this.isDelayEnded = false;
+                _this.isDistanceSurpassed = false;
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.preventSelection)(document.body);
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.preventContextMenu)(document.body);
+                // prevent links from being visited if there's an eventual drag.
+                // also prevents selection in older browsers (maybe?).
+                // not necessary for touch, besides, browser would complain about passiveness.
+                if (!ev.isTouch) {
+                    ev.origEvent.preventDefault();
+                }
+                _this.emitter.trigger('pointerdown', ev);
+                if (_this.isInteracting && // not destroyed via pointerdown handler
+                    !_this.pointer.shouldIgnoreMove) {
+                    // actions related to initiating dragstart+dragmove+dragend...
+                    _this.mirror.setIsVisible(false); // reset. caller must set-visible
+                    _this.mirror.start(ev.subjectEl, ev.pageX, ev.pageY); // must happen on first pointer down
+                    _this.startDelay(ev);
+                    if (!_this.minDistance) {
+                        _this.handleDistanceSurpassed(ev);
+                    }
+                }
+            }
+        };
+        _this.onPointerMove = function (ev) {
+            if (_this.isInteracting) {
+                _this.emitter.trigger('pointermove', ev);
+                if (!_this.isDistanceSurpassed) {
+                    var minDistance = _this.minDistance;
+                    var distanceSq = void 0; // current distance from the origin, squared
+                    var deltaX = ev.deltaX, deltaY = ev.deltaY;
+                    distanceSq = deltaX * deltaX + deltaY * deltaY;
+                    if (distanceSq >= minDistance * minDistance) { // use pythagorean theorem
+                        _this.handleDistanceSurpassed(ev);
+                    }
+                }
+                if (_this.isDragging) {
+                    // a real pointer move? (not one simulated by scrolling)
+                    if (ev.origEvent.type !== 'scroll') {
+                        _this.mirror.handleMove(ev.pageX, ev.pageY);
+                        _this.autoScroller.handleMove(ev.pageX, ev.pageY);
+                    }
+                    _this.emitter.trigger('dragmove', ev);
+                }
+            }
+        };
+        _this.onPointerUp = function (ev) {
+            if (_this.isInteracting) {
+                _this.isInteracting = false;
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.allowSelection)(document.body);
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.allowContextMenu)(document.body);
+                _this.emitter.trigger('pointerup', ev); // can potentially set mirrorNeedsRevert
+                if (_this.isDragging) {
+                    _this.autoScroller.stop();
+                    _this.tryStopDrag(ev); // which will stop the mirror
+                }
+                if (_this.delayTimeoutId) {
+                    clearTimeout(_this.delayTimeoutId);
+                    _this.delayTimeoutId = null;
+                }
+            }
+        };
+        var pointer = _this.pointer = new PointerDragging(containerEl);
+        pointer.emitter.on('pointerdown', _this.onPointerDown);
+        pointer.emitter.on('pointermove', _this.onPointerMove);
+        pointer.emitter.on('pointerup', _this.onPointerUp);
+        if (selector) {
+            pointer.selector = selector;
+        }
+        _this.mirror = new ElementMirror();
+        _this.autoScroller = new AutoScroller();
+        return _this;
+    }
+    FeaturefulElementDragging.prototype.destroy = function () {
+        this.pointer.destroy();
+        // HACK: simulate a pointer-up to end the current drag
+        // TODO: fire 'dragend' directly and stop interaction. discourage use of pointerup event (b/c might not fire)
+        this.onPointerUp({});
+    };
+    FeaturefulElementDragging.prototype.startDelay = function (ev) {
+        var _this = this;
+        if (typeof this.delay === 'number') {
+            this.delayTimeoutId = setTimeout(function () {
+                _this.delayTimeoutId = null;
+                _this.handleDelayEnd(ev);
+            }, this.delay); // not assignable to number!
+        }
+        else {
+            this.handleDelayEnd(ev);
+        }
+    };
+    FeaturefulElementDragging.prototype.handleDelayEnd = function (ev) {
+        this.isDelayEnded = true;
+        this.tryStartDrag(ev);
+    };
+    FeaturefulElementDragging.prototype.handleDistanceSurpassed = function (ev) {
+        this.isDistanceSurpassed = true;
+        this.tryStartDrag(ev);
+    };
+    FeaturefulElementDragging.prototype.tryStartDrag = function (ev) {
+        if (this.isDelayEnded && this.isDistanceSurpassed) {
+            if (!this.pointer.wasTouchScroll || this.touchScrollAllowed) {
+                this.isDragging = true;
+                this.mirrorNeedsRevert = false;
+                this.autoScroller.start(ev.pageX, ev.pageY, this.containerEl);
+                this.emitter.trigger('dragstart', ev);
+                if (this.touchScrollAllowed === false) {
+                    this.pointer.cancelTouchScroll();
+                }
+            }
+        }
+    };
+    FeaturefulElementDragging.prototype.tryStopDrag = function (ev) {
+        // .stop() is ALWAYS asynchronous, which we NEED because we want all pointerup events
+        // that come from the document to fire beforehand. much more convenient this way.
+        this.mirror.stop(this.mirrorNeedsRevert, this.stopDrag.bind(this, ev));
+    };
+    FeaturefulElementDragging.prototype.stopDrag = function (ev) {
+        this.isDragging = false;
+        this.emitter.trigger('dragend', ev);
+    };
+    // fill in the implementations...
+    FeaturefulElementDragging.prototype.setIgnoreMove = function (bool) {
+        this.pointer.shouldIgnoreMove = bool;
+    };
+    FeaturefulElementDragging.prototype.setMirrorIsVisible = function (bool) {
+        this.mirror.setIsVisible(bool);
+    };
+    FeaturefulElementDragging.prototype.setMirrorNeedsRevert = function (bool) {
+        this.mirrorNeedsRevert = bool;
+    };
+    FeaturefulElementDragging.prototype.setAutoScrollEnabled = function (bool) {
+        this.autoScroller.isEnabled = bool;
+    };
+    return FeaturefulElementDragging;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.ElementDragging));
+
+/*
+When this class is instantiated, it records the offset of an element (relative to the document topleft),
+and continues to monitor scrolling, updating the cached coordinates if it needs to.
+Does not access the DOM after instantiation, so highly performant.
+
+Also keeps track of all scrolling/overflow:hidden containers that are parents of the given element
+and an determine if a given point is inside the combined clipping rectangle.
+*/
+var OffsetTracker = /** @class */ (function () {
+    function OffsetTracker(el) {
+        this.origRect = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.computeRect)(el);
+        // will work fine for divs that have overflow:hidden
+        this.scrollCaches = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getClippingParents)(el).map(function (scrollEl) { return new ElementScrollGeomCache(scrollEl, true); });
+    }
+    OffsetTracker.prototype.destroy = function () {
+        for (var _i = 0, _a = this.scrollCaches; _i < _a.length; _i++) {
+            var scrollCache = _a[_i];
+            scrollCache.destroy();
+        }
+    };
+    OffsetTracker.prototype.computeLeft = function () {
+        var left = this.origRect.left;
+        for (var _i = 0, _a = this.scrollCaches; _i < _a.length; _i++) {
+            var scrollCache = _a[_i];
+            left += scrollCache.origScrollLeft - scrollCache.getScrollLeft();
+        }
+        return left;
+    };
+    OffsetTracker.prototype.computeTop = function () {
+        var top = this.origRect.top;
+        for (var _i = 0, _a = this.scrollCaches; _i < _a.length; _i++) {
+            var scrollCache = _a[_i];
+            top += scrollCache.origScrollTop - scrollCache.getScrollTop();
+        }
+        return top;
+    };
+    OffsetTracker.prototype.isWithinClipping = function (pageX, pageY) {
+        var point = { left: pageX, top: pageY };
+        for (var _i = 0, _a = this.scrollCaches; _i < _a.length; _i++) {
+            var scrollCache = _a[_i];
+            if (!isIgnoredClipping(scrollCache.getEventTarget()) &&
+                !(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.pointInsideRect)(point, scrollCache.clientRect)) {
+                return false;
+            }
+        }
+        return true;
+    };
+    return OffsetTracker;
+}());
+// certain clipping containers should never constrain interactions, like <html> and <body>
+// https://github.com/fullcalendar/fullcalendar/issues/3615
+function isIgnoredClipping(node) {
+    var tagName = node.tagName;
+    return tagName === 'HTML' || tagName === 'BODY';
+}
+
+/*
+Tracks movement over multiple droppable areas (aka "hits")
+that exist in one or more DateComponents.
+Relies on an existing draggable.
+
+emits:
+- pointerdown
+- dragstart
+- hitchange - fires initially, even if not over a hit
+- pointerup
+- (hitchange - again, to null, if ended over a hit)
+- dragend
+*/
+var HitDragging = /** @class */ (function () {
+    function HitDragging(dragging, droppableStore) {
+        var _this = this;
+        // options that can be set by caller
+        this.useSubjectCenter = false;
+        this.requireInitial = true; // if doesn't start out on a hit, won't emit any events
+        this.initialHit = null;
+        this.movingHit = null;
+        this.finalHit = null; // won't ever be populated if shouldIgnoreMove
+        this.handlePointerDown = function (ev) {
+            var dragging = _this.dragging;
+            _this.initialHit = null;
+            _this.movingHit = null;
+            _this.finalHit = null;
+            _this.prepareHits();
+            _this.processFirstCoord(ev);
+            if (_this.initialHit || !_this.requireInitial) {
+                dragging.setIgnoreMove(false);
+                // TODO: fire this before computing processFirstCoord, so listeners can cancel. this gets fired by almost every handler :(
+                _this.emitter.trigger('pointerdown', ev);
+            }
+            else {
+                dragging.setIgnoreMove(true);
+            }
+        };
+        this.handleDragStart = function (ev) {
+            _this.emitter.trigger('dragstart', ev);
+            _this.handleMove(ev, true); // force = fire even if initially null
+        };
+        this.handleDragMove = function (ev) {
+            _this.emitter.trigger('dragmove', ev);
+            _this.handleMove(ev);
+        };
+        this.handlePointerUp = function (ev) {
+            _this.releaseHits();
+            _this.emitter.trigger('pointerup', ev);
+        };
+        this.handleDragEnd = function (ev) {
+            if (_this.movingHit) {
+                _this.emitter.trigger('hitupdate', null, true, ev);
+            }
+            _this.finalHit = _this.movingHit;
+            _this.movingHit = null;
+            _this.emitter.trigger('dragend', ev);
+        };
+        this.droppableStore = droppableStore;
+        dragging.emitter.on('pointerdown', this.handlePointerDown);
+        dragging.emitter.on('dragstart', this.handleDragStart);
+        dragging.emitter.on('dragmove', this.handleDragMove);
+        dragging.emitter.on('pointerup', this.handlePointerUp);
+        dragging.emitter.on('dragend', this.handleDragEnd);
+        this.dragging = dragging;
+        this.emitter = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.Emitter();
+    }
+    // sets initialHit
+    // sets coordAdjust
+    HitDragging.prototype.processFirstCoord = function (ev) {
+        var origPoint = { left: ev.pageX, top: ev.pageY };
+        var adjustedPoint = origPoint;
+        var subjectEl = ev.subjectEl;
+        var subjectRect;
+        if (subjectEl instanceof HTMLElement) { // i.e. not a Document/ShadowRoot
+            subjectRect = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.computeRect)(subjectEl);
+            adjustedPoint = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.constrainPoint)(adjustedPoint, subjectRect);
+        }
+        var initialHit = this.initialHit = this.queryHitForOffset(adjustedPoint.left, adjustedPoint.top);
+        if (initialHit) {
+            if (this.useSubjectCenter && subjectRect) {
+                var slicedSubjectRect = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.intersectRects)(subjectRect, initialHit.rect);
+                if (slicedSubjectRect) {
+                    adjustedPoint = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getRectCenter)(slicedSubjectRect);
+                }
+            }
+            this.coordAdjust = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.diffPoints)(adjustedPoint, origPoint);
+        }
+        else {
+            this.coordAdjust = { left: 0, top: 0 };
+        }
+    };
+    HitDragging.prototype.handleMove = function (ev, forceHandle) {
+        var hit = this.queryHitForOffset(ev.pageX + this.coordAdjust.left, ev.pageY + this.coordAdjust.top);
+        if (forceHandle || !isHitsEqual(this.movingHit, hit)) {
+            this.movingHit = hit;
+            this.emitter.trigger('hitupdate', hit, false, ev);
+        }
+    };
+    HitDragging.prototype.prepareHits = function () {
+        this.offsetTrackers = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.mapHash)(this.droppableStore, function (interactionSettings) {
+            interactionSettings.component.prepareHits();
+            return new OffsetTracker(interactionSettings.el);
+        });
+    };
+    HitDragging.prototype.releaseHits = function () {
+        var offsetTrackers = this.offsetTrackers;
+        for (var id in offsetTrackers) {
+            offsetTrackers[id].destroy();
+        }
+        this.offsetTrackers = {};
+    };
+    HitDragging.prototype.queryHitForOffset = function (offsetLeft, offsetTop) {
+        var _a = this, droppableStore = _a.droppableStore, offsetTrackers = _a.offsetTrackers;
+        var bestHit = null;
+        for (var id in droppableStore) {
+            var component = droppableStore[id].component;
+            var offsetTracker = offsetTrackers[id];
+            if (offsetTracker && // wasn't destroyed mid-drag
+                offsetTracker.isWithinClipping(offsetLeft, offsetTop)) {
+                var originLeft = offsetTracker.computeLeft();
+                var originTop = offsetTracker.computeTop();
+                var positionLeft = offsetLeft - originLeft;
+                var positionTop = offsetTop - originTop;
+                var origRect = offsetTracker.origRect;
+                var width = origRect.right - origRect.left;
+                var height = origRect.bottom - origRect.top;
+                if (
+                // must be within the element's bounds
+                positionLeft >= 0 && positionLeft < width &&
+                    positionTop >= 0 && positionTop < height) {
+                    var hit = component.queryHit(positionLeft, positionTop, width, height);
+                    if (hit && (
+                    // make sure the hit is within activeRange, meaning it's not a dead cell
+                    (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.rangeContainsRange)(hit.dateProfile.activeRange, hit.dateSpan.range)) &&
+                        (!bestHit || hit.layer > bestHit.layer)) {
+                        hit.componentId = id;
+                        hit.context = component.context;
+                        // TODO: better way to re-orient rectangle
+                        hit.rect.left += originLeft;
+                        hit.rect.right += originLeft;
+                        hit.rect.top += originTop;
+                        hit.rect.bottom += originTop;
+                        bestHit = hit;
+                    }
+                }
+            }
+        }
+        return bestHit;
+    };
+    return HitDragging;
+}());
+function isHitsEqual(hit0, hit1) {
+    if (!hit0 && !hit1) {
+        return true;
+    }
+    if (Boolean(hit0) !== Boolean(hit1)) {
+        return false;
+    }
+    return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.isDateSpansEqual)(hit0.dateSpan, hit1.dateSpan);
+}
+
+function buildDatePointApiWithContext(dateSpan, context) {
+    var props = {};
+    for (var _i = 0, _a = context.pluginHooks.datePointTransforms; _i < _a.length; _i++) {
+        var transform = _a[_i];
+        (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)(props, transform(dateSpan, context));
+    }
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)(props, buildDatePointApi(dateSpan, context.dateEnv));
+    return props;
+}
+function buildDatePointApi(span, dateEnv) {
+    return {
+        date: dateEnv.toDate(span.range.start),
+        dateStr: dateEnv.formatIso(span.range.start, { omitTime: span.allDay }),
+        allDay: span.allDay,
+    };
+}
+
+/*
+Monitors when the user clicks on a specific date/time of a component.
+A pointerdown+pointerup on the same "hit" constitutes a click.
+*/
+var DateClicking = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(DateClicking, _super);
+    function DateClicking(settings) {
+        var _this = _super.call(this, settings) || this;
+        _this.handlePointerDown = function (pev) {
+            var dragging = _this.dragging;
+            var downEl = pev.origEvent.target;
+            // do this in pointerdown (not dragend) because DOM might be mutated by the time dragend is fired
+            dragging.setIgnoreMove(!_this.component.isValidDateDownEl(downEl));
+        };
+        // won't even fire if moving was ignored
+        _this.handleDragEnd = function (ev) {
+            var component = _this.component;
+            var pointer = _this.dragging.pointer;
+            if (!pointer.wasTouchScroll) {
+                var _a = _this.hitDragging, initialHit = _a.initialHit, finalHit = _a.finalHit;
+                if (initialHit && finalHit && isHitsEqual(initialHit, finalHit)) {
+                    var context = component.context;
+                    var arg = (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, buildDatePointApiWithContext(initialHit.dateSpan, context)), { dayEl: initialHit.dayEl, jsEvent: ev.origEvent, view: context.viewApi || context.calendarApi.view });
+                    context.emitter.trigger('dateClick', arg);
+                }
+            }
+        };
+        // we DO want to watch pointer moves because otherwise finalHit won't get populated
+        _this.dragging = new FeaturefulElementDragging(settings.el);
+        _this.dragging.autoScroller.isEnabled = false;
+        var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.interactionSettingsToStore)(settings));
+        hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
+        hitDragging.emitter.on('dragend', _this.handleDragEnd);
+        return _this;
+    }
+    DateClicking.prototype.destroy = function () {
+        this.dragging.destroy();
+    };
+    return DateClicking;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.Interaction));
+
+/*
+Tracks when the user selects a portion of time of a component,
+constituted by a drag over date cells, with a possible delay at the beginning of the drag.
+*/
+var DateSelecting = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(DateSelecting, _super);
+    function DateSelecting(settings) {
+        var _this = _super.call(this, settings) || this;
+        _this.dragSelection = null;
+        _this.handlePointerDown = function (ev) {
+            var _a = _this, component = _a.component, dragging = _a.dragging;
+            var options = component.context.options;
+            var canSelect = options.selectable &&
+                component.isValidDateDownEl(ev.origEvent.target);
+            // don't bother to watch expensive moves if component won't do selection
+            dragging.setIgnoreMove(!canSelect);
+            // if touch, require user to hold down
+            dragging.delay = ev.isTouch ? getComponentTouchDelay$1(component) : null;
+        };
+        _this.handleDragStart = function (ev) {
+            _this.component.context.calendarApi.unselect(ev); // unselect previous selections
+        };
+        _this.handleHitUpdate = function (hit, isFinal) {
+            var context = _this.component.context;
+            var dragSelection = null;
+            var isInvalid = false;
+            if (hit) {
+                var initialHit = _this.hitDragging.initialHit;
+                var disallowed = hit.componentId === initialHit.componentId
+                    && _this.isHitComboAllowed
+                    && !_this.isHitComboAllowed(initialHit, hit);
+                if (!disallowed) {
+                    dragSelection = joinHitsIntoSelection(initialHit, hit, context.pluginHooks.dateSelectionTransformers);
+                }
+                if (!dragSelection || !(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.isDateSelectionValid)(dragSelection, hit.dateProfile, context)) {
+                    isInvalid = true;
+                    dragSelection = null;
+                }
+            }
+            if (dragSelection) {
+                context.dispatch({ type: 'SELECT_DATES', selection: dragSelection });
+            }
+            else if (!isFinal) { // only unselect if moved away while dragging
+                context.dispatch({ type: 'UNSELECT_DATES' });
+            }
+            if (!isInvalid) {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.enableCursor)();
+            }
+            else {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.disableCursor)();
+            }
+            if (!isFinal) {
+                _this.dragSelection = dragSelection; // only clear if moved away from all hits while dragging
+            }
+        };
+        _this.handlePointerUp = function (pev) {
+            if (_this.dragSelection) {
+                // selection is already rendered, so just need to report selection
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.triggerDateSelect)(_this.dragSelection, pev, _this.component.context);
+                _this.dragSelection = null;
+            }
+        };
+        var component = settings.component;
+        var options = component.context.options;
+        var dragging = _this.dragging = new FeaturefulElementDragging(settings.el);
+        dragging.touchScrollAllowed = false;
+        dragging.minDistance = options.selectMinDistance || 0;
+        dragging.autoScroller.isEnabled = options.dragScroll;
+        var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.interactionSettingsToStore)(settings));
+        hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
+        hitDragging.emitter.on('dragstart', _this.handleDragStart);
+        hitDragging.emitter.on('hitupdate', _this.handleHitUpdate);
+        hitDragging.emitter.on('pointerup', _this.handlePointerUp);
+        return _this;
+    }
+    DateSelecting.prototype.destroy = function () {
+        this.dragging.destroy();
+    };
+    return DateSelecting;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.Interaction));
+function getComponentTouchDelay$1(component) {
+    var options = component.context.options;
+    var delay = options.selectLongPressDelay;
+    if (delay == null) {
+        delay = options.longPressDelay;
+    }
+    return delay;
+}
+function joinHitsIntoSelection(hit0, hit1, dateSelectionTransformers) {
+    var dateSpan0 = hit0.dateSpan;
+    var dateSpan1 = hit1.dateSpan;
+    var ms = [
+        dateSpan0.range.start,
+        dateSpan0.range.end,
+        dateSpan1.range.start,
+        dateSpan1.range.end,
+    ];
+    ms.sort(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.compareNumbers);
+    var props = {};
+    for (var _i = 0, dateSelectionTransformers_1 = dateSelectionTransformers; _i < dateSelectionTransformers_1.length; _i++) {
+        var transformer = dateSelectionTransformers_1[_i];
+        var res = transformer(hit0, hit1);
+        if (res === false) {
+            return null;
+        }
+        if (res) {
+            (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)(props, res);
+        }
+    }
+    props.range = { start: ms[0], end: ms[3] };
+    props.allDay = dateSpan0.allDay;
+    return props;
+}
+
+var EventDragging = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(EventDragging, _super);
+    function EventDragging(settings) {
+        var _this = _super.call(this, settings) || this;
+        // internal state
+        _this.subjectEl = null;
+        _this.subjectSeg = null; // the seg being selected/dragged
+        _this.isDragging = false;
+        _this.eventRange = null;
+        _this.relevantEvents = null; // the events being dragged
+        _this.receivingContext = null;
+        _this.validMutation = null;
+        _this.mutatedRelevantEvents = null;
+        _this.handlePointerDown = function (ev) {
+            var origTarget = ev.origEvent.target;
+            var _a = _this, component = _a.component, dragging = _a.dragging;
+            var mirror = dragging.mirror;
+            var options = component.context.options;
+            var initialContext = component.context;
+            _this.subjectEl = ev.subjectEl;
+            var subjectSeg = _this.subjectSeg = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getElSeg)(ev.subjectEl);
+            var eventRange = _this.eventRange = subjectSeg.eventRange;
+            var eventInstanceId = eventRange.instance.instanceId;
+            _this.relevantEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getRelevantEvents)(initialContext.getCurrentData().eventStore, eventInstanceId);
+            dragging.minDistance = ev.isTouch ? 0 : options.eventDragMinDistance;
+            dragging.delay =
+                // only do a touch delay if touch and this event hasn't been selected yet
+                (ev.isTouch && eventInstanceId !== component.props.eventSelection) ?
+                    getComponentTouchDelay(component) :
+                    null;
+            if (options.fixedMirrorParent) {
+                mirror.parentNode = options.fixedMirrorParent;
+            }
+            else {
+                mirror.parentNode = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(origTarget, '.fc');
+            }
+            mirror.revertDuration = options.dragRevertDuration;
+            var isValid = component.isValidSegDownEl(origTarget) &&
+                !(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(origTarget, '.fc-event-resizer'); // NOT on a resizer
+            dragging.setIgnoreMove(!isValid);
+            // disable dragging for elements that are resizable (ie, selectable)
+            // but are not draggable
+            _this.isDragging = isValid &&
+                ev.subjectEl.classList.contains('fc-event-draggable');
+        };
+        _this.handleDragStart = function (ev) {
+            var initialContext = _this.component.context;
+            var eventRange = _this.eventRange;
+            var eventInstanceId = eventRange.instance.instanceId;
+            if (ev.isTouch) {
+                // need to select a different event?
+                if (eventInstanceId !== _this.component.props.eventSelection) {
+                    initialContext.dispatch({ type: 'SELECT_EVENT', eventInstanceId: eventInstanceId });
+                }
+            }
+            else {
+                // if now using mouse, but was previous touch interaction, clear selected event
+                initialContext.dispatch({ type: 'UNSELECT_EVENT' });
+            }
+            if (_this.isDragging) {
+                initialContext.calendarApi.unselect(ev); // unselect *date* selection
+                initialContext.emitter.trigger('eventDragStart', {
+                    el: _this.subjectEl,
+                    event: new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(initialContext, eventRange.def, eventRange.instance),
+                    jsEvent: ev.origEvent,
+                    view: initialContext.viewApi,
+                });
+            }
+        };
+        _this.handleHitUpdate = function (hit, isFinal) {
+            if (!_this.isDragging) {
+                return;
+            }
+            var relevantEvents = _this.relevantEvents;
+            var initialHit = _this.hitDragging.initialHit;
+            var initialContext = _this.component.context;
+            // states based on new hit
+            var receivingContext = null;
+            var mutation = null;
+            var mutatedRelevantEvents = null;
+            var isInvalid = false;
+            var interaction = {
+                affectedEvents: relevantEvents,
+                mutatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)(),
+                isEvent: true,
+            };
+            if (hit) {
+                receivingContext = hit.context;
+                var receivingOptions = receivingContext.options;
+                if (initialContext === receivingContext ||
+                    (receivingOptions.editable && receivingOptions.droppable)) {
+                    mutation = computeEventMutation(initialHit, hit, receivingContext.getCurrentData().pluginHooks.eventDragMutationMassagers);
+                    if (mutation) {
+                        mutatedRelevantEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.applyMutationToEventStore)(relevantEvents, receivingContext.getCurrentData().eventUiBases, mutation, receivingContext);
+                        interaction.mutatedEvents = mutatedRelevantEvents;
+                        if (!(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.isInteractionValid)(interaction, hit.dateProfile, receivingContext)) {
+                            isInvalid = true;
+                            mutation = null;
+                            mutatedRelevantEvents = null;
+                            interaction.mutatedEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)();
+                        }
+                    }
+                }
+                else {
+                    receivingContext = null;
+                }
+            }
+            _this.displayDrag(receivingContext, interaction);
+            if (!isInvalid) {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.enableCursor)();
+            }
+            else {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.disableCursor)();
+            }
+            if (!isFinal) {
+                if (initialContext === receivingContext && // TODO: write test for this
+                    isHitsEqual(initialHit, hit)) {
+                    mutation = null;
+                }
+                _this.dragging.setMirrorNeedsRevert(!mutation);
+                // render the mirror if no already-rendered mirror
+                // TODO: wish we could somehow wait for dispatch to guarantee render
+                _this.dragging.setMirrorIsVisible(!hit || !(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getElRoot)(_this.subjectEl).querySelector('.fc-event-mirror'));
+                // assign states based on new hit
+                _this.receivingContext = receivingContext;
+                _this.validMutation = mutation;
+                _this.mutatedRelevantEvents = mutatedRelevantEvents;
+            }
+        };
+        _this.handlePointerUp = function () {
+            if (!_this.isDragging) {
+                _this.cleanup(); // because handleDragEnd won't fire
+            }
+        };
+        _this.handleDragEnd = function (ev) {
+            if (_this.isDragging) {
+                var initialContext_1 = _this.component.context;
+                var initialView = initialContext_1.viewApi;
+                var _a = _this, receivingContext_1 = _a.receivingContext, validMutation = _a.validMutation;
+                var eventDef = _this.eventRange.def;
+                var eventInstance = _this.eventRange.instance;
+                var eventApi = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(initialContext_1, eventDef, eventInstance);
+                var relevantEvents_1 = _this.relevantEvents;
+                var mutatedRelevantEvents_1 = _this.mutatedRelevantEvents;
+                var finalHit = _this.hitDragging.finalHit;
+                _this.clearDrag(); // must happen after revert animation
+                initialContext_1.emitter.trigger('eventDragStop', {
+                    el: _this.subjectEl,
+                    event: eventApi,
+                    jsEvent: ev.origEvent,
+                    view: initialView,
+                });
+                if (validMutation) {
+                    // dropped within same calendar
+                    if (receivingContext_1 === initialContext_1) {
+                        var updatedEventApi = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(initialContext_1, mutatedRelevantEvents_1.defs[eventDef.defId], eventInstance ? mutatedRelevantEvents_1.instances[eventInstance.instanceId] : null);
+                        initialContext_1.dispatch({
+                            type: 'MERGE_EVENTS',
+                            eventStore: mutatedRelevantEvents_1,
+                        });
+                        var eventChangeArg = {
+                            oldEvent: eventApi,
+                            event: updatedEventApi,
+                            relatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.buildEventApis)(mutatedRelevantEvents_1, initialContext_1, eventInstance),
+                            revert: function () {
+                                initialContext_1.dispatch({
+                                    type: 'MERGE_EVENTS',
+                                    eventStore: relevantEvents_1, // the pre-change data
+                                });
+                            },
+                        };
+                        var transformed = {};
+                        for (var _i = 0, _b = initialContext_1.getCurrentData().pluginHooks.eventDropTransformers; _i < _b.length; _i++) {
+                            var transformer = _b[_i];
+                            (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)(transformed, transformer(validMutation, initialContext_1));
+                        }
+                        initialContext_1.emitter.trigger('eventDrop', (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, eventChangeArg), transformed), { el: ev.subjectEl, delta: validMutation.datesDelta, jsEvent: ev.origEvent, view: initialView }));
+                        initialContext_1.emitter.trigger('eventChange', eventChangeArg);
+                        // dropped in different calendar
+                    }
+                    else if (receivingContext_1) {
+                        var eventRemoveArg = {
+                            event: eventApi,
+                            relatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.buildEventApis)(relevantEvents_1, initialContext_1, eventInstance),
+                            revert: function () {
+                                initialContext_1.dispatch({
+                                    type: 'MERGE_EVENTS',
+                                    eventStore: relevantEvents_1,
+                                });
+                            },
+                        };
+                        initialContext_1.emitter.trigger('eventLeave', (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, eventRemoveArg), { draggedEl: ev.subjectEl, view: initialView }));
+                        initialContext_1.dispatch({
+                            type: 'REMOVE_EVENTS',
+                            eventStore: relevantEvents_1,
+                        });
+                        initialContext_1.emitter.trigger('eventRemove', eventRemoveArg);
+                        var addedEventDef = mutatedRelevantEvents_1.defs[eventDef.defId];
+                        var addedEventInstance = mutatedRelevantEvents_1.instances[eventInstance.instanceId];
+                        var addedEventApi = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(receivingContext_1, addedEventDef, addedEventInstance);
+                        receivingContext_1.dispatch({
+                            type: 'MERGE_EVENTS',
+                            eventStore: mutatedRelevantEvents_1,
+                        });
+                        var eventAddArg = {
+                            event: addedEventApi,
+                            relatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.buildEventApis)(mutatedRelevantEvents_1, receivingContext_1, addedEventInstance),
+                            revert: function () {
+                                receivingContext_1.dispatch({
+                                    type: 'REMOVE_EVENTS',
+                                    eventStore: mutatedRelevantEvents_1,
+                                });
+                            },
+                        };
+                        receivingContext_1.emitter.trigger('eventAdd', eventAddArg);
+                        if (ev.isTouch) {
+                            receivingContext_1.dispatch({
+                                type: 'SELECT_EVENT',
+                                eventInstanceId: eventInstance.instanceId,
+                            });
+                        }
+                        receivingContext_1.emitter.trigger('drop', (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, buildDatePointApiWithContext(finalHit.dateSpan, receivingContext_1)), { draggedEl: ev.subjectEl, jsEvent: ev.origEvent, view: finalHit.context.viewApi }));
+                        receivingContext_1.emitter.trigger('eventReceive', (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, eventAddArg), { draggedEl: ev.subjectEl, view: finalHit.context.viewApi }));
+                    }
+                }
+                else {
+                    initialContext_1.emitter.trigger('_noEventDrop');
+                }
+            }
+            _this.cleanup();
+        };
+        var component = _this.component;
+        var options = component.context.options;
+        var dragging = _this.dragging = new FeaturefulElementDragging(settings.el);
+        dragging.pointer.selector = EventDragging.SELECTOR;
+        dragging.touchScrollAllowed = false;
+        dragging.autoScroller.isEnabled = options.dragScroll;
+        var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.interactionSettingsStore);
+        hitDragging.useSubjectCenter = settings.useEventCenter;
+        hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
+        hitDragging.emitter.on('dragstart', _this.handleDragStart);
+        hitDragging.emitter.on('hitupdate', _this.handleHitUpdate);
+        hitDragging.emitter.on('pointerup', _this.handlePointerUp);
+        hitDragging.emitter.on('dragend', _this.handleDragEnd);
+        return _this;
+    }
+    EventDragging.prototype.destroy = function () {
+        this.dragging.destroy();
+    };
+    // render a drag state on the next receivingCalendar
+    EventDragging.prototype.displayDrag = function (nextContext, state) {
+        var initialContext = this.component.context;
+        var prevContext = this.receivingContext;
+        // does the previous calendar need to be cleared?
+        if (prevContext && prevContext !== nextContext) {
+            // does the initial calendar need to be cleared?
+            // if so, don't clear all the way. we still need to to hide the affectedEvents
+            if (prevContext === initialContext) {
+                prevContext.dispatch({
+                    type: 'SET_EVENT_DRAG',
+                    state: {
+                        affectedEvents: state.affectedEvents,
+                        mutatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)(),
+                        isEvent: true,
+                    },
+                });
+                // completely clear the old calendar if it wasn't the initial
+            }
+            else {
+                prevContext.dispatch({ type: 'UNSET_EVENT_DRAG' });
+            }
+        }
+        if (nextContext) {
+            nextContext.dispatch({ type: 'SET_EVENT_DRAG', state: state });
+        }
+    };
+    EventDragging.prototype.clearDrag = function () {
+        var initialCalendar = this.component.context;
+        var receivingContext = this.receivingContext;
+        if (receivingContext) {
+            receivingContext.dispatch({ type: 'UNSET_EVENT_DRAG' });
+        }
+        // the initial calendar might have an dummy drag state from displayDrag
+        if (initialCalendar !== receivingContext) {
+            initialCalendar.dispatch({ type: 'UNSET_EVENT_DRAG' });
+        }
+    };
+    EventDragging.prototype.cleanup = function () {
+        this.subjectSeg = null;
+        this.isDragging = false;
+        this.eventRange = null;
+        this.relevantEvents = null;
+        this.receivingContext = null;
+        this.validMutation = null;
+        this.mutatedRelevantEvents = null;
+    };
+    // TODO: test this in IE11
+    // QUESTION: why do we need it on the resizable???
+    EventDragging.SELECTOR = '.fc-event-draggable, .fc-event-resizable';
+    return EventDragging;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.Interaction));
+function computeEventMutation(hit0, hit1, massagers) {
+    var dateSpan0 = hit0.dateSpan;
+    var dateSpan1 = hit1.dateSpan;
+    var date0 = dateSpan0.range.start;
+    var date1 = dateSpan1.range.start;
+    var standardProps = {};
+    if (dateSpan0.allDay !== dateSpan1.allDay) {
+        standardProps.allDay = dateSpan1.allDay;
+        standardProps.hasEnd = hit1.context.options.allDayMaintainDuration;
+        if (dateSpan1.allDay) {
+            // means date1 is already start-of-day,
+            // but date0 needs to be converted
+            date0 = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.startOfDay)(date0);
+        }
+    }
+    var delta = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.diffDates)(date0, date1, hit0.context.dateEnv, hit0.componentId === hit1.componentId ?
+        hit0.largeUnit :
+        null);
+    if (delta.milliseconds) { // has hours/minutes/seconds
+        standardProps.allDay = false;
+    }
+    var mutation = {
+        datesDelta: delta,
+        standardProps: standardProps,
+    };
+    for (var _i = 0, massagers_1 = massagers; _i < massagers_1.length; _i++) {
+        var massager = massagers_1[_i];
+        massager(mutation, hit0, hit1);
+    }
+    return mutation;
+}
+function getComponentTouchDelay(component) {
+    var options = component.context.options;
+    var delay = options.eventLongPressDelay;
+    if (delay == null) {
+        delay = options.longPressDelay;
+    }
+    return delay;
+}
+
+var EventResizing = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(EventResizing, _super);
+    function EventResizing(settings) {
+        var _this = _super.call(this, settings) || this;
+        // internal state
+        _this.draggingSegEl = null;
+        _this.draggingSeg = null; // TODO: rename to resizingSeg? subjectSeg?
+        _this.eventRange = null;
+        _this.relevantEvents = null;
+        _this.validMutation = null;
+        _this.mutatedRelevantEvents = null;
+        _this.handlePointerDown = function (ev) {
+            var component = _this.component;
+            var segEl = _this.querySegEl(ev);
+            var seg = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getElSeg)(segEl);
+            var eventRange = _this.eventRange = seg.eventRange;
+            _this.dragging.minDistance = component.context.options.eventDragMinDistance;
+            // if touch, need to be working with a selected event
+            _this.dragging.setIgnoreMove(!_this.component.isValidSegDownEl(ev.origEvent.target) ||
+                (ev.isTouch && _this.component.props.eventSelection !== eventRange.instance.instanceId));
+        };
+        _this.handleDragStart = function (ev) {
+            var context = _this.component.context;
+            var eventRange = _this.eventRange;
+            _this.relevantEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getRelevantEvents)(context.getCurrentData().eventStore, _this.eventRange.instance.instanceId);
+            var segEl = _this.querySegEl(ev);
+            _this.draggingSegEl = segEl;
+            _this.draggingSeg = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getElSeg)(segEl);
+            context.calendarApi.unselect();
+            context.emitter.trigger('eventResizeStart', {
+                el: segEl,
+                event: new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(context, eventRange.def, eventRange.instance),
+                jsEvent: ev.origEvent,
+                view: context.viewApi,
+            });
+        };
+        _this.handleHitUpdate = function (hit, isFinal, ev) {
+            var context = _this.component.context;
+            var relevantEvents = _this.relevantEvents;
+            var initialHit = _this.hitDragging.initialHit;
+            var eventInstance = _this.eventRange.instance;
+            var mutation = null;
+            var mutatedRelevantEvents = null;
+            var isInvalid = false;
+            var interaction = {
+                affectedEvents: relevantEvents,
+                mutatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)(),
+                isEvent: true,
+            };
+            if (hit) {
+                var disallowed = hit.componentId === initialHit.componentId
+                    && _this.isHitComboAllowed
+                    && !_this.isHitComboAllowed(initialHit, hit);
+                if (!disallowed) {
+                    mutation = computeMutation(initialHit, hit, ev.subjectEl.classList.contains('fc-event-resizer-start'), eventInstance.range);
+                }
+            }
+            if (mutation) {
+                mutatedRelevantEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.applyMutationToEventStore)(relevantEvents, context.getCurrentData().eventUiBases, mutation, context);
+                interaction.mutatedEvents = mutatedRelevantEvents;
+                if (!(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.isInteractionValid)(interaction, hit.dateProfile, context)) {
+                    isInvalid = true;
+                    mutation = null;
+                    mutatedRelevantEvents = null;
+                    interaction.mutatedEvents = null;
+                }
+            }
+            if (mutatedRelevantEvents) {
+                context.dispatch({
+                    type: 'SET_EVENT_RESIZE',
+                    state: interaction,
+                });
+            }
+            else {
+                context.dispatch({ type: 'UNSET_EVENT_RESIZE' });
+            }
+            if (!isInvalid) {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.enableCursor)();
+            }
+            else {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.disableCursor)();
+            }
+            if (!isFinal) {
+                if (mutation && isHitsEqual(initialHit, hit)) {
+                    mutation = null;
+                }
+                _this.validMutation = mutation;
+                _this.mutatedRelevantEvents = mutatedRelevantEvents;
+            }
+        };
+        _this.handleDragEnd = function (ev) {
+            var context = _this.component.context;
+            var eventDef = _this.eventRange.def;
+            var eventInstance = _this.eventRange.instance;
+            var eventApi = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(context, eventDef, eventInstance);
+            var relevantEvents = _this.relevantEvents;
+            var mutatedRelevantEvents = _this.mutatedRelevantEvents;
+            context.emitter.trigger('eventResizeStop', {
+                el: _this.draggingSegEl,
+                event: eventApi,
+                jsEvent: ev.origEvent,
+                view: context.viewApi,
+            });
+            if (_this.validMutation) {
+                var updatedEventApi = new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(context, mutatedRelevantEvents.defs[eventDef.defId], eventInstance ? mutatedRelevantEvents.instances[eventInstance.instanceId] : null);
+                context.dispatch({
+                    type: 'MERGE_EVENTS',
+                    eventStore: mutatedRelevantEvents,
+                });
+                var eventChangeArg = {
+                    oldEvent: eventApi,
+                    event: updatedEventApi,
+                    relatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.buildEventApis)(mutatedRelevantEvents, context, eventInstance),
+                    revert: function () {
+                        context.dispatch({
+                            type: 'MERGE_EVENTS',
+                            eventStore: relevantEvents, // the pre-change events
+                        });
+                    },
+                };
+                context.emitter.trigger('eventResize', (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, eventChangeArg), { el: _this.draggingSegEl, startDelta: _this.validMutation.startDelta || (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createDuration)(0), endDelta: _this.validMutation.endDelta || (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createDuration)(0), jsEvent: ev.origEvent, view: context.viewApi }));
+                context.emitter.trigger('eventChange', eventChangeArg);
+            }
+            else {
+                context.emitter.trigger('_noEventResize');
+            }
+            // reset all internal state
+            _this.draggingSeg = null;
+            _this.relevantEvents = null;
+            _this.validMutation = null;
+            // okay to keep eventInstance around. useful to set it in handlePointerDown
+        };
+        var component = settings.component;
+        var dragging = _this.dragging = new FeaturefulElementDragging(settings.el);
+        dragging.pointer.selector = '.fc-event-resizer';
+        dragging.touchScrollAllowed = false;
+        dragging.autoScroller.isEnabled = component.context.options.dragScroll;
+        var hitDragging = _this.hitDragging = new HitDragging(_this.dragging, (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.interactionSettingsToStore)(settings));
+        hitDragging.emitter.on('pointerdown', _this.handlePointerDown);
+        hitDragging.emitter.on('dragstart', _this.handleDragStart);
+        hitDragging.emitter.on('hitupdate', _this.handleHitUpdate);
+        hitDragging.emitter.on('dragend', _this.handleDragEnd);
+        return _this;
+    }
+    EventResizing.prototype.destroy = function () {
+        this.dragging.destroy();
+    };
+    EventResizing.prototype.querySegEl = function (ev) {
+        return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(ev.subjectEl, '.fc-event');
+    };
+    return EventResizing;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.Interaction));
+function computeMutation(hit0, hit1, isFromStart, instanceRange) {
+    var dateEnv = hit0.context.dateEnv;
+    var date0 = hit0.dateSpan.range.start;
+    var date1 = hit1.dateSpan.range.start;
+    var delta = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.diffDates)(date0, date1, dateEnv, hit0.largeUnit);
+    if (isFromStart) {
+        if (dateEnv.add(instanceRange.start, delta) < instanceRange.end) {
+            return { startDelta: delta };
+        }
+    }
+    else if (dateEnv.add(instanceRange.end, delta) > instanceRange.start) {
+        return { endDelta: delta };
+    }
+    return null;
+}
+
+var UnselectAuto = /** @class */ (function () {
+    function UnselectAuto(context) {
+        var _this = this;
+        this.context = context;
+        this.isRecentPointerDateSelect = false; // wish we could use a selector to detect date selection, but uses hit system
+        this.matchesCancel = false;
+        this.matchesEvent = false;
+        this.onSelect = function (selectInfo) {
+            if (selectInfo.jsEvent) {
+                _this.isRecentPointerDateSelect = true;
+            }
+        };
+        this.onDocumentPointerDown = function (pev) {
+            var unselectCancel = _this.context.options.unselectCancel;
+            var downEl = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getEventTargetViaRoot)(pev.origEvent);
+            _this.matchesCancel = !!(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(downEl, unselectCancel);
+            _this.matchesEvent = !!(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementClosest)(downEl, EventDragging.SELECTOR); // interaction started on an event?
+        };
+        this.onDocumentPointerUp = function (pev) {
+            var context = _this.context;
+            var documentPointer = _this.documentPointer;
+            var calendarState = context.getCurrentData();
+            // touch-scrolling should never unfocus any type of selection
+            if (!documentPointer.wasTouchScroll) {
+                if (calendarState.dateSelection && // an existing date selection?
+                    !_this.isRecentPointerDateSelect // a new pointer-initiated date selection since last onDocumentPointerUp?
+                ) {
+                    var unselectAuto = context.options.unselectAuto;
+                    if (unselectAuto && (!unselectAuto || !_this.matchesCancel)) {
+                        context.calendarApi.unselect(pev);
+                    }
+                }
+                if (calendarState.eventSelection && // an existing event selected?
+                    !_this.matchesEvent // interaction DIDN'T start on an event
+                ) {
+                    context.dispatch({ type: 'UNSELECT_EVENT' });
+                }
+            }
+            _this.isRecentPointerDateSelect = false;
+        };
+        var documentPointer = this.documentPointer = new PointerDragging(document);
+        documentPointer.shouldIgnoreMove = true;
+        documentPointer.shouldWatchScroll = false;
+        documentPointer.emitter.on('pointerdown', this.onDocumentPointerDown);
+        documentPointer.emitter.on('pointerup', this.onDocumentPointerUp);
+        /*
+        TODO: better way to know about whether there was a selection with the pointer
+        */
+        context.emitter.on('select', this.onSelect);
+    }
+    UnselectAuto.prototype.destroy = function () {
+        this.context.emitter.off('select', this.onSelect);
+        this.documentPointer.destroy();
+    };
+    return UnselectAuto;
+}());
+
+var OPTION_REFINERS = {
+    fixedMirrorParent: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+};
+var LISTENER_REFINERS = {
+    dateClick: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventDragStart: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventDragStop: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventDrop: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventResizeStart: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventResizeStop: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventResize: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    drop: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventReceive: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+    eventLeave: _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.identity,
+};
+
+/*
+Given an already instantiated draggable object for one-or-more elements,
+Interprets any dragging as an attempt to drag an events that lives outside
+of a calendar onto a calendar.
+*/
+var ExternalElementDragging = /** @class */ (function () {
+    function ExternalElementDragging(dragging, suppliedDragMeta) {
+        var _this = this;
+        this.receivingContext = null;
+        this.droppableEvent = null; // will exist for all drags, even if create:false
+        this.suppliedDragMeta = null;
+        this.dragMeta = null;
+        this.handleDragStart = function (ev) {
+            _this.dragMeta = _this.buildDragMeta(ev.subjectEl);
+        };
+        this.handleHitUpdate = function (hit, isFinal, ev) {
+            var dragging = _this.hitDragging.dragging;
+            var receivingContext = null;
+            var droppableEvent = null;
+            var isInvalid = false;
+            var interaction = {
+                affectedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)(),
+                mutatedEvents: (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)(),
+                isEvent: _this.dragMeta.create,
+            };
+            if (hit) {
+                receivingContext = hit.context;
+                if (_this.canDropElOnCalendar(ev.subjectEl, receivingContext)) {
+                    droppableEvent = computeEventForDateSpan(hit.dateSpan, _this.dragMeta, receivingContext);
+                    interaction.mutatedEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.eventTupleToStore)(droppableEvent);
+                    isInvalid = !(0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.isInteractionValid)(interaction, hit.dateProfile, receivingContext);
+                    if (isInvalid) {
+                        interaction.mutatedEvents = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEmptyEventStore)();
+                        droppableEvent = null;
+                    }
+                }
+            }
+            _this.displayDrag(receivingContext, interaction);
+            // show mirror if no already-rendered mirror element OR if we are shutting down the mirror (?)
+            // TODO: wish we could somehow wait for dispatch to guarantee render
+            dragging.setMirrorIsVisible(isFinal || !droppableEvent || !document.querySelector('.fc-event-mirror'));
+            if (!isInvalid) {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.enableCursor)();
+            }
+            else {
+                (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.disableCursor)();
+            }
+            if (!isFinal) {
+                dragging.setMirrorNeedsRevert(!droppableEvent);
+                _this.receivingContext = receivingContext;
+                _this.droppableEvent = droppableEvent;
+            }
+        };
+        this.handleDragEnd = function (pev) {
+            var _a = _this, receivingContext = _a.receivingContext, droppableEvent = _a.droppableEvent;
+            _this.clearDrag();
+            if (receivingContext && droppableEvent) {
+                var finalHit = _this.hitDragging.finalHit;
+                var finalView = finalHit.context.viewApi;
+                var dragMeta = _this.dragMeta;
+                receivingContext.emitter.trigger('drop', (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)((0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, buildDatePointApiWithContext(finalHit.dateSpan, receivingContext)), { draggedEl: pev.subjectEl, jsEvent: pev.origEvent, view: finalView }));
+                if (dragMeta.create) {
+                    var addingEvents_1 = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.eventTupleToStore)(droppableEvent);
+                    receivingContext.dispatch({
+                        type: 'MERGE_EVENTS',
+                        eventStore: addingEvents_1,
+                    });
+                    if (pev.isTouch) {
+                        receivingContext.dispatch({
+                            type: 'SELECT_EVENT',
+                            eventInstanceId: droppableEvent.instance.instanceId,
+                        });
+                    }
+                    // signal that an external event landed
+                    receivingContext.emitter.trigger('eventReceive', {
+                        event: new _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.EventApi(receivingContext, droppableEvent.def, droppableEvent.instance),
+                        relatedEvents: [],
+                        revert: function () {
+                            receivingContext.dispatch({
+                                type: 'REMOVE_EVENTS',
+                                eventStore: addingEvents_1,
+                            });
+                        },
+                        draggedEl: pev.subjectEl,
+                        view: finalView,
+                    });
+                }
+            }
+            _this.receivingContext = null;
+            _this.droppableEvent = null;
+        };
+        var hitDragging = this.hitDragging = new HitDragging(dragging, _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.interactionSettingsStore);
+        hitDragging.requireInitial = false; // will start outside of a component
+        hitDragging.emitter.on('dragstart', this.handleDragStart);
+        hitDragging.emitter.on('hitupdate', this.handleHitUpdate);
+        hitDragging.emitter.on('dragend', this.handleDragEnd);
+        this.suppliedDragMeta = suppliedDragMeta;
+    }
+    ExternalElementDragging.prototype.buildDragMeta = function (subjectEl) {
+        if (typeof this.suppliedDragMeta === 'object') {
+            return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.parseDragMeta)(this.suppliedDragMeta);
+        }
+        if (typeof this.suppliedDragMeta === 'function') {
+            return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.parseDragMeta)(this.suppliedDragMeta(subjectEl));
+        }
+        return getDragMetaFromEl(subjectEl);
+    };
+    ExternalElementDragging.prototype.displayDrag = function (nextContext, state) {
+        var prevContext = this.receivingContext;
+        if (prevContext && prevContext !== nextContext) {
+            prevContext.dispatch({ type: 'UNSET_EVENT_DRAG' });
+        }
+        if (nextContext) {
+            nextContext.dispatch({ type: 'SET_EVENT_DRAG', state: state });
+        }
+    };
+    ExternalElementDragging.prototype.clearDrag = function () {
+        if (this.receivingContext) {
+            this.receivingContext.dispatch({ type: 'UNSET_EVENT_DRAG' });
+        }
+    };
+    ExternalElementDragging.prototype.canDropElOnCalendar = function (el, receivingContext) {
+        var dropAccept = receivingContext.options.dropAccept;
+        if (typeof dropAccept === 'function') {
+            return dropAccept.call(receivingContext.calendarApi, el);
+        }
+        if (typeof dropAccept === 'string' && dropAccept) {
+            return Boolean((0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.elementMatches)(el, dropAccept));
+        }
+        return true;
+    };
+    return ExternalElementDragging;
+}());
+// Utils for computing event store from the DragMeta
+// ----------------------------------------------------------------------------------------------------
+function computeEventForDateSpan(dateSpan, dragMeta, context) {
+    var defProps = (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)({}, dragMeta.leftoverProps);
+    for (var _i = 0, _a = context.pluginHooks.externalDefTransforms; _i < _a.length; _i++) {
+        var transform = _a[_i];
+        (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__assign)(defProps, transform(dateSpan, dragMeta));
+    }
+    var _b = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.refineEventDef)(defProps, context), refined = _b.refined, extra = _b.extra;
+    var def = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.parseEventDef)(refined, extra, dragMeta.sourceId, dateSpan.allDay, context.options.forceEventDuration || Boolean(dragMeta.duration), // hasEnd
+    context);
+    var start = dateSpan.range.start;
+    // only rely on time info if drop zone is all-day,
+    // otherwise, we already know the time
+    if (dateSpan.allDay && dragMeta.startTime) {
+        start = context.dateEnv.add(start, dragMeta.startTime);
+    }
+    var end = dragMeta.duration ?
+        context.dateEnv.add(start, dragMeta.duration) :
+        (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.getDefaultEventEnd)(dateSpan.allDay, start, context);
+    var instance = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createEventInstance)(def.defId, { start: start, end: end });
+    return { def: def, instance: instance };
+}
+// Utils for extracting data from element
+// ----------------------------------------------------------------------------------------------------
+function getDragMetaFromEl(el) {
+    var str = getEmbeddedElData(el, 'event');
+    var obj = str ?
+        JSON.parse(str) :
+        { create: false }; // if no embedded data, assume no event creation
+    return (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.parseDragMeta)(obj);
+}
+_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.config.dataAttrPrefix = '';
+function getEmbeddedElData(el, name) {
+    var prefix = _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.config.dataAttrPrefix;
+    var prefixedName = (prefix ? prefix + '-' : '') + name;
+    return el.getAttribute('data-' + prefixedName) || '';
+}
+
+/*
+Makes an element (that is *external* to any calendar) draggable.
+Can pass in data that determines how an event will be created when dropped onto a calendar.
+Leverages FullCalendar's internal drag-n-drop functionality WITHOUT a third-party drag system.
+*/
+var ExternalDraggable = /** @class */ (function () {
+    function ExternalDraggable(el, settings) {
+        var _this = this;
+        if (settings === void 0) { settings = {}; }
+        this.handlePointerDown = function (ev) {
+            var dragging = _this.dragging;
+            var _a = _this.settings, minDistance = _a.minDistance, longPressDelay = _a.longPressDelay;
+            dragging.minDistance =
+                minDistance != null ?
+                    minDistance :
+                    (ev.isTouch ? 0 : _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.BASE_OPTION_DEFAULTS.eventDragMinDistance);
+            dragging.delay =
+                ev.isTouch ? // TODO: eventually read eventLongPressDelay instead vvv
+                    (longPressDelay != null ? longPressDelay : _fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.BASE_OPTION_DEFAULTS.longPressDelay) :
+                    0;
+        };
+        this.handleDragStart = function (ev) {
+            if (ev.isTouch &&
+                _this.dragging.delay &&
+                ev.subjectEl.classList.contains('fc-event')) {
+                _this.dragging.mirror.getMirrorEl().classList.add('fc-event-selected');
+            }
+        };
+        this.settings = settings;
+        var dragging = this.dragging = new FeaturefulElementDragging(el);
+        dragging.touchScrollAllowed = false;
+        if (settings.itemSelector != null) {
+            dragging.pointer.selector = settings.itemSelector;
+        }
+        if (settings.appendTo != null) {
+            dragging.mirror.parentNode = settings.appendTo; // TODO: write tests
+        }
+        dragging.emitter.on('pointerdown', this.handlePointerDown);
+        dragging.emitter.on('dragstart', this.handleDragStart);
+        new ExternalElementDragging(dragging, settings.eventData); // eslint-disable-line no-new
+    }
+    ExternalDraggable.prototype.destroy = function () {
+        this.dragging.destroy();
+    };
+    return ExternalDraggable;
+}());
+
+/*
+Detects when a *THIRD-PARTY* drag-n-drop system interacts with elements.
+The third-party system is responsible for drawing the visuals effects of the drag.
+This class simply monitors for pointer movements and fires events.
+It also has the ability to hide the moving element (the "mirror") during the drag.
+*/
+var InferredElementDragging = /** @class */ (function (_super) {
+    (0,tslib__WEBPACK_IMPORTED_MODULE_1__.__extends)(InferredElementDragging, _super);
+    function InferredElementDragging(containerEl) {
+        var _this = _super.call(this, containerEl) || this;
+        _this.shouldIgnoreMove = false;
+        _this.mirrorSelector = '';
+        _this.currentMirrorEl = null;
+        _this.handlePointerDown = function (ev) {
+            _this.emitter.trigger('pointerdown', ev);
+            if (!_this.shouldIgnoreMove) {
+                // fire dragstart right away. does not support delay or min-distance
+                _this.emitter.trigger('dragstart', ev);
+            }
+        };
+        _this.handlePointerMove = function (ev) {
+            if (!_this.shouldIgnoreMove) {
+                _this.emitter.trigger('dragmove', ev);
+            }
+        };
+        _this.handlePointerUp = function (ev) {
+            _this.emitter.trigger('pointerup', ev);
+            if (!_this.shouldIgnoreMove) {
+                // fire dragend right away. does not support a revert animation
+                _this.emitter.trigger('dragend', ev);
+            }
+        };
+        var pointer = _this.pointer = new PointerDragging(containerEl);
+        pointer.emitter.on('pointerdown', _this.handlePointerDown);
+        pointer.emitter.on('pointermove', _this.handlePointerMove);
+        pointer.emitter.on('pointerup', _this.handlePointerUp);
+        return _this;
+    }
+    InferredElementDragging.prototype.destroy = function () {
+        this.pointer.destroy();
+    };
+    InferredElementDragging.prototype.setIgnoreMove = function (bool) {
+        this.shouldIgnoreMove = bool;
+    };
+    InferredElementDragging.prototype.setMirrorIsVisible = function (bool) {
+        if (bool) {
+            // restore a previously hidden element.
+            // use the reference in case the selector class has already been removed.
+            if (this.currentMirrorEl) {
+                this.currentMirrorEl.style.visibility = '';
+                this.currentMirrorEl = null;
+            }
+        }
+        else {
+            var mirrorEl = this.mirrorSelector
+                // TODO: somehow query FullCalendars WITHIN shadow-roots
+                ? document.querySelector(this.mirrorSelector)
+                : null;
+            if (mirrorEl) {
+                this.currentMirrorEl = mirrorEl;
+                mirrorEl.style.visibility = 'hidden';
+            }
+        }
+    };
+    return InferredElementDragging;
+}(_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.ElementDragging));
+
+/*
+Bridges third-party drag-n-drop systems with FullCalendar.
+Must be instantiated and destroyed by caller.
+*/
+var ThirdPartyDraggable = /** @class */ (function () {
+    function ThirdPartyDraggable(containerOrSettings, settings) {
+        var containerEl = document;
+        if (
+        // wish we could just test instanceof EventTarget, but doesn't work in IE11
+        containerOrSettings === document ||
+            containerOrSettings instanceof Element) {
+            containerEl = containerOrSettings;
+            settings = settings || {};
+        }
+        else {
+            settings = (containerOrSettings || {});
+        }
+        var dragging = this.dragging = new InferredElementDragging(containerEl);
+        if (typeof settings.itemSelector === 'string') {
+            dragging.pointer.selector = settings.itemSelector;
+        }
+        else if (containerEl === document) {
+            dragging.pointer.selector = '[data-event]';
+        }
+        if (typeof settings.mirrorSelector === 'string') {
+            dragging.mirrorSelector = settings.mirrorSelector;
+        }
+        new ExternalElementDragging(dragging, settings.eventData); // eslint-disable-line no-new
+    }
+    ThirdPartyDraggable.prototype.destroy = function () {
+        this.dragging.destroy();
+    };
+    return ThirdPartyDraggable;
+}());
+
+var main = (0,_fullcalendar_common__WEBPACK_IMPORTED_MODULE_0__.createPlugin)({
+    componentInteractions: [DateClicking, DateSelecting, EventDragging, EventResizing],
+    calendarInteractions: [UnselectAuto],
+    elementDraggingImpl: FeaturefulElementDragging,
+    optionRefiners: OPTION_REFINERS,
+    listenerRefiners: LISTENER_REFINERS,
+});
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (main);
+
+//# sourceMappingURL=main.js.map
+
+
+/***/ }),
+
 /***/ "./node_modules/@fullcalendar/vue3/dist/FullCalendar.js":
 /*!**************************************************************!*\
   !*** ./node_modules/@fullcalendar/vue3/dist/FullCalendar.js ***!
@@ -35177,10 +37357,97 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendar.vue?vue&type=script&lang=js":
-/*!*******************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendar.vue?vue&type=script&lang=js ***!
-  \*******************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/CreateEventFormComponent.vue?vue&type=script&lang=js":
+/*!******************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/CreateEventFormComponent.vue?vue&type=script&lang=js ***!
+  \******************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var vue3_date_time_picker__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vue3-date-time-picker */ "./node_modules/vue3-date-time-picker/dist/vue3-date-time-picker.esm.js");
+
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
+  components: {
+    Datepicker: vue3_date_time_picker__WEBPACK_IMPORTED_MODULE_3__["default"]
+  },
+  setup: function setup(props, context) {
+    var isSubmitting = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(false);
+    var form = (0,vue__WEBPACK_IMPORTED_MODULE_2__.reactive)({
+      title: "",
+      date: "",
+      start_time: "",
+      end_time: ""
+    });
+    var validation = (0,vue__WEBPACK_IMPORTED_MODULE_2__.reactive)({
+      errors: {},
+      message: ""
+    });
+
+    var handleCreateEvent = function handleCreateEvent() {
+      resetValidationErrors();
+      isSubmitting.value = true;
+      axios__WEBPACK_IMPORTED_MODULE_0___default().post("/admin/calendar-events/store", form).then(function (res) {
+        sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
+          icon: "success",
+          title: res.data.message
+        });
+        context.emit("newEventAdded");
+        resetForm();
+      })["catch"](function (err) {
+        if (err.response.status == 422) {
+          validation.errors = err.response.data.errors;
+        } else {
+          sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
+            icon: "error",
+            title: err.response.data.message
+          });
+        }
+
+        console.log(err.response);
+      })["finally"](function () {
+        isSubmitting.value = false;
+      });
+    };
+
+    var resetValidationErrors = function resetValidationErrors() {
+      validation.errors = {};
+      validation.message = "";
+    };
+
+    var resetForm = function resetForm() {
+      form.title = "";
+      form.date = "";
+      form.start_time = "";
+      form.end_time = "";
+    };
+
+    return {
+      isSubmitting: isSubmitting,
+      handleCreateEvent: handleCreateEvent,
+      form: form,
+      validation: validation
+    };
+  }
+});
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=script&lang=js":
+/*!****************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=script&lang=js ***!
+  \****************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -35190,39 +37457,112 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var _fullcalendar_vue3__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @fullcalendar/vue3 */ "./node_modules/@fullcalendar/vue3/dist/main.js");
 /* harmony import */ var _fullcalendar_daygrid__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! @fullcalendar/daygrid */ "./node_modules/@fullcalendar/daygrid/main.js");
-/* harmony import */ var _fullcalendar_bootstrap__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @fullcalendar/bootstrap */ "./node_modules/@fullcalendar/bootstrap/main.js");
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var _fullcalendar_interaction__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! @fullcalendar/interaction */ "./node_modules/@fullcalendar/interaction/main.js");
+/* harmony import */ var _fullcalendar_bootstrap__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! @fullcalendar/bootstrap */ "./node_modules/@fullcalendar/bootstrap/main.js");
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_4__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+/* harmony import */ var vue3_date_time_picker_dist_main_css__WEBPACK_IMPORTED_MODULE_5__ = __webpack_require__(/*! vue3-date-time-picker/dist/main.css */ "./node_modules/vue3-date-time-picker/dist/main.css");
+/* harmony import */ var _CreateEventFormComponent_vue__WEBPACK_IMPORTED_MODULE_6__ = __webpack_require__(/*! ./CreateEventFormComponent.vue */ "./resources/js/components/CreateEventFormComponent.vue");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_7__ = __webpack_require__(/*! axios */ "./node_modules/axios/index.js");
+/* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_7___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_7__);
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_8__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_8___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_8__);
+
+
+
+
+
 
 
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   components: {
-    FullCalendar: _fullcalendar_vue3__WEBPACK_IMPORTED_MODULE_0__["default"]
+    FullCalendar: _fullcalendar_vue3__WEBPACK_IMPORTED_MODULE_0__["default"],
+    CreateEventFormComponent: _CreateEventFormComponent_vue__WEBPACK_IMPORTED_MODULE_6__["default"]
   },
   setup: function setup() {
-    var calendarOptions = (0,vue__WEBPACK_IMPORTED_MODULE_3__.reactive)({
-      plugins: [_fullcalendar_daygrid__WEBPACK_IMPORTED_MODULE_1__["default"], _fullcalendar_bootstrap__WEBPACK_IMPORTED_MODULE_2__["default"]],
+    var fetchingData = (0,vue__WEBPACK_IMPORTED_MODULE_4__.ref)(false);
+    var calendarOptions = (0,vue__WEBPACK_IMPORTED_MODULE_4__.reactive)({
+      plugins: [_fullcalendar_daygrid__WEBPACK_IMPORTED_MODULE_1__["default"], _fullcalendar_bootstrap__WEBPACK_IMPORTED_MODULE_3__["default"], _fullcalendar_interaction__WEBPACK_IMPORTED_MODULE_2__["default"]],
       initialView: "dayGridMonth",
       themeSystem: "bootstrap",
-      events: [{
-        title: "test 1",
-        date: "2021-12-04"
-      }],
+      events: [],
       eventColor: "#26c920",
-      expandRows: false
+      eventClick: function eventClick(info) {
+        attemptEventDelete(info);
+      }
     });
-    var fullCalendar = (0,vue__WEBPACK_IMPORTED_MODULE_3__.ref)(0);
-    (0,vue__WEBPACK_IMPORTED_MODULE_3__.onMounted)(function () {
-      var calendarApi = fullCalendar.value.getApi();
-      console.log("api", calendarApi);
+    var fullCalendar = (0,vue__WEBPACK_IMPORTED_MODULE_4__.ref)(0);
+    var calendarApi = null;
+    (0,vue__WEBPACK_IMPORTED_MODULE_4__.onMounted)(function () {
+      calendarApi = fullCalendar.value.getApi();
+      getEvents(); // for resizing the calendar UI after a small delay.
+      // this is becuase calendar UI gets broken at initial render
+
       setTimeout(function () {
         calendarApi.updateSize();
       }, 100);
     });
+
+    var getEvents = function getEvents() {
+      fetchingData.value = true;
+      axios__WEBPACK_IMPORTED_MODULE_7___default().get("/admin/calendar-events/list").then(function (res) {
+        putEventsInCalendar(res.data.data);
+      })["catch"](function (err) {
+        sweetalert2__WEBPACK_IMPORTED_MODULE_8___default().fire({
+          icon: "error",
+          title: err.response.data.message
+        });
+      })["finally"](function () {
+        fetchingData.value = false;
+      });
+    };
+
+    var putEventsInCalendar = function putEventsInCalendar(events) {
+      events.forEach(function (event) {
+        addEvent(event);
+      });
+    };
+
+    var addEvent = function addEvent(event) {
+      calendarApi.addEvent({
+        id: event.id,
+        title: event.title,
+        start: event.start_date,
+        end: event.end_date
+      });
+    };
+
+    var handleNewEvent = function handleNewEvent() {
+      calendarApi.removeAllEvents();
+      getEvents();
+    };
+
+    var attemptEventDelete = function attemptEventDelete(event) {
+      console.log(event);
+      sweetalert2__WEBPACK_IMPORTED_MODULE_8___default().fire({
+        icon: "question",
+        title: "Are you sure want you to delete this event?",
+        text: "Event name: " + event.title,
+        isConfirmed: true
+      }).then(function (res) {
+        if (res.isConfirmed) {
+          deleteEvent(event.id);
+        }
+      });
+    };
+
+    var deleteEvent = function deleteEvent(event_id) {
+      axios__WEBPACK_IMPORTED_MODULE_7___default().post("/admin/calendar-events/destroy/" + event_id, {
+        _method: "DELETE"
+      });
+    };
+
     return {
       calendarOptions: calendarOptions,
-      fullCalendar: fullCalendar
+      fullCalendar: fullCalendar,
+      fetchingData: fetchingData,
+      handleNewEvent: handleNewEvent
     };
   }
 });
@@ -38283,10 +40623,10 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
 
 /***/ }),
 
-/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendar.vue?vue&type=template&id=45edf79d":
-/*!***********************************************************************************************************************************************************************************************************************************************************************************!*\
-  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendar.vue?vue&type=template&id=45edf79d ***!
-  \***********************************************************************************************************************************************************************************************************************************************************************************/
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4":
+/*!**********************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4 ***!
+  \**********************************************************************************************************************************************************************************************************************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -38296,18 +40636,219 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ });
 /* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
 
+
+var _hoisted_1 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h3", null, "Create an event", -1
+/* HOISTED */
+);
+
+var _hoisted_2 = {
+  "class": "form-group"
+};
+
+var _hoisted_3 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "for": "title",
+  "class": "form-label"
+}, "Title*", -1
+/* HOISTED */
+);
+
+var _hoisted_4 = {
+  key: 0,
+  "class": "text-danger"
+};
+var _hoisted_5 = {
+  "class": "form-group"
+};
+
+var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "for": "event_datetime",
+  "class": "form-label"
+}, "Event Date*", -1
+/* HOISTED */
+);
+
+var _hoisted_7 = {
+  key: 0,
+  "class": "text-danger"
+};
+var _hoisted_8 = {
+  "class": "form-group row"
+};
+var _hoisted_9 = {
+  "class": "col-6"
+};
+
+var _hoisted_10 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "for": "start_time",
+  "class": "form-label"
+}, "Start time", -1
+/* HOISTED */
+);
+
+var _hoisted_11 = {
+  key: 0,
+  "class": "text-danger"
+};
+var _hoisted_12 = {
+  "class": "col-6"
+};
+
+var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", {
+  "for": "end_time",
+  "class": "form-label"
+}, "End time", -1
+/* HOISTED */
+);
+
+var _hoisted_14 = {
+  key: 0,
+  "class": "text-danger"
+};
+var _hoisted_15 = {
+  "class": "form-group d-flex justify-content-end"
+};
+var _hoisted_16 = ["disabled"];
+var _hoisted_17 = {
+  key: 0,
+  "class": "fa fa-plus mr-2"
+};
+var _hoisted_18 = {
+  key: 1,
+  "class": "fas fa-circle-notch fa-spin mr-2"
+};
+
+var _hoisted_19 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(" Add ");
+
+function render(_ctx, _cache, $props, $setup, $data, $options) {
+  var _component_Datepicker = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("Datepicker");
+
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("form", {
+    "class": "mx-auto",
+    onSubmit: _cache[4] || (_cache[4] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
+      return $setup.handleCreateEvent();
+    }, ["prevent"]))
+  }, [_hoisted_1, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [_hoisted_3, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "text",
+    "class": "form-control",
+    name: "title",
+    "onUpdate:modelValue": _cache[0] || (_cache[0] = function ($event) {
+      return $setup.form.title = $event;
+    })
+  }, null, 512
+  /* NEED_PATCH */
+  ), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.form.title]]), $setup.validation.errors.title && $setup.validation.errors.title.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_4, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.validation.errors.title[0]), 1
+  /* TEXT */
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [_hoisted_6, (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_Datepicker, {
+    enableTimePicker: false,
+    range: "",
+    modelValue: $setup.form.date,
+    "onUpdate:modelValue": _cache[1] || (_cache[1] = function ($event) {
+      return $setup.form.date = $event;
+    })
+  }, null, 8
+  /* PROPS */
+  , ["modelValue"]), $setup.validation.errors.date && $setup.validation.errors.date.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_7, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.validation.errors.date[0]), 1
+  /* TEXT */
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_8, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_9, [_hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "time",
+    "class": "form-control",
+    name: "start_time",
+    "onUpdate:modelValue": _cache[2] || (_cache[2] = function ($event) {
+      return $setup.form.start_time = $event;
+    })
+  }, null, 512
+  /* NEED_PATCH */
+  ), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.form.start_time]]), $setup.validation.errors.start_time && $setup.validation.errors.start_time.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_11, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.validation.errors.start_time[0]), 1
+  /* TEXT */
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_12, [_hoisted_13, (0,vue__WEBPACK_IMPORTED_MODULE_0__.withDirectives)((0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+    type: "time",
+    "class": "form-control",
+    name: "end_time",
+    "onUpdate:modelValue": _cache[3] || (_cache[3] = function ($event) {
+      return $setup.form.end_time = $event;
+    })
+  }, null, 512
+  /* NEED_PATCH */
+  ), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.form.end_time]]), $setup.validation.errors.end_time && $setup.validation.errors.end_time.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.validation.errors.end_time[0]), 1
+  /* TEXT */
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn btn-outline-primary btn-sm",
+    type: "submit",
+    disabled: $setup.isSubmitting
+  }, [!$setup.isSubmitting ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_17)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_18)), _hoisted_19], 8
+  /* PROPS */
+  , _hoisted_16)])], 32
+  /* HYDRATE_EVENTS */
+  )]);
+}
+
+/***/ }),
+
+/***/ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true":
+/*!********************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true ***!
+  \********************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* binding */ render)
+/* harmony export */ });
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+
+
+var _withScopeId = function _withScopeId(n) {
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.pushScopeId)("data-v-fb8c6ce0"), n = n(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.popScopeId)(), n;
+};
+
 var _hoisted_1 = {
-  "class": ""
+  "class": "row"
+};
+var _hoisted_2 = {
+  "class": "col-md-8 d-relative"
+};
+var _hoisted_3 = {
+  key: 0,
+  "class": "loading-overlay d-flex justify-content-center align-items-center"
+};
+
+var _hoisted_4 = /*#__PURE__*/_withScopeId(function () {
+  return /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+    "class": "fas fa-circle-notch fa-spin text-dark loader-icon"
+  }, null, -1
+  /* HOISTED */
+  );
+});
+
+var _hoisted_5 = [_hoisted_4];
+var _hoisted_6 = {
+  "class": "col-md-4"
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_FullCalendar = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("FullCalendar");
 
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FullCalendar, {
+  var _component_create_event_form_component = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("create-event-form-component");
+
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_FullCalendar, {
     ref: "fullCalendar",
     options: $setup.calendarOptions
   }, null, 8
   /* PROPS */
-  , ["options"])]);
+  , ["options"]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(vue__WEBPACK_IMPORTED_MODULE_0__.Transition, {
+    name: "fade"
+  }, {
+    "default": (0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)(function () {
+      return [$setup.fetchingData ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_3, _hoisted_5)) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)];
+    }),
+    _: 1
+    /* STABLE */
+
+  })]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(_component_create_event_form_component, {
+    onNewEventAdded: $setup.handleNewEvent
+  }, null, 8
+  /* PROPS */
+  , ["onNewEventAdded"])])]);
 }
 
 /***/ }),
@@ -39973,7 +42514,7 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _components_Classrooms_ClassroomItemsGridList_vue__WEBPACK_IMPORTED_MODULE_17__ = __webpack_require__(/*! ./components/Classrooms/ClassroomItemsGridList.vue */ "./resources/js/components/Classrooms/ClassroomItemsGridList.vue");
 /* harmony import */ var _components_Classrooms_ClassroomView_vue__WEBPACK_IMPORTED_MODULE_18__ = __webpack_require__(/*! ./components/Classrooms/ClassroomView.vue */ "./resources/js/components/Classrooms/ClassroomView.vue");
 /* harmony import */ var _components_Home_CourseListComponent_vue__WEBPACK_IMPORTED_MODULE_19__ = __webpack_require__(/*! ./components/Home/CourseListComponent.vue */ "./resources/js/components/Home/CourseListComponent.vue");
-/* harmony import */ var _components_EventCalendar_vue__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./components/EventCalendar.vue */ "./resources/js/components/EventCalendar.vue");
+/* harmony import */ var _components_EventCalendarComponent_vue__WEBPACK_IMPORTED_MODULE_20__ = __webpack_require__(/*! ./components/EventCalendarComponent.vue */ "./resources/js/components/EventCalendarComponent.vue");
 /* harmony import */ var _components_Users_ClassroomList_vue__WEBPACK_IMPORTED_MODULE_21__ = __webpack_require__(/*! ./components/Users/ClassroomList.vue */ "./resources/js/components/Users/ClassroomList.vue");
 /* harmony import */ var _components_Users_ClassroomView_vue__WEBPACK_IMPORTED_MODULE_22__ = __webpack_require__(/*! ./components/Users/ClassroomView.vue */ "./resources/js/components/Users/ClassroomView.vue");
 /* harmony import */ var _routes__WEBPACK_IMPORTED_MODULE_23__ = __webpack_require__(/*! ./routes */ "./resources/js/routes.js");
@@ -40030,7 +42571,7 @@ app.component("classroom-view", _components_Classrooms_ClassroomView_vue__WEBPAC
 app.component("student-classroom-list", _components_Users_ClassroomList_vue__WEBPACK_IMPORTED_MODULE_21__["default"]);
 app.component("student-classroom-view", _components_Users_ClassroomView_vue__WEBPACK_IMPORTED_MODULE_22__["default"]); // End of students components
 
-app.component("event-calendar-component", _components_EventCalendar_vue__WEBPACK_IMPORTED_MODULE_20__["default"]);
+app.component("event-calendar-component", _components_EventCalendarComponent_vue__WEBPACK_IMPORTED_MODULE_20__["default"]);
 /**
  * Guest
  */
@@ -42524,6 +45065,30 @@ ___CSS_LOADER_EXPORT___.push([module.id, ".ql-container {\n  box-sizing: border-
 
 /***/ }),
 
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue3-date-time-picker/dist/main.css":
+/*!******************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue3-date-time-picker/dist/main.css ***!
+  \******************************************************************************************************************************************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__);
+// Imports
+
+var ___CSS_LOADER_EXPORT___ = _css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, ".dp__input_wrap{position:relative;width:100%;box-sizing:unset}.dp__input{background-color:var(--dp-background-color);border-radius:4px;border:1px solid var(--dp-border-color);outline:none;transition:border-color 0.2s cubic-bezier(0.645, 0.045, 0.355, 1);width:100%;font-size:1rem;line-height:1.5rem;padding:6px 12px;color:var(--dp-text-color);box-sizing:border-box}.dp__input::-moz-placeholder{opacity:0.7}.dp__input:-ms-input-placeholder{opacity:0.7}.dp__input::placeholder{opacity:0.7}.dp__input:hover{border-color:var(--dp-border-color-hover)}.dp__disabled{background:var(--dp-disabled-color)}.dp__disabled::-moz-placeholder{color:var(--dp-disabled-color-text)}.dp__disabled:-ms-input-placeholder{color:var(--dp-disabled-color-text)}.dp__disabled::placeholder{color:var(--dp-disabled-color-text)}.dp__input_icons{display:inline-block;width:1rem;height:1rem;stroke-width:0;font-size:1rem;line-height:1.5rem;padding:6px 12px;color:var(--dp-icon-color);box-sizing:content-box}.dp__input_icon{position:absolute;top:50%;left:0;transform:translateY(-50%);color:var(--dp-icon-color)}.dp__clear_icon{position:absolute;top:50%;right:0;transform:translateY(-50%);cursor:pointer;color:var(--dp-icon-color)}.dp__input_icon_pad{padding-left:35px}.dp__input_valid{box-shadow:0 0 4px var(--dp-success-color);border-color:var(--dp-success-color)}.dp__input_valid:hover{border-color:var(--dp-success-color)}.dp__input_invalid{box-shadow:0 0 4px var(--dp-danger-color);border-color:var(--dp-danger-color)}.dp__input_invalid:hover{border-color:var(--dp-danger-color)}.dp__menu{position:absolute;background:var(--dp-background-color);border-radius:4px;min-width:260px;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Oxygen,Ubuntu,Cantarell,\"Open Sans\",\"Helvetica Neue\",sans-serif;font-size:1rem;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;border:1px solid var(--dp-border-color);z-index:99999;box-sizing:border-box}.dp__menu::after{box-sizing:border-box}.dp__menu::before{box-sizing:border-box}.dp__arrow_top{left:50%;top:-1px;height:12px;width:12px;background-color:var(--dp-background-color);position:absolute;border-left:1px solid var(--dp-border-color);border-top:1px solid var(--dp-border-color);transform:translate(-50%, -50%) rotate(45deg)}.dp__arrow_bottom{left:50%;bottom:-1px;height:12px;width:12px;background-color:var(--dp-background-color);position:absolute;border-right:1px solid var(--dp-border-color);border-bottom:1px solid var(--dp-border-color);transform:translate(-50%, 50%) rotate(45deg)}.dp__now_wrap{text-align:center;padding:2px 0}.dp__now_button{border:1px solid var(--dp-primary-color);color:var(--dp-primary-color);padding:0 4px;font-weight:bold;border-radius:4px;font-size:1rem;cursor:pointer;background:transparent}.dp__calendar_wrap{display:flex;justify-content:center;align-items:center;flex-direction:column;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Oxygen,Ubuntu,Cantarell,\"Open Sans\",\"Helvetica Neue\",sans-serif}.db__calendar_header{position:relative;display:flex;justify-content:center;align-items:center;color:var(--dp-text-color);white-space:nowrap;font-weight:bold}.dp__calendar_header_item{text-align:center;flex-grow:1;height:35px;padding:5px;width:35px;box-sizing:border-box}.dp__calendar_row{display:flex;justify-content:center;align-items:center;margin:5px 0}.dp__calendar_item{text-align:center;flex-grow:1;box-sizing:border-box;color:var(--dp-text-color)}.dp__calendar{position:relative}.dp_calendar_fixed{height:255px}.dp__calendar_content_wrap{position:relative}.dp__calendar_header_cell{border-bottom:thin solid var(--dp-border-color);padding:0.5rem}.dp__cell_inner{display:flex;align-items:center;text-align:center;justify-content:center;border-radius:4px;height:35px;padding:5px;width:35px;border:1px solid transparent;box-sizing:border-box}.dp__range_start,.dp__cell_auto_range_start{border-bottom-right-radius:0;border-top-right-radius:0}.dp__range_end,.dp__cell_auto_range_end{border-bottom-left-radius:0;border-top-left-radius:0}.dp__active_date,.dp__range_start,.dp__range_end{background:var(--dp-primary-color);color:var(--dp-primary-text-color)}.dp__cell_auto_range_start,.dp__cell_auto_range_end{border-top:1px dashed var(--dp-primary-color);border-bottom:1px dashed var(--dp-primary-color)}.dp__cell_offset{color:var(--dp-secondary-color)}.dp__cell_disabled{color:var(--dp-secondary-color);cursor:not-allowed}.dp__date_hover:hover{background:var(--dp-hover-color);color:var(--dp-hover-text-color)}.dp__range_between{background:var(--dp-hover-color);border-radius:0;border-top:1px solid var(--dp-hover-color);border-bottom:1px solid var(--dp-hover-color)}.dp__today{border:1px solid var(--dp-primary-color)}.dp__week_num{color:var(--dp-secondary-color);text-align:center}.dp__cell_auto_range{border-radius:0;border-top:1px dashed var(--dp-primary-color);border-bottom:1px dashed var(--dp-primary-color)}.dp__cell_auto_range_start{border-left:1px dashed var(--dp-primary-color)}.dp__cell_auto_range_end{border-right:1px dashed var(--dp-primary-color)}.dp__calendar_header_separator{width:100%;height:1px;background:var(--dp-border-color)}.dp__calendar_next{margin-left:10px}.dp__month_year_row{display:flex;align-items:center;height:35px;color:var(--dp-text-color);box-sizing:border-box}.dp__inner_nav{display:flex;align-items:center;justify-content:center;height:25px;cursor:pointer;width:25px;color:var(--dp-icon-color);text-align:center;border-radius:50%}.dp__inner_nav svg{height:20px;width:20px}.dp__inner_nav:hover{background:var(--dp-hover-color);color:var(--dp-hover-icon-color)}.dp__month_year_select{width:50%;text-align:center;cursor:pointer;height:35px;display:flex;align-items:center;justify-content:center;border-radius:4px;box-sizing:border-box}.dp__month_year_select:hover{background:var(--dp-hover-color);color:var(--dp-hover-text-color)}.dp__overlay{position:absolute;overflow-y:auto;width:100%;height:100%;background:var(--dp-background-color);top:0;left:0;transition:opacity 1s ease-out;z-index:99999;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Oxygen,Ubuntu,Cantarell,\"Open Sans\",\"Helvetica Neue\",sans-serif;color:var(--dp-text-color);box-sizing:border-box}.dp__overlay::-webkit-scrollbar-track{-webkit-box-shadow:var(--dp-scroll-bar-background);background-color:var(--dp-scroll-bar-background)}.dp__overlay::-webkit-scrollbar{width:5px;background-color:var(--dp-scroll-bar-background)}.dp__overlay::-webkit-scrollbar-thumb{background-color:var(--dp-scroll-bar-color);border-radius:10px}.dp__overlay_container{display:flex;height:100%;flex-direction:column}.dp__overlay_row{padding:0;box-sizing:border-box;display:flex;margin-left:auto;margin-right:auto;flex-wrap:wrap;max-width:100%;width:100%;align-items:center}.dp__overlay_container>.dp__overlay_row{flex:1}.dp__overlay_col{box-sizing:border-box;width:33%;padding:3px;white-space:nowrap}.dp__overlay_cell_pad{padding:10px 0}.dp__overlay_cell_active{cursor:pointer;border-radius:4px;text-align:center;background:var(--dp-primary-color);color:var(--dp-primary-text-color)}.dp__overlay_cell{cursor:pointer;border-radius:4px;text-align:center}.dp__overlay_cell:hover{background:var(--dp-hover-color);color:var(--dp-hover-text-color)}.dp__overlay_action{position:sticky;bottom:0;background:#fff}.dp__over_action_scroll{right:5px;box-sizing:border-box}.dp__overlay_cell_disabled{cursor:not-allowed;background:var(--dp-disabled-color)}.dp__overlay_cell_disabled:hover{background:var(--dp-disabled-color)}.dp__month_picker_header{display:flex;width:100%;align-items:center;justify-content:space-between;height:35px}.dp__time_input{width:100%;display:flex;align-items:center;justify-content:center;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Oxygen,Ubuntu,Cantarell,\"Open Sans\",\"Helvetica Neue\",sans-serif;color:var(--dp-text-color)}.dp__time_col{padding:0 20px;font-size:2rem;text-align:center;display:flex;align-items:center;justify-content:center;flex-direction:column}.dp__time_display{cursor:pointer;color:var(--dp-text-color);border-radius:4px;display:flex;align-items:center;justify-content:center;padding:0 3px}.dp__time_display:hover{background:var(--dp-hover-color);color:var(--dp-hover-text-color)}.dp__inc_dec_button{padding:5px 5px;margin:0;height:32px;width:32px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:50%;color:var(--dp-icon-color);box-sizing:border-box}.dp__inc_dec_button svg{height:32px;width:32px}.dp__inc_dec_button:hover{background:var(--dp-hover-color);color:var(--dp-primary-color)}.dp__pm_am_button{background:var(--dp-primary-color);color:var(--dp-primary-text-color);border:none;padding:10px;border-radius:4px;cursor:pointer}.dp__action_row{display:flex;align-items:center;width:100%;padding:10px;box-sizing:border-box;color:var(--dp-text-color);background:var(--dp-background-color)}.dp__action_row svg{height:20px;width:auto}.dp__selection_preview{width:50%;color:var(--dp-text-color);font-size:.8rem}.dp__action_buttons{width:50%;text-align:right}.dp__action{font-weight:bold;cursor:pointer;padding:2px 5px;border-radius:4px;display:inline-flex;align-items:center}.dp__select{color:var(--dp-success-color)}.dp__cancel{color:var(--dp-secondary-color)}.dp__theme_dark{--dp-background-color: #212121;--dp-text-color: #ffffff;--dp-hover-color: #484848;--dp-hover-text-color: #ffffff;--dp-hover-icon-color: #959595;--dp-primary-color: #005cb2;--dp-primary-text-color: #ffffff;--dp-secondary-color: #a9a9a9;--dp-border-color: #2d2d2d;--dp-border-color-hover: #aaaeb7;--dp-disabled-color: #737373;--dp-disabled-color-text: #d0d0d0;--dp-scroll-bar-background: #212121;--dp-scroll-bar-color: #484848;--dp-success-color: #00701a;--dp-icon-color: #959595;--dp-danger-color: #e53935}.dp__theme_light{--dp-background-color: #ffffff;--dp-text-color: #212121;--dp-hover-color: #f3f3f3;--dp-hover-text-color: #212121;--dp-hover-icon-color: #959595;--dp-primary-color: #1976d2;--dp-primary-text-color: #f8f5f5;--dp-secondary-color: #c0c4cc;--dp-border-color: #ddd;--dp-border-color-hover: #aaaeb7;--dp-disabled-color: #f6f6f6;--dp-scroll-bar-background: #f3f3f3;--dp-scroll-bar-color: #959595;--dp-success-color: #76d275;--dp-icon-color: #959595;--dp-danger-color: #ff6f60;--dp-disabled-color-text: #8e8e8e}.dp__main{font-family:-apple-system,BlinkMacSystemFont,\"Segoe UI\",Roboto,Oxygen,Ubuntu,Cantarell,\"Open Sans\",\"Helvetica Neue\",sans-serif;-webkit-user-select:none;-moz-user-select:none;-ms-user-select:none;user-select:none;box-sizing:border-box}.dp__pointer{cursor:pointer}.dp__icon{stroke:currentColor;fill:currentColor}.dp__button{width:100%;text-align:center;color:var(--dp-icon-color);background:var(--dp-background-color);cursor:pointer;display:flex;align-items:center;align-content:center;justify-content:center;padding:10px;box-sizing:border-box;height:35px}.dp__button:hover{background:var(--dp-hover-color);color:var(--dp-hover-icon-color)}.dp__button svg{height:20px;width:auto}.dp__flex_display{display:flex;position:relative}.dp__relative{position:relative}\n", ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
 /***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Auth/Admin/LoginComponent.vue?vue&type=style&index=0&id=f28db980&lang=css":
 /*!********************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Auth/Admin/LoginComponent.vue?vue&type=style&index=0&id=f28db980&lang=css ***!
@@ -42686,6 +45251,30 @@ __webpack_require__.r(__webpack_exports__);
 var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
 // Module
 ___CSS_LOADER_EXPORT___.push([module.id, "\n.ql-container {\r\n  height: 300px !important;\n}\n.swal2-styled.swal2-confirm {\r\n  margin-right: 10px !important;\n}\r\n", ""]);
+// Exports
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
+
+
+/***/ }),
+
+/***/ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css":
+/*!*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css ***!
+  \*****************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ../../../node_modules/css-loader/dist/runtime/api.js */ "./node_modules/css-loader/dist/runtime/api.js");
+/* harmony import */ var _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0__);
+// Imports
+
+var ___CSS_LOADER_EXPORT___ = _node_modules_css_loader_dist_runtime_api_js__WEBPACK_IMPORTED_MODULE_0___default()(function(i){return i[1]});
+// Module
+___CSS_LOADER_EXPORT___.push([module.id, "\n.loading-overlay[data-v-fb8c6ce0] {\n  position: absolute;\n  top: 0;\n  bottom: 0;\n  left: 0;\n  right: 0;\n  z-index: 3;\n  background: rgba(255, 255, 255, 0.7);\n}\n.loader-icon[data-v-fb8c6ce0] {\n  position: absolute;\n  font-size: 22px;\n}\n.fade-enter-active[data-v-fb8c6ce0],\n.fade-leave-active[data-v-fb8c6ce0] {\n  transition: opacity 0.4s ease;\n}\n.fade-enter-from[data-v-fb8c6ce0],\n.fade-leave-to[data-v-fb8c6ce0] {\n  opacity: 0;\n}\n.fade-enter-to[data-v-fb8c6ce0],\n.fade-leave-from[data-v-fb8c6ce0] {\n  opacity: 1;\n}\n", ""]);
 // Exports
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (___CSS_LOADER_EXPORT___);
 
@@ -75590,6 +78179,36 @@ var update = _style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMP
 
 /***/ }),
 
+/***/ "./node_modules/vue3-date-time-picker/dist/main.css":
+/*!**********************************************************!*\
+  !*** ./node_modules/vue3-date-time-picker/dist/main.css ***!
+  \**********************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _css_loader_dist_cjs_js_clonedRuleSet_9_use_1_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_main_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./main.css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue3-date-time-picker/dist/main.css");
+
+            
+
+var options = {};
+
+options.insert = "head";
+options.singleton = false;
+
+var update = _style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_main_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_main_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+
+/***/ }),
+
 /***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Auth/Admin/LoginComponent.vue?vue&type=style&index=0&id=f28db980&lang=css":
 /*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Auth/Admin/LoginComponent.vue?vue&type=style&index=0&id=f28db980&lang=css ***!
@@ -75797,6 +78416,36 @@ var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js
 
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_CreateCourses_vue_vue_type_style_index_0_id_6c1b810a_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
+
+/***/ }),
+
+/***/ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css":
+/*!*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
+  !*** ./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css ***!
+  \*********************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! !../../../node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js */ "./node_modules/style-loader/dist/runtime/injectStylesIntoStyleTag.js");
+/* harmony import */ var _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_style_index_0_id_fb8c6ce0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! !!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css */ "./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css");
+
+            
+
+var options = {};
+
+options.insert = "head";
+options.singleton = false;
+
+var update = _node_modules_style_loader_dist_runtime_injectStylesIntoStyleTag_js__WEBPACK_IMPORTED_MODULE_0___default()(_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_style_index_0_id_fb8c6ce0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"], options);
+
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_style_index_0_id_fb8c6ce0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_1__["default"].locals || {});
 
 /***/ }),
 
@@ -80231,10 +82880,10 @@ if (false) {}
 
 /***/ }),
 
-/***/ "./resources/js/components/EventCalendar.vue":
-/*!***************************************************!*\
-  !*** ./resources/js/components/EventCalendar.vue ***!
-  \***************************************************/
+/***/ "./resources/js/components/CreateEventFormComponent.vue":
+/*!**************************************************************!*\
+  !*** ./resources/js/components/CreateEventFormComponent.vue ***!
+  \**************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
@@ -80242,15 +82891,46 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var _EventCalendar_vue_vue_type_template_id_45edf79d__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventCalendar.vue?vue&type=template&id=45edf79d */ "./resources/js/components/EventCalendar.vue?vue&type=template&id=45edf79d");
-/* harmony import */ var _EventCalendar_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./EventCalendar.vue?vue&type=script&lang=js */ "./resources/js/components/EventCalendar.vue?vue&type=script&lang=js");
+/* harmony import */ var _CreateEventFormComponent_vue_vue_type_template_id_dd60b7b4__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4 */ "./resources/js/components/CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4");
+/* harmony import */ var _CreateEventFormComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./CreateEventFormComponent.vue?vue&type=script&lang=js */ "./resources/js/components/CreateEventFormComponent.vue?vue&type=script&lang=js");
 /* harmony import */ var _var_www_html_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
 
 
 
 
 ;
-const __exports__ = /*#__PURE__*/(0,_var_www_html_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_EventCalendar_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_EventCalendar_vue_vue_type_template_id_45edf79d__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/components/EventCalendar.vue"]])
+const __exports__ = /*#__PURE__*/(0,_var_www_html_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_2__["default"])(_CreateEventFormComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_CreateEventFormComponent_vue_vue_type_template_id_dd60b7b4__WEBPACK_IMPORTED_MODULE_0__.render],['__file',"resources/js/components/CreateEventFormComponent.vue"]])
+/* hot reload */
+if (false) {}
+
+
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (__exports__);
+
+/***/ }),
+
+/***/ "./resources/js/components/EventCalendarComponent.vue":
+/*!************************************************************!*\
+  !*** ./resources/js/components/EventCalendarComponent.vue ***!
+  \************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
+/* harmony import */ var _EventCalendarComponent_vue_vue_type_template_id_fb8c6ce0_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! ./EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true */ "./resources/js/components/EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true");
+/* harmony import */ var _EventCalendarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! ./EventCalendarComponent.vue?vue&type=script&lang=js */ "./resources/js/components/EventCalendarComponent.vue?vue&type=script&lang=js");
+/* harmony import */ var _EventCalendarComponent_vue_vue_type_style_index_0_id_fb8c6ce0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(/*! ./EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css */ "./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css");
+/* harmony import */ var _var_www_html_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! ./node_modules/vue-loader/dist/exportHelper.js */ "./node_modules/vue-loader/dist/exportHelper.js");
+
+
+
+
+;
+
+
+const __exports__ = /*#__PURE__*/(0,_var_www_html_node_modules_vue_loader_dist_exportHelper_js__WEBPACK_IMPORTED_MODULE_3__["default"])(_EventCalendarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_1__["default"], [['render',_EventCalendarComponent_vue_vue_type_template_id_fb8c6ce0_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render],['__scopeId',"data-v-fb8c6ce0"],['__file',"resources/js/components/EventCalendarComponent.vue"]])
 /* hot reload */
 if (false) {}
 
@@ -81016,18 +83696,34 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/EventCalendar.vue?vue&type=script&lang=js":
-/*!***************************************************************************!*\
-  !*** ./resources/js/components/EventCalendar.vue?vue&type=script&lang=js ***!
-  \***************************************************************************/
+/***/ "./resources/js/components/CreateEventFormComponent.vue?vue&type=script&lang=js":
+/*!**************************************************************************************!*\
+  !*** ./resources/js/components/CreateEventFormComponent.vue?vue&type=script&lang=js ***!
+  \**************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendar_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_CreateEventFormComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
 /* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendar_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./EventCalendar.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendar.vue?vue&type=script&lang=js");
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_CreateEventFormComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./CreateEventFormComponent.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/CreateEventFormComponent.vue?vue&type=script&lang=js");
+ 
+
+/***/ }),
+
+/***/ "./resources/js/components/EventCalendarComponent.vue?vue&type=script&lang=js":
+/*!************************************************************************************!*\
+  !*** ./resources/js/components/EventCalendarComponent.vue?vue&type=script&lang=js ***!
+  \************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__["default"])
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_script_lang_js__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./EventCalendarComponent.vue?vue&type=script&lang=js */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=script&lang=js");
  
 
 /***/ }),
@@ -81592,18 +84288,34 @@ __webpack_require__.r(__webpack_exports__);
 
 /***/ }),
 
-/***/ "./resources/js/components/EventCalendar.vue?vue&type=template&id=45edf79d":
-/*!*********************************************************************************!*\
-  !*** ./resources/js/components/EventCalendar.vue?vue&type=template&id=45edf79d ***!
-  \*********************************************************************************/
+/***/ "./resources/js/components/CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4":
+/*!********************************************************************************************!*\
+  !*** ./resources/js/components/CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4 ***!
+  \********************************************************************************************/
 /***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
 
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
-/* harmony export */   "render": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendar_vue_vue_type_template_id_45edf79d__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */   "render": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_CreateEventFormComponent_vue_vue_type_template_id_dd60b7b4__WEBPACK_IMPORTED_MODULE_0__.render)
 /* harmony export */ });
-/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendar_vue_vue_type_template_id_45edf79d__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./EventCalendar.vue?vue&type=template&id=45edf79d */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendar.vue?vue&type=template&id=45edf79d");
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_CreateEventFormComponent_vue_vue_type_template_id_dd60b7b4__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4 */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/CreateEventFormComponent.vue?vue&type=template&id=dd60b7b4");
+
+
+/***/ }),
+
+/***/ "./resources/js/components/EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true":
+/*!******************************************************************************************************!*\
+  !*** ./resources/js/components/EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true ***!
+  \******************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "render": () => (/* reexport safe */ _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_template_id_fb8c6ce0_scoped_true__WEBPACK_IMPORTED_MODULE_0__.render)
+/* harmony export */ });
+/* harmony import */ var _node_modules_babel_loader_lib_index_js_clonedRuleSet_5_use_0_node_modules_vue_loader_dist_templateLoader_js_ruleSet_1_rules_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_template_id_fb8c6ce0_scoped_true__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!../../../node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true */ "./node_modules/babel-loader/lib/index.js??clonedRuleSet-5.use[0]!./node_modules/vue-loader/dist/templateLoader.js??ruleSet[1].rules[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=template&id=fb8c6ce0&scoped=true");
 
 
 /***/ }),
@@ -81935,6 +84647,19 @@ __webpack_require__.r(__webpack_exports__);
 "use strict";
 __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_CreateCourses_vue_vue_type_style_index_0_id_6c1b810a_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../../node_modules/style-loader/dist/cjs.js!../../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./CreateCourses.vue?vue&type=style&index=0&id=6c1b810a&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/Courses/CreateCourses.vue?vue&type=style&index=0&id=6c1b810a&lang=css");
+
+
+/***/ }),
+
+/***/ "./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css":
+/*!********************************************************************************************************************!*\
+  !*** ./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css ***!
+  \********************************************************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var _node_modules_style_loader_dist_cjs_js_node_modules_css_loader_dist_cjs_js_clonedRuleSet_9_use_1_node_modules_vue_loader_dist_stylePostLoader_js_node_modules_postcss_loader_dist_cjs_js_clonedRuleSet_9_use_2_node_modules_vue_loader_dist_index_js_ruleSet_0_use_0_EventCalendarComponent_vue_vue_type_style_index_0_id_fb8c6ce0_scoped_true_lang_css__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! -!../../../node_modules/style-loader/dist/cjs.js!../../../node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!../../../node_modules/vue-loader/dist/stylePostLoader.js!../../../node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!../../../node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css */ "./node_modules/style-loader/dist/cjs.js!./node_modules/css-loader/dist/cjs.js??clonedRuleSet-9.use[1]!./node_modules/vue-loader/dist/stylePostLoader.js!./node_modules/postcss-loader/dist/cjs.js??clonedRuleSet-9.use[2]!./node_modules/vue-loader/dist/index.js??ruleSet[0].use[0]!./resources/js/components/EventCalendarComponent.vue?vue&type=style&index=0&id=fb8c6ce0&scoped=true&lang=css");
 
 
 /***/ }),
@@ -85661,6 +88386,23 @@ function compileToFunction(template, options) {
 (0,_vue_runtime_dom__WEBPACK_IMPORTED_MODULE_2__.registerRuntimeCompiler)(compileToFunction);
 
 
+
+
+/***/ }),
+
+/***/ "./node_modules/vue3-date-time-picker/dist/vue3-date-time-picker.esm.js":
+/*!******************************************************************************!*\
+  !*** ./node_modules/vue3-date-time-picker/dist/vue3-date-time-picker.esm.js ***!
+  \******************************************************************************/
+/***/ ((__unused_webpack_module, __webpack_exports__, __webpack_require__) => {
+
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (/* binding */ ta)
+/* harmony export */ });
+/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
+function A(e,t,n){return t in e?Object.defineProperty(e,t,{value:n,enumerable:!0,configurable:!0,writable:!0}):e[t]=n,e}function Y(e,t){(null==t||t>e.length)&&(t=e.length);for(var n=0,r=new Array(t);n<t;n++)r[n]=e[n];return r}function H(e,t){if(e){if("string"==typeof e)return Y(e,t);var n=Object.prototype.toString.call(e).slice(8,-1);return"Object"===n&&e.constructor&&(n=e.constructor.name),"Map"===n||"Set"===n?Array.from(e):"Arguments"===n||/^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)?Y(e,t):void 0}}function j(e,t){return function(e){if(Array.isArray(e))return e}(e)||function(e,t){var n=null==e?null:"undefined"!=typeof Symbol&&e[Symbol.iterator]||e["@@iterator"];if(null!=n){var r,a,o=[],i=!0,u=!1;try{for(n=n.call(e);!(i=(r=n.next()).done)&&(o.push(r.value),!t||o.length!==t);i=!0);}catch(e){u=!0,a=e}finally{try{i||null==n.return||n.return()}finally{if(u)throw a}}return o}}(e,t)||H(e,t)||function(){throw new TypeError("Invalid attempt to destructure non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}var E={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},V=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M29.333 8c0-2.208-1.792-4-4-4h-18.667c-2.208 0-4 1.792-4 4v18.667c0 2.208 1.792 4 4 4h18.667c2.208 0 4-1.792 4-4v-18.667zM26.667 8v18.667c0 0.736-0.597 1.333-1.333 1.333 0 0-18.667 0-18.667 0-0.736 0-1.333-0.597-1.333-1.333 0 0 0-18.667 0-18.667 0-0.736 0.597-1.333 1.333-1.333 0 0 18.667 0 18.667 0 0.736 0 1.333 0.597 1.333 1.333z"},null,-1),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M20 2.667v5.333c0 0.736 0.597 1.333 1.333 1.333s1.333-0.597 1.333-1.333v-5.333c0-0.736-0.597-1.333-1.333-1.333s-1.333 0.597-1.333 1.333z"},null,-1),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M9.333 2.667v5.333c0 0.736 0.597 1.333 1.333 1.333s1.333-0.597 1.333-1.333v-5.333c0-0.736-0.597-1.333-1.333-1.333s-1.333 0.597-1.333 1.333z"},null,-1),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M4 14.667h24c0.736 0 1.333-0.597 1.333-1.333s-0.597-1.333-1.333-1.333h-24c-0.736 0-1.333 0.597-1.333 1.333s0.597 1.333 1.333 1.333z"},null,-1)];var F={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",E,V)}},R={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},W=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M23.057 7.057l-16 16c-0.52 0.52-0.52 1.365 0 1.885s1.365 0.52 1.885 0l16-16c0.52-0.52 0.52-1.365 0-1.885s-1.365-0.52-1.885 0z"},null,-1),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M7.057 8.943l16 16c0.52 0.52 1.365 0.52 1.885 0s0.52-1.365 0-1.885l-16-16c-0.52-0.52-1.365-0.52-1.885 0s-0.52 1.365 0 1.885z"},null,-1)];var q={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",R,W)}},L={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},G=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M20.943 23.057l-7.057-7.057c0 0 7.057-7.057 7.057-7.057 0.52-0.52 0.52-1.365 0-1.885s-1.365-0.52-1.885 0l-8 8c-0.521 0.521-0.521 1.365 0 1.885l8 8c0.52 0.52 1.365 0.52 1.885 0s0.52-1.365 0-1.885z"},null,-1)];var Q={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",L,G)}},z={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},X=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M12.943 24.943l8-8c0.521-0.521 0.521-1.365 0-1.885l-8-8c-0.52-0.52-1.365-0.52-1.885 0s-0.52 1.365 0 1.885l7.057 7.057c0 0-7.057 7.057-7.057 7.057-0.52 0.52-0.52 1.365 0 1.885s1.365 0.52 1.885 0z"},null,-1)];var J={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",z,X)}},K={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},Z=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M16 1.333c-8.095 0-14.667 6.572-14.667 14.667s6.572 14.667 14.667 14.667c8.095 0 14.667-6.572 14.667-14.667s-6.572-14.667-14.667-14.667zM16 4c6.623 0 12 5.377 12 12s-5.377 12-12 12c-6.623 0-12-5.377-12-12s5.377-12 12-12z"},null,-1),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M14.667 8v8c0 0.505 0.285 0.967 0.737 1.193l5.333 2.667c0.658 0.329 1.46 0.062 1.789-0.596s0.062-1.46-0.596-1.789l-4.596-2.298c0 0 0-7.176 0-7.176 0-0.736-0.597-1.333-1.333-1.333s-1.333 0.597-1.333 1.333z"},null,-1)];var ee={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",K,Z)}},te={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},ne=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M24.943 19.057l-8-8c-0.521-0.521-1.365-0.521-1.885 0l-8 8c-0.52 0.52-0.52 1.365 0 1.885s1.365 0.52 1.885 0l7.057-7.057c0 0 7.057 7.057 7.057 7.057 0.52 0.52 1.365 0.52 1.885 0s0.52-1.365 0-1.885z"},null,-1)];var re={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",te,ne)}},ae={version:"1.1",xmlns:"http://www.w3.org/2000/svg",width:"32",height:"32",viewBox:"0 0 32 32",class:"dp__icon"},oe=[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("path",{d:"M7.057 12.943l8 8c0.521 0.521 1.365 0.521 1.885 0l8-8c0.52-0.52 0.52-1.365 0-1.885s-1.365-0.52-1.885 0l-7.057 7.057c0 0-7.057-7.057-7.057-7.057-0.52-0.52-1.365-0.52-1.885 0s-0.52 1.365 0 1.885z"},null,-1)];var ie={render:function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("svg",ae,oe)}},ue={lessThanXSeconds:{one:"less than a second",other:"less than {{count}} seconds"},xSeconds:{one:"1 second",other:"{{count}} seconds"},halfAMinute:"half a minute",lessThanXMinutes:{one:"less than a minute",other:"less than {{count}} minutes"},xMinutes:{one:"1 minute",other:"{{count}} minutes"},aboutXHours:{one:"about 1 hour",other:"about {{count}} hours"},xHours:{one:"1 hour",other:"{{count}} hours"},xDays:{one:"1 day",other:"{{count}} days"},aboutXWeeks:{one:"about 1 week",other:"about {{count}} weeks"},xWeeks:{one:"1 week",other:"{{count}} weeks"},aboutXMonths:{one:"about 1 month",other:"about {{count}} months"},xMonths:{one:"1 month",other:"{{count}} months"},aboutXYears:{one:"about 1 year",other:"about {{count}} years"},xYears:{one:"1 year",other:"{{count}} years"},overXYears:{one:"over 1 year",other:"over {{count}} years"},almostXYears:{one:"almost 1 year",other:"almost {{count}} years"}},le=function(e,t,n){var r,a=ue[e];return r="string"==typeof a?a:1===t?a.one:a.other.replace("{{count}}",t.toString()),null!=n&&n.addSuffix?n.comparison&&n.comparison>0?"in "+r:r+" ago":r};function se(e){return function(){var t=arguments.length>0&&void 0!==arguments[0]?arguments[0]:{},n=t.width?String(t.width):e.defaultWidth,r=e.formats[n]||e.formats[e.defaultWidth];return r}}var ce={date:se({formats:{full:"EEEE, MMMM do, y",long:"MMMM do, y",medium:"MMM d, y",short:"MM/dd/yyyy"},defaultWidth:"full"}),time:se({formats:{full:"h:mm:ss a zzzz",long:"h:mm:ss a z",medium:"h:mm:ss a",short:"h:mm a"},defaultWidth:"full"}),dateTime:se({formats:{full:"{{date}} 'at' {{time}}",long:"{{date}} 'at' {{time}}",medium:"{{date}}, {{time}}",short:"{{date}}, {{time}}"},defaultWidth:"full"})},de={lastWeek:"'last' eeee 'at' p",yesterday:"'yesterday at' p",today:"'today at' p",tomorrow:"'tomorrow at' p",nextWeek:"eeee 'at' p",other:"P"};function me(e){return function(t,n){var r,a=n||{};if("formatting"===(a.context?String(a.context):"standalone")&&e.formattingValues){var o=e.defaultFormattingWidth||e.defaultWidth,i=a.width?String(a.width):o;r=e.formattingValues[i]||e.formattingValues[o]}else{var u=e.defaultWidth,l=a.width?String(a.width):e.defaultWidth;r=e.values[l]||e.values[u]}return r[e.argumentCallback?e.argumentCallback(t):t]}}function fe(e){return function(t){var n=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},r=n.width,a=r&&e.matchPatterns[r]||e.matchPatterns[e.defaultMatchWidth],o=t.match(a);if(!o)return null;var i,u=o[0],l=r&&e.parsePatterns[r]||e.parsePatterns[e.defaultParseWidth],s=Array.isArray(l)?ve(l,(function(e){return e.test(u)})):pe(l,(function(e){return e.test(u)}));i=e.valueCallback?e.valueCallback(s):s,i=n.valueCallback?n.valueCallback(i):i;var c=t.slice(u.length);return{value:i,rest:c}}}function pe(e,t){for(var n in e)if(e.hasOwnProperty(n)&&t(e[n]))return n}function ve(e,t){for(var n=0;n<e.length;n++)if(t(e[n]))return n}var he,ye={code:"en-US",formatDistance:le,formatLong:ce,formatRelative:function(e,t,n,r){return de[e]},localize:{ordinalNumber:function(e,t){var n=Number(e),r=n%100;if(r>20||r<10)switch(r%10){case 1:return n+"st";case 2:return n+"nd";case 3:return n+"rd"}return n+"th"},era:me({values:{narrow:["B","A"],abbreviated:["BC","AD"],wide:["Before Christ","Anno Domini"]},defaultWidth:"wide"}),quarter:me({values:{narrow:["1","2","3","4"],abbreviated:["Q1","Q2","Q3","Q4"],wide:["1st quarter","2nd quarter","3rd quarter","4th quarter"]},defaultWidth:"wide",argumentCallback:function(e){return e-1}}),month:me({values:{narrow:["J","F","M","A","M","J","J","A","S","O","N","D"],abbreviated:["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],wide:["January","February","March","April","May","June","July","August","September","October","November","December"]},defaultWidth:"wide"}),day:me({values:{narrow:["S","M","T","W","T","F","S"],short:["Su","Mo","Tu","We","Th","Fr","Sa"],abbreviated:["Sun","Mon","Tue","Wed","Thu","Fri","Sat"],wide:["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"]},defaultWidth:"wide"}),dayPeriod:me({values:{narrow:{am:"a",pm:"p",midnight:"mi",noon:"n",morning:"morning",afternoon:"afternoon",evening:"evening",night:"night"},abbreviated:{am:"AM",pm:"PM",midnight:"midnight",noon:"noon",morning:"morning",afternoon:"afternoon",evening:"evening",night:"night"},wide:{am:"a.m.",pm:"p.m.",midnight:"midnight",noon:"noon",morning:"morning",afternoon:"afternoon",evening:"evening",night:"night"}},defaultWidth:"wide",formattingValues:{narrow:{am:"a",pm:"p",midnight:"mi",noon:"n",morning:"in the morning",afternoon:"in the afternoon",evening:"in the evening",night:"at night"},abbreviated:{am:"AM",pm:"PM",midnight:"midnight",noon:"noon",morning:"in the morning",afternoon:"in the afternoon",evening:"in the evening",night:"at night"},wide:{am:"a.m.",pm:"p.m.",midnight:"midnight",noon:"noon",morning:"in the morning",afternoon:"in the afternoon",evening:"in the evening",night:"at night"}},defaultFormattingWidth:"wide"})},match:{ordinalNumber:(he={matchPattern:/^(\d+)(th|st|nd|rd)?/i,parsePattern:/\d+/i,valueCallback:function(e){return parseInt(e,10)}},function(e){var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:{},n=e.match(he.matchPattern);if(!n)return null;var r=n[0],a=e.match(he.parsePattern);if(!a)return null;var o=he.valueCallback?he.valueCallback(a[0]):a[0];o=t.valueCallback?t.valueCallback(o):o;var i=e.slice(r.length);return{value:o,rest:i}}),era:fe({matchPatterns:{narrow:/^(b|a)/i,abbreviated:/^(b\.?\s?c\.?|b\.?\s?c\.?\s?e\.?|a\.?\s?d\.?|c\.?\s?e\.?)/i,wide:/^(before christ|before common era|anno domini|common era)/i},defaultMatchWidth:"wide",parsePatterns:{any:[/^b/i,/^(a|c)/i]},defaultParseWidth:"any"}),quarter:fe({matchPatterns:{narrow:/^[1234]/i,abbreviated:/^q[1234]/i,wide:/^[1234](th|st|nd|rd)? quarter/i},defaultMatchWidth:"wide",parsePatterns:{any:[/1/i,/2/i,/3/i,/4/i]},defaultParseWidth:"any",valueCallback:function(e){return e+1}}),month:fe({matchPatterns:{narrow:/^[jfmasond]/i,abbreviated:/^(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)/i,wide:/^(january|february|march|april|may|june|july|august|september|october|november|december)/i},defaultMatchWidth:"wide",parsePatterns:{narrow:[/^j/i,/^f/i,/^m/i,/^a/i,/^m/i,/^j/i,/^j/i,/^a/i,/^s/i,/^o/i,/^n/i,/^d/i],any:[/^ja/i,/^f/i,/^mar/i,/^ap/i,/^may/i,/^jun/i,/^jul/i,/^au/i,/^s/i,/^o/i,/^n/i,/^d/i]},defaultParseWidth:"any"}),day:fe({matchPatterns:{narrow:/^[smtwf]/i,short:/^(su|mo|tu|we|th|fr|sa)/i,abbreviated:/^(sun|mon|tue|wed|thu|fri|sat)/i,wide:/^(sunday|monday|tuesday|wednesday|thursday|friday|saturday)/i},defaultMatchWidth:"wide",parsePatterns:{narrow:[/^s/i,/^m/i,/^t/i,/^w/i,/^t/i,/^f/i,/^s/i],any:[/^su/i,/^m/i,/^tu/i,/^w/i,/^th/i,/^f/i,/^sa/i]},defaultParseWidth:"any"}),dayPeriod:fe({matchPatterns:{narrow:/^(a|p|mi|n|(in the|at) (morning|afternoon|evening|night))/i,any:/^([ap]\.?\s?m\.?|midnight|noon|(in the|at) (morning|afternoon|evening|night))/i},defaultMatchWidth:"any",parsePatterns:{any:{am:/^a/i,pm:/^p/i,midnight:/^mi/i,noon:/^no/i,morning:/morning/i,afternoon:/afternoon/i,evening:/evening/i,night:/night/i}},defaultParseWidth:"any"})},options:{weekStartsOn:0,firstWeekContainsDate:1}};function we(e){if(null===e||!0===e||!1===e)return NaN;var t=Number(e);return isNaN(t)?t:t<0?Math.ceil(t):Math.floor(t)}function ge(e,t){if(t.length<e)throw new TypeError(e+" argument"+(e>1?"s":"")+" required, but only "+t.length+" present")}function be(e){ge(1,arguments);var t=Object.prototype.toString.call(e);return e instanceof Date||"object"==typeof e&&"[object Date]"===t?new Date(e.getTime()):"number"==typeof e||"[object Number]"===t?new Date(e):("string"!=typeof e&&"[object String]"!==t||"undefined"==typeof console||(console.warn("Starting with v2.0.0-beta.1 date-fns doesn't accept strings as date arguments. Please use `parseISO` to parse strings. See: https://git.io/fjule"),console.warn((new Error).stack)),new Date(NaN))}function ke(e,t){ge(2,arguments);var n=be(e).getTime(),r=we(t);return new Date(n+r)}function Te(e,t){ge(2,arguments);var n=we(t);return ke(e,-n)}function _e(e,t){if(null==e)throw new TypeError("assign requires that input parameter not be null or undefined");for(var n in t=t||{})Object.prototype.hasOwnProperty.call(t,n)&&(e[n]=t[n]);return e}function De(e,t){switch(e){case"P":return t.date({width:"short"});case"PP":return t.date({width:"medium"});case"PPP":return t.date({width:"long"});default:return t.date({width:"full"})}}function Ce(e,t){switch(e){case"p":return t.time({width:"short"});case"pp":return t.time({width:"medium"});case"ppp":return t.time({width:"long"});default:return t.time({width:"full"})}}var xe={p:Ce,P:function(e,t){var n,r=e.match(/(P+)(p+)?/),a=r[1],o=r[2];if(!o)return De(e,t);switch(a){case"P":n=t.dateTime({width:"short"});break;case"PP":n=t.dateTime({width:"medium"});break;case"PPP":n=t.dateTime({width:"long"});break;default:n=t.dateTime({width:"full"})}return n.replace("{{date}}",De(a,t)).replace("{{time}}",Ce(o,t))}},Se=xe;function Me(e){var t=new Date(Date.UTC(e.getFullYear(),e.getMonth(),e.getDate(),e.getHours(),e.getMinutes(),e.getSeconds(),e.getMilliseconds()));return t.setUTCFullYear(e.getFullYear()),e.getTime()-t.getTime()}var Oe=["D","DD"],Pe=["YY","YYYY"];function Ne(e){return-1!==Oe.indexOf(e)}function Ue(e){return-1!==Pe.indexOf(e)}function Ie(e,t,n){if("YYYY"===e)throw new RangeError("Use `yyyy` instead of `YYYY` (in `".concat(t,"`) for formatting years to the input `").concat(n,"`; see: https://git.io/fxCyr"));if("YY"===e)throw new RangeError("Use `yy` instead of `YY` (in `".concat(t,"`) for formatting years to the input `").concat(n,"`; see: https://git.io/fxCyr"));if("D"===e)throw new RangeError("Use `d` instead of `D` (in `".concat(t,"`) for formatting days of the month to the input `").concat(n,"`; see: https://git.io/fxCyr"));if("DD"===e)throw new RangeError("Use `dd` instead of `DD` (in `".concat(t,"`) for formatting days of the month to the input `").concat(n,"`; see: https://git.io/fxCyr"))}function $e(e,t){ge(1,arguments);var n=t||{},r=n.locale,a=r&&r.options&&r.options.weekStartsOn,o=null==a?0:we(a),i=null==n.weekStartsOn?o:we(n.weekStartsOn);if(!(i>=0&&i<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var u=be(e),l=u.getUTCDay(),s=(l<i?7:0)+l-i;return u.setUTCDate(u.getUTCDate()-s),u.setUTCHours(0,0,0,0),u}function Be(e,t){ge(1,arguments);var n=be(e,t),r=n.getUTCFullYear(),a=t||{},o=a.locale,i=o&&o.options&&o.options.firstWeekContainsDate,u=null==i?1:we(i),l=null==a.firstWeekContainsDate?u:we(a.firstWeekContainsDate);if(!(l>=1&&l<=7))throw new RangeError("firstWeekContainsDate must be between 1 and 7 inclusively");var s=new Date(0);s.setUTCFullYear(r+1,0,l),s.setUTCHours(0,0,0,0);var c=$e(s,t),d=new Date(0);d.setUTCFullYear(r,0,l),d.setUTCHours(0,0,0,0);var m=$e(d,t);return n.getTime()>=c.getTime()?r+1:n.getTime()>=m.getTime()?r:r-1}function Ae(e,t,n){ge(2,arguments);var r=n||{},a=r.locale,o=a&&a.options&&a.options.weekStartsOn,i=null==o?0:we(o),u=null==r.weekStartsOn?i:we(r.weekStartsOn);if(!(u>=0&&u<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var l=be(e),s=we(t),c=l.getUTCDay(),d=s%7,m=(d+7)%7,f=(m<u?7:0)+s-c;return l.setUTCDate(l.getUTCDate()+f),l}function Ye(e){ge(1,arguments);var t=1,n=be(e),r=n.getUTCDay(),a=(r<t?7:0)+r-t;return n.setUTCDate(n.getUTCDate()-a),n.setUTCHours(0,0,0,0),n}function He(e){ge(1,arguments);var t=be(e),n=t.getUTCFullYear(),r=new Date(0);r.setUTCFullYear(n+1,0,4),r.setUTCHours(0,0,0,0);var a=Ye(r),o=new Date(0);o.setUTCFullYear(n,0,4),o.setUTCHours(0,0,0,0);var i=Ye(o);return t.getTime()>=a.getTime()?n+1:t.getTime()>=i.getTime()?n:n-1}function je(e){ge(1,arguments);var t=He(e),n=new Date(0);n.setUTCFullYear(t,0,4),n.setUTCHours(0,0,0,0);var r=Ye(n);return r}function Ee(e){ge(1,arguments);var t=be(e),n=Ye(t).getTime()-je(t).getTime();return Math.round(n/6048e5)+1}function Ve(e,t){ge(1,arguments);var n=t||{},r=n.locale,a=r&&r.options&&r.options.firstWeekContainsDate,o=null==a?1:we(a),i=null==n.firstWeekContainsDate?o:we(n.firstWeekContainsDate),u=Be(e,t),l=new Date(0);l.setUTCFullYear(u,0,i),l.setUTCHours(0,0,0,0);var s=$e(l,t);return s}function Fe(e,t){ge(1,arguments);var n=be(e),r=$e(n,t).getTime()-Ve(n,t).getTime();return Math.round(r/6048e5)+1}var Re=/^(1[0-2]|0?\d)/,We=/^(3[0-1]|[0-2]?\d)/,qe=/^(36[0-6]|3[0-5]\d|[0-2]?\d?\d)/,Le=/^(5[0-3]|[0-4]?\d)/,Ge=/^(2[0-3]|[0-1]?\d)/,Qe=/^(2[0-4]|[0-1]?\d)/,ze=/^(1[0-1]|0?\d)/,Xe=/^(1[0-2]|0?\d)/,Je=/^[0-5]?\d/,Ke=/^[0-5]?\d/,Ze=/^\d/,et=/^\d{1,2}/,tt=/^\d{1,3}/,nt=/^\d{1,4}/,rt=/^-?\d+/,at=/^-?\d/,ot=/^-?\d{1,2}/,it=/^-?\d{1,3}/,ut=/^-?\d{1,4}/,lt=/^([+-])(\d{2})(\d{2})?|Z/,st=/^([+-])(\d{2})(\d{2})|Z/,ct=/^([+-])(\d{2})(\d{2})((\d{2}))?|Z/,dt=/^([+-])(\d{2}):(\d{2})|Z/,mt=/^([+-])(\d{2}):(\d{2})(:(\d{2}))?|Z/;function ft(e,t,n){var r=t.match(e);if(!r)return null;var a=parseInt(r[0],10);return{value:n?n(a):a,rest:t.slice(r[0].length)}}function pt(e,t){var n=t.match(e);return n?"Z"===n[0]?{value:0,rest:t.slice(1)}:{value:("+"===n[1]?1:-1)*(36e5*(n[2]?parseInt(n[2],10):0)+6e4*(n[3]?parseInt(n[3],10):0)+1e3*(n[5]?parseInt(n[5],10):0)),rest:t.slice(n[0].length)}:null}function vt(e,t){return ft(rt,e,t)}function ht(e,t,n){switch(e){case 1:return ft(Ze,t,n);case 2:return ft(et,t,n);case 3:return ft(tt,t,n);case 4:return ft(nt,t,n);default:return ft(new RegExp("^\\d{1,"+e+"}"),t,n)}}function yt(e,t,n){switch(e){case 1:return ft(at,t,n);case 2:return ft(ot,t,n);case 3:return ft(it,t,n);case 4:return ft(ut,t,n);default:return ft(new RegExp("^-?\\d{1,"+e+"}"),t,n)}}function wt(e){switch(e){case"morning":return 4;case"evening":return 17;case"pm":case"noon":case"afternoon":return 12;default:return 0}}function gt(e,t){var n,r=t>0,a=r?t:1-t;if(a<=50)n=e||100;else{var o=a+50;n=e+100*Math.floor(o/100)-(e>=o%100?100:0)}return r?n:1-n}var bt=[31,28,31,30,31,30,31,31,30,31,30,31],kt=[31,29,31,30,31,30,31,31,30,31,30,31];function Tt(e){return e%400==0||e%4==0&&e%100!=0}var _t={G:{priority:140,parse:function(e,t,n,r){switch(t){case"G":case"GG":case"GGG":return n.era(e,{width:"abbreviated"})||n.era(e,{width:"narrow"});case"GGGGG":return n.era(e,{width:"narrow"});default:return n.era(e,{width:"wide"})||n.era(e,{width:"abbreviated"})||n.era(e,{width:"narrow"})}},set:function(e,t,n,r){return t.era=n,e.setUTCFullYear(n,0,1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["R","u","t","T"]},y:{priority:130,parse:function(e,t,n,r){var a=function(e){return{year:e,isTwoDigitYear:"yy"===t}};switch(t){case"y":return ht(4,e,a);case"yo":return n.ordinalNumber(e,{unit:"year",valueCallback:a});default:return ht(t.length,e,a)}},validate:function(e,t,n){return t.isTwoDigitYear||t.year>0},set:function(e,t,n,r){var a=e.getUTCFullYear();if(n.isTwoDigitYear){var o=gt(n.year,a);return e.setUTCFullYear(o,0,1),e.setUTCHours(0,0,0,0),e}var i="era"in t&&1!==t.era?1-n.year:n.year;return e.setUTCFullYear(i,0,1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","u","w","I","i","e","c","t","T"]},Y:{priority:130,parse:function(e,t,n,r){var a=function(e){return{year:e,isTwoDigitYear:"YY"===t}};switch(t){case"Y":return ht(4,e,a);case"Yo":return n.ordinalNumber(e,{unit:"year",valueCallback:a});default:return ht(t.length,e,a)}},validate:function(e,t,n){return t.isTwoDigitYear||t.year>0},set:function(e,t,n,r){var a=Be(e,r);if(n.isTwoDigitYear){var o=gt(n.year,a);return e.setUTCFullYear(o,0,r.firstWeekContainsDate),e.setUTCHours(0,0,0,0),$e(e,r)}var i="era"in t&&1!==t.era?1-n.year:n.year;return e.setUTCFullYear(i,0,r.firstWeekContainsDate),e.setUTCHours(0,0,0,0),$e(e,r)},incompatibleTokens:["y","R","u","Q","q","M","L","I","d","D","i","t","T"]},R:{priority:130,parse:function(e,t,n,r){return yt("R"===t?4:t.length,e)},set:function(e,t,n,r){var a=new Date(0);return a.setUTCFullYear(n,0,4),a.setUTCHours(0,0,0,0),Ye(a)},incompatibleTokens:["G","y","Y","u","Q","q","M","L","w","d","D","e","c","t","T"]},u:{priority:130,parse:function(e,t,n,r){return yt("u"===t?4:t.length,e)},set:function(e,t,n,r){return e.setUTCFullYear(n,0,1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["G","y","Y","R","w","I","i","e","c","t","T"]},Q:{priority:120,parse:function(e,t,n,r){switch(t){case"Q":case"QQ":return ht(t.length,e);case"Qo":return n.ordinalNumber(e,{unit:"quarter"});case"QQQ":return n.quarter(e,{width:"abbreviated",context:"formatting"})||n.quarter(e,{width:"narrow",context:"formatting"});case"QQQQQ":return n.quarter(e,{width:"narrow",context:"formatting"});default:return n.quarter(e,{width:"wide",context:"formatting"})||n.quarter(e,{width:"abbreviated",context:"formatting"})||n.quarter(e,{width:"narrow",context:"formatting"})}},validate:function(e,t,n){return t>=1&&t<=4},set:function(e,t,n,r){return e.setUTCMonth(3*(n-1),1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","q","M","L","w","I","d","D","i","e","c","t","T"]},q:{priority:120,parse:function(e,t,n,r){switch(t){case"q":case"qq":return ht(t.length,e);case"qo":return n.ordinalNumber(e,{unit:"quarter"});case"qqq":return n.quarter(e,{width:"abbreviated",context:"standalone"})||n.quarter(e,{width:"narrow",context:"standalone"});case"qqqqq":return n.quarter(e,{width:"narrow",context:"standalone"});default:return n.quarter(e,{width:"wide",context:"standalone"})||n.quarter(e,{width:"abbreviated",context:"standalone"})||n.quarter(e,{width:"narrow",context:"standalone"})}},validate:function(e,t,n){return t>=1&&t<=4},set:function(e,t,n,r){return e.setUTCMonth(3*(n-1),1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","Q","M","L","w","I","d","D","i","e","c","t","T"]},M:{priority:110,parse:function(e,t,n,r){var a=function(e){return e-1};switch(t){case"M":return ft(Re,e,a);case"MM":return ht(2,e,a);case"Mo":return n.ordinalNumber(e,{unit:"month",valueCallback:a});case"MMM":return n.month(e,{width:"abbreviated",context:"formatting"})||n.month(e,{width:"narrow",context:"formatting"});case"MMMMM":return n.month(e,{width:"narrow",context:"formatting"});default:return n.month(e,{width:"wide",context:"formatting"})||n.month(e,{width:"abbreviated",context:"formatting"})||n.month(e,{width:"narrow",context:"formatting"})}},validate:function(e,t,n){return t>=0&&t<=11},set:function(e,t,n,r){return e.setUTCMonth(n,1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","q","Q","L","w","I","D","i","e","c","t","T"]},L:{priority:110,parse:function(e,t,n,r){var a=function(e){return e-1};switch(t){case"L":return ft(Re,e,a);case"LL":return ht(2,e,a);case"Lo":return n.ordinalNumber(e,{unit:"month",valueCallback:a});case"LLL":return n.month(e,{width:"abbreviated",context:"standalone"})||n.month(e,{width:"narrow",context:"standalone"});case"LLLLL":return n.month(e,{width:"narrow",context:"standalone"});default:return n.month(e,{width:"wide",context:"standalone"})||n.month(e,{width:"abbreviated",context:"standalone"})||n.month(e,{width:"narrow",context:"standalone"})}},validate:function(e,t,n){return t>=0&&t<=11},set:function(e,t,n,r){return e.setUTCMonth(n,1),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","q","Q","M","w","I","D","i","e","c","t","T"]},w:{priority:100,parse:function(e,t,n,r){switch(t){case"w":return ft(Le,e);case"wo":return n.ordinalNumber(e,{unit:"week"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=1&&t<=53},set:function(e,t,n,r){return $e(function(e,t,n){ge(2,arguments);var r=be(e),a=we(t),o=Fe(r,n)-a;return r.setUTCDate(r.getUTCDate()-7*o),r}(e,n,r),r)},incompatibleTokens:["y","R","u","q","Q","M","L","I","d","D","i","t","T"]},I:{priority:100,parse:function(e,t,n,r){switch(t){case"I":return ft(Le,e);case"Io":return n.ordinalNumber(e,{unit:"week"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=1&&t<=53},set:function(e,t,n,r){return Ye(function(e,t){ge(2,arguments);var n=be(e),r=we(t),a=Ee(n)-r;return n.setUTCDate(n.getUTCDate()-7*a),n}(e,n,r),r)},incompatibleTokens:["y","Y","u","q","Q","M","L","w","d","D","e","c","t","T"]},d:{priority:90,subPriority:1,parse:function(e,t,n,r){switch(t){case"d":return ft(We,e);case"do":return n.ordinalNumber(e,{unit:"date"});default:return ht(t.length,e)}},validate:function(e,t,n){var r=Tt(e.getUTCFullYear()),a=e.getUTCMonth();return r?t>=1&&t<=kt[a]:t>=1&&t<=bt[a]},set:function(e,t,n,r){return e.setUTCDate(n),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","q","Q","w","I","D","i","e","c","t","T"]},D:{priority:90,subPriority:1,parse:function(e,t,n,r){switch(t){case"D":case"DD":return ft(qe,e);case"Do":return n.ordinalNumber(e,{unit:"date"});default:return ht(t.length,e)}},validate:function(e,t,n){return Tt(e.getUTCFullYear())?t>=1&&t<=366:t>=1&&t<=365},set:function(e,t,n,r){return e.setUTCMonth(0,n),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["Y","R","q","Q","M","L","w","I","d","E","i","e","c","t","T"]},E:{priority:90,parse:function(e,t,n,r){switch(t){case"E":case"EE":case"EEE":return n.day(e,{width:"abbreviated",context:"formatting"})||n.day(e,{width:"short",context:"formatting"})||n.day(e,{width:"narrow",context:"formatting"});case"EEEEE":return n.day(e,{width:"narrow",context:"formatting"});case"EEEEEE":return n.day(e,{width:"short",context:"formatting"})||n.day(e,{width:"narrow",context:"formatting"});default:return n.day(e,{width:"wide",context:"formatting"})||n.day(e,{width:"abbreviated",context:"formatting"})||n.day(e,{width:"short",context:"formatting"})||n.day(e,{width:"narrow",context:"formatting"})}},validate:function(e,t,n){return t>=0&&t<=6},set:function(e,t,n,r){return(e=Ae(e,n,r)).setUTCHours(0,0,0,0),e},incompatibleTokens:["D","i","e","c","t","T"]},e:{priority:90,parse:function(e,t,n,r){var a=function(e){var t=7*Math.floor((e-1)/7);return(e+r.weekStartsOn+6)%7+t};switch(t){case"e":case"ee":return ht(t.length,e,a);case"eo":return n.ordinalNumber(e,{unit:"day",valueCallback:a});case"eee":return n.day(e,{width:"abbreviated",context:"formatting"})||n.day(e,{width:"short",context:"formatting"})||n.day(e,{width:"narrow",context:"formatting"});case"eeeee":return n.day(e,{width:"narrow",context:"formatting"});case"eeeeee":return n.day(e,{width:"short",context:"formatting"})||n.day(e,{width:"narrow",context:"formatting"});default:return n.day(e,{width:"wide",context:"formatting"})||n.day(e,{width:"abbreviated",context:"formatting"})||n.day(e,{width:"short",context:"formatting"})||n.day(e,{width:"narrow",context:"formatting"})}},validate:function(e,t,n){return t>=0&&t<=6},set:function(e,t,n,r){return(e=Ae(e,n,r)).setUTCHours(0,0,0,0),e},incompatibleTokens:["y","R","u","q","Q","M","L","I","d","D","E","i","c","t","T"]},c:{priority:90,parse:function(e,t,n,r){var a=function(e){var t=7*Math.floor((e-1)/7);return(e+r.weekStartsOn+6)%7+t};switch(t){case"c":case"cc":return ht(t.length,e,a);case"co":return n.ordinalNumber(e,{unit:"day",valueCallback:a});case"ccc":return n.day(e,{width:"abbreviated",context:"standalone"})||n.day(e,{width:"short",context:"standalone"})||n.day(e,{width:"narrow",context:"standalone"});case"ccccc":return n.day(e,{width:"narrow",context:"standalone"});case"cccccc":return n.day(e,{width:"short",context:"standalone"})||n.day(e,{width:"narrow",context:"standalone"});default:return n.day(e,{width:"wide",context:"standalone"})||n.day(e,{width:"abbreviated",context:"standalone"})||n.day(e,{width:"short",context:"standalone"})||n.day(e,{width:"narrow",context:"standalone"})}},validate:function(e,t,n){return t>=0&&t<=6},set:function(e,t,n,r){return(e=Ae(e,n,r)).setUTCHours(0,0,0,0),e},incompatibleTokens:["y","R","u","q","Q","M","L","I","d","D","E","i","e","t","T"]},i:{priority:90,parse:function(e,t,n,r){var a=function(e){return 0===e?7:e};switch(t){case"i":case"ii":return ht(t.length,e);case"io":return n.ordinalNumber(e,{unit:"day"});case"iii":return n.day(e,{width:"abbreviated",context:"formatting",valueCallback:a})||n.day(e,{width:"short",context:"formatting",valueCallback:a})||n.day(e,{width:"narrow",context:"formatting",valueCallback:a});case"iiiii":return n.day(e,{width:"narrow",context:"formatting",valueCallback:a});case"iiiiii":return n.day(e,{width:"short",context:"formatting",valueCallback:a})||n.day(e,{width:"narrow",context:"formatting",valueCallback:a});default:return n.day(e,{width:"wide",context:"formatting",valueCallback:a})||n.day(e,{width:"abbreviated",context:"formatting",valueCallback:a})||n.day(e,{width:"short",context:"formatting",valueCallback:a})||n.day(e,{width:"narrow",context:"formatting",valueCallback:a})}},validate:function(e,t,n){return t>=1&&t<=7},set:function(e,t,n,r){return e=function(e,t){ge(2,arguments);var n=we(t);n%7==0&&(n-=7);var r=1,a=be(e),o=a.getUTCDay(),i=((n%7+7)%7<r?7:0)+n-o;return a.setUTCDate(a.getUTCDate()+i),a}(e,n,r),e.setUTCHours(0,0,0,0),e},incompatibleTokens:["y","Y","u","q","Q","M","L","w","d","D","E","e","c","t","T"]},a:{priority:80,parse:function(e,t,n,r){switch(t){case"a":case"aa":case"aaa":return n.dayPeriod(e,{width:"abbreviated",context:"formatting"})||n.dayPeriod(e,{width:"narrow",context:"formatting"});case"aaaaa":return n.dayPeriod(e,{width:"narrow",context:"formatting"});default:return n.dayPeriod(e,{width:"wide",context:"formatting"})||n.dayPeriod(e,{width:"abbreviated",context:"formatting"})||n.dayPeriod(e,{width:"narrow",context:"formatting"})}},set:function(e,t,n,r){return e.setUTCHours(wt(n),0,0,0),e},incompatibleTokens:["b","B","H","K","k","t","T"]},b:{priority:80,parse:function(e,t,n,r){switch(t){case"b":case"bb":case"bbb":return n.dayPeriod(e,{width:"abbreviated",context:"formatting"})||n.dayPeriod(e,{width:"narrow",context:"formatting"});case"bbbbb":return n.dayPeriod(e,{width:"narrow",context:"formatting"});default:return n.dayPeriod(e,{width:"wide",context:"formatting"})||n.dayPeriod(e,{width:"abbreviated",context:"formatting"})||n.dayPeriod(e,{width:"narrow",context:"formatting"})}},set:function(e,t,n,r){return e.setUTCHours(wt(n),0,0,0),e},incompatibleTokens:["a","B","H","K","k","t","T"]},B:{priority:80,parse:function(e,t,n,r){switch(t){case"B":case"BB":case"BBB":return n.dayPeriod(e,{width:"abbreviated",context:"formatting"})||n.dayPeriod(e,{width:"narrow",context:"formatting"});case"BBBBB":return n.dayPeriod(e,{width:"narrow",context:"formatting"});default:return n.dayPeriod(e,{width:"wide",context:"formatting"})||n.dayPeriod(e,{width:"abbreviated",context:"formatting"})||n.dayPeriod(e,{width:"narrow",context:"formatting"})}},set:function(e,t,n,r){return e.setUTCHours(wt(n),0,0,0),e},incompatibleTokens:["a","b","t","T"]},h:{priority:70,parse:function(e,t,n,r){switch(t){case"h":return ft(Xe,e);case"ho":return n.ordinalNumber(e,{unit:"hour"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=1&&t<=12},set:function(e,t,n,r){var a=e.getUTCHours()>=12;return a&&n<12?e.setUTCHours(n+12,0,0,0):a||12!==n?e.setUTCHours(n,0,0,0):e.setUTCHours(0,0,0,0),e},incompatibleTokens:["H","K","k","t","T"]},H:{priority:70,parse:function(e,t,n,r){switch(t){case"H":return ft(Ge,e);case"Ho":return n.ordinalNumber(e,{unit:"hour"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=0&&t<=23},set:function(e,t,n,r){return e.setUTCHours(n,0,0,0),e},incompatibleTokens:["a","b","h","K","k","t","T"]},K:{priority:70,parse:function(e,t,n,r){switch(t){case"K":return ft(ze,e);case"Ko":return n.ordinalNumber(e,{unit:"hour"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=0&&t<=11},set:function(e,t,n,r){return e.getUTCHours()>=12&&n<12?e.setUTCHours(n+12,0,0,0):e.setUTCHours(n,0,0,0),e},incompatibleTokens:["a","b","h","H","k","t","T"]},k:{priority:70,parse:function(e,t,n,r){switch(t){case"k":return ft(Qe,e);case"ko":return n.ordinalNumber(e,{unit:"hour"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=1&&t<=24},set:function(e,t,n,r){var a=n<=24?n%24:n;return e.setUTCHours(a,0,0,0),e},incompatibleTokens:["a","b","h","H","K","t","T"]},m:{priority:60,parse:function(e,t,n,r){switch(t){case"m":return ft(Je,e);case"mo":return n.ordinalNumber(e,{unit:"minute"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=0&&t<=59},set:function(e,t,n,r){return e.setUTCMinutes(n,0,0),e},incompatibleTokens:["t","T"]},s:{priority:50,parse:function(e,t,n,r){switch(t){case"s":return ft(Ke,e);case"so":return n.ordinalNumber(e,{unit:"second"});default:return ht(t.length,e)}},validate:function(e,t,n){return t>=0&&t<=59},set:function(e,t,n,r){return e.setUTCSeconds(n,0),e},incompatibleTokens:["t","T"]},S:{priority:30,parse:function(e,t,n,r){return ht(t.length,e,(function(e){return Math.floor(e*Math.pow(10,3-t.length))}))},set:function(e,t,n,r){return e.setUTCMilliseconds(n),e},incompatibleTokens:["t","T"]},X:{priority:10,parse:function(e,t,n,r){switch(t){case"X":return pt(lt,e);case"XX":return pt(st,e);case"XXXX":return pt(ct,e);case"XXXXX":return pt(mt,e);default:return pt(dt,e)}},set:function(e,t,n,r){return t.timestampIsSet?e:new Date(e.getTime()-n)},incompatibleTokens:["t","T","x"]},x:{priority:10,parse:function(e,t,n,r){switch(t){case"x":return pt(lt,e);case"xx":return pt(st,e);case"xxxx":return pt(ct,e);case"xxxxx":return pt(mt,e);default:return pt(dt,e)}},set:function(e,t,n,r){return t.timestampIsSet?e:new Date(e.getTime()-n)},incompatibleTokens:["t","T","X"]},t:{priority:40,parse:function(e,t,n,r){return vt(e)},set:function(e,t,n,r){return[new Date(1e3*n),{timestampIsSet:!0}]},incompatibleTokens:"*"},T:{priority:20,parse:function(e,t,n,r){return vt(e)},set:function(e,t,n,r){return[new Date(n),{timestampIsSet:!0}]},incompatibleTokens:"*"}},Dt=_t,Ct=/[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g,xt=/P+p+|P+|p+|''|'(''|[^'])+('|$)|./g,St=/^'([^]*?)'?$/,Mt=/''/g,Ot=/\S/,Pt=/[a-zA-Z]/;function Nt(e,t){if(t.timestampIsSet)return e;var n=new Date(0);return n.setFullYear(e.getUTCFullYear(),e.getUTCMonth(),e.getUTCDate()),n.setHours(e.getUTCHours(),e.getUTCMinutes(),e.getUTCSeconds(),e.getUTCMilliseconds()),n}function Ut(e){return e.match(St)[1].replace(Mt,"'")}function It(e){return ge(1,arguments),e instanceof Date||"object"==typeof e&&"[object Date]"===Object.prototype.toString.call(e)}function $t(e){if(ge(1,arguments),!It(e)&&"number"!=typeof e)return!1;var t=be(e);return!isNaN(Number(t))}function Bt(e,t){for(var n=e<0?"-":"",r=Math.abs(e).toString();r.length<t;)r="0"+r;return n+r}var At={y:function(e,t){var n=e.getUTCFullYear(),r=n>0?n:1-n;return Bt("yy"===t?r%100:r,t.length)},M:function(e,t){var n=e.getUTCMonth();return"M"===t?String(n+1):Bt(n+1,2)},d:function(e,t){return Bt(e.getUTCDate(),t.length)},a:function(e,t){var n=e.getUTCHours()/12>=1?"pm":"am";switch(t){case"a":case"aa":return n.toUpperCase();case"aaa":return n;case"aaaaa":return n[0];default:return"am"===n?"a.m.":"p.m."}},h:function(e,t){return Bt(e.getUTCHours()%12||12,t.length)},H:function(e,t){return Bt(e.getUTCHours(),t.length)},m:function(e,t){return Bt(e.getUTCMinutes(),t.length)},s:function(e,t){return Bt(e.getUTCSeconds(),t.length)},S:function(e,t){var n=t.length,r=e.getUTCMilliseconds();return Bt(Math.floor(r*Math.pow(10,n-3)),t.length)}};var Yt="midnight",Ht="noon",jt="morning",Et="afternoon",Vt="evening",Ft="night",Rt={G:function(e,t,n){var r=e.getUTCFullYear()>0?1:0;switch(t){case"G":case"GG":case"GGG":return n.era(r,{width:"abbreviated"});case"GGGGG":return n.era(r,{width:"narrow"});default:return n.era(r,{width:"wide"})}},y:function(e,t,n){if("yo"===t){var r=e.getUTCFullYear(),a=r>0?r:1-r;return n.ordinalNumber(a,{unit:"year"})}return At.y(e,t)},Y:function(e,t,n,r){var a=Be(e,r),o=a>0?a:1-a;return"YY"===t?Bt(o%100,2):"Yo"===t?n.ordinalNumber(o,{unit:"year"}):Bt(o,t.length)},R:function(e,t){return Bt(He(e),t.length)},u:function(e,t){return Bt(e.getUTCFullYear(),t.length)},Q:function(e,t,n){var r=Math.ceil((e.getUTCMonth()+1)/3);switch(t){case"Q":return String(r);case"QQ":return Bt(r,2);case"Qo":return n.ordinalNumber(r,{unit:"quarter"});case"QQQ":return n.quarter(r,{width:"abbreviated",context:"formatting"});case"QQQQQ":return n.quarter(r,{width:"narrow",context:"formatting"});default:return n.quarter(r,{width:"wide",context:"formatting"})}},q:function(e,t,n){var r=Math.ceil((e.getUTCMonth()+1)/3);switch(t){case"q":return String(r);case"qq":return Bt(r,2);case"qo":return n.ordinalNumber(r,{unit:"quarter"});case"qqq":return n.quarter(r,{width:"abbreviated",context:"standalone"});case"qqqqq":return n.quarter(r,{width:"narrow",context:"standalone"});default:return n.quarter(r,{width:"wide",context:"standalone"})}},M:function(e,t,n){var r=e.getUTCMonth();switch(t){case"M":case"MM":return At.M(e,t);case"Mo":return n.ordinalNumber(r+1,{unit:"month"});case"MMM":return n.month(r,{width:"abbreviated",context:"formatting"});case"MMMMM":return n.month(r,{width:"narrow",context:"formatting"});default:return n.month(r,{width:"wide",context:"formatting"})}},L:function(e,t,n){var r=e.getUTCMonth();switch(t){case"L":return String(r+1);case"LL":return Bt(r+1,2);case"Lo":return n.ordinalNumber(r+1,{unit:"month"});case"LLL":return n.month(r,{width:"abbreviated",context:"standalone"});case"LLLLL":return n.month(r,{width:"narrow",context:"standalone"});default:return n.month(r,{width:"wide",context:"standalone"})}},w:function(e,t,n,r){var a=Fe(e,r);return"wo"===t?n.ordinalNumber(a,{unit:"week"}):Bt(a,t.length)},I:function(e,t,n){var r=Ee(e);return"Io"===t?n.ordinalNumber(r,{unit:"week"}):Bt(r,t.length)},d:function(e,t,n){return"do"===t?n.ordinalNumber(e.getUTCDate(),{unit:"date"}):At.d(e,t)},D:function(e,t,n){var r=function(e){ge(1,arguments);var t=be(e),n=t.getTime();t.setUTCMonth(0,1),t.setUTCHours(0,0,0,0);var r=t.getTime(),a=n-r;return Math.floor(a/864e5)+1}(e);return"Do"===t?n.ordinalNumber(r,{unit:"dayOfYear"}):Bt(r,t.length)},E:function(e,t,n){var r=e.getUTCDay();switch(t){case"E":case"EE":case"EEE":return n.day(r,{width:"abbreviated",context:"formatting"});case"EEEEE":return n.day(r,{width:"narrow",context:"formatting"});case"EEEEEE":return n.day(r,{width:"short",context:"formatting"});default:return n.day(r,{width:"wide",context:"formatting"})}},e:function(e,t,n,r){var a=e.getUTCDay(),o=(a-r.weekStartsOn+8)%7||7;switch(t){case"e":return String(o);case"ee":return Bt(o,2);case"eo":return n.ordinalNumber(o,{unit:"day"});case"eee":return n.day(a,{width:"abbreviated",context:"formatting"});case"eeeee":return n.day(a,{width:"narrow",context:"formatting"});case"eeeeee":return n.day(a,{width:"short",context:"formatting"});default:return n.day(a,{width:"wide",context:"formatting"})}},c:function(e,t,n,r){var a=e.getUTCDay(),o=(a-r.weekStartsOn+8)%7||7;switch(t){case"c":return String(o);case"cc":return Bt(o,t.length);case"co":return n.ordinalNumber(o,{unit:"day"});case"ccc":return n.day(a,{width:"abbreviated",context:"standalone"});case"ccccc":return n.day(a,{width:"narrow",context:"standalone"});case"cccccc":return n.day(a,{width:"short",context:"standalone"});default:return n.day(a,{width:"wide",context:"standalone"})}},i:function(e,t,n){var r=e.getUTCDay(),a=0===r?7:r;switch(t){case"i":return String(a);case"ii":return Bt(a,t.length);case"io":return n.ordinalNumber(a,{unit:"day"});case"iii":return n.day(r,{width:"abbreviated",context:"formatting"});case"iiiii":return n.day(r,{width:"narrow",context:"formatting"});case"iiiiii":return n.day(r,{width:"short",context:"formatting"});default:return n.day(r,{width:"wide",context:"formatting"})}},a:function(e,t,n){var r=e.getUTCHours()/12>=1?"pm":"am";switch(t){case"a":case"aa":return n.dayPeriod(r,{width:"abbreviated",context:"formatting"});case"aaa":return n.dayPeriod(r,{width:"abbreviated",context:"formatting"}).toLowerCase();case"aaaaa":return n.dayPeriod(r,{width:"narrow",context:"formatting"});default:return n.dayPeriod(r,{width:"wide",context:"formatting"})}},b:function(e,t,n){var r,a=e.getUTCHours();switch(r=12===a?Ht:0===a?Yt:a/12>=1?"pm":"am",t){case"b":case"bb":return n.dayPeriod(r,{width:"abbreviated",context:"formatting"});case"bbb":return n.dayPeriod(r,{width:"abbreviated",context:"formatting"}).toLowerCase();case"bbbbb":return n.dayPeriod(r,{width:"narrow",context:"formatting"});default:return n.dayPeriod(r,{width:"wide",context:"formatting"})}},B:function(e,t,n){var r,a=e.getUTCHours();switch(r=a>=17?Vt:a>=12?Et:a>=4?jt:Ft,t){case"B":case"BB":case"BBB":return n.dayPeriod(r,{width:"abbreviated",context:"formatting"});case"BBBBB":return n.dayPeriod(r,{width:"narrow",context:"formatting"});default:return n.dayPeriod(r,{width:"wide",context:"formatting"})}},h:function(e,t,n){if("ho"===t){var r=e.getUTCHours()%12;return 0===r&&(r=12),n.ordinalNumber(r,{unit:"hour"})}return At.h(e,t)},H:function(e,t,n){return"Ho"===t?n.ordinalNumber(e.getUTCHours(),{unit:"hour"}):At.H(e,t)},K:function(e,t,n){var r=e.getUTCHours()%12;return"Ko"===t?n.ordinalNumber(r,{unit:"hour"}):Bt(r,t.length)},k:function(e,t,n){var r=e.getUTCHours();return 0===r&&(r=24),"ko"===t?n.ordinalNumber(r,{unit:"hour"}):Bt(r,t.length)},m:function(e,t,n){return"mo"===t?n.ordinalNumber(e.getUTCMinutes(),{unit:"minute"}):At.m(e,t)},s:function(e,t,n){return"so"===t?n.ordinalNumber(e.getUTCSeconds(),{unit:"second"}):At.s(e,t)},S:function(e,t){return At.S(e,t)},X:function(e,t,n,r){var a=(r._originalDate||e).getTimezoneOffset();if(0===a)return"Z";switch(t){case"X":return qt(a);case"XXXX":case"XX":return Lt(a);default:return Lt(a,":")}},x:function(e,t,n,r){var a=(r._originalDate||e).getTimezoneOffset();switch(t){case"x":return qt(a);case"xxxx":case"xx":return Lt(a);default:return Lt(a,":")}},O:function(e,t,n,r){var a=(r._originalDate||e).getTimezoneOffset();switch(t){case"O":case"OO":case"OOO":return"GMT"+Wt(a,":");default:return"GMT"+Lt(a,":")}},z:function(e,t,n,r){var a=(r._originalDate||e).getTimezoneOffset();switch(t){case"z":case"zz":case"zzz":return"GMT"+Wt(a,":");default:return"GMT"+Lt(a,":")}},t:function(e,t,n,r){var a=r._originalDate||e;return Bt(Math.floor(a.getTime()/1e3),t.length)},T:function(e,t,n,r){return Bt((r._originalDate||e).getTime(),t.length)}};function Wt(e,t){var n=e>0?"-":"+",r=Math.abs(e),a=Math.floor(r/60),o=r%60;if(0===o)return n+String(a);var i=t||"";return n+String(a)+i+Bt(o,2)}function qt(e,t){return e%60==0?(e>0?"-":"+")+Bt(Math.abs(e)/60,2):Lt(e,t)}function Lt(e,t){var n=t||"",r=e>0?"-":"+",a=Math.abs(e);return r+Bt(Math.floor(a/60),2)+n+Bt(a%60,2)}var Gt=Rt,Qt=/[yYQqMLwIdDecihHKkms]o|(\w)\1*|''|'(''|[^'])+('|$)|./g,zt=/P+p+|P+|p+|''|'(''|[^'])+('|$)|./g,Xt=/^'([^]*?)'?$/,Jt=/''/g,Kt=/[a-zA-Z]/;function Zt(e,t,n){ge(2,arguments);var r=String(t),a=n||{},o=a.locale||ye,i=o.options&&o.options.firstWeekContainsDate,u=null==i?1:we(i),l=null==a.firstWeekContainsDate?u:we(a.firstWeekContainsDate);if(!(l>=1&&l<=7))throw new RangeError("firstWeekContainsDate must be between 1 and 7 inclusively");var s=o.options&&o.options.weekStartsOn,c=null==s?0:we(s),d=null==a.weekStartsOn?c:we(a.weekStartsOn);if(!(d>=0&&d<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");if(!o.localize)throw new RangeError("locale must contain localize property");if(!o.formatLong)throw new RangeError("locale must contain formatLong property");var m=be(e);if(!$t(m))throw new RangeError("Invalid time value");var f=Me(m),p=Te(m,f),v={firstWeekContainsDate:l,weekStartsOn:d,locale:o,_originalDate:m},h=r.match(zt).map((function(e){var t=e[0];return"p"===t||"P"===t?(0,Se[t])(e,o.formatLong,v):e})).join("").match(Qt).map((function(n){if("''"===n)return"'";var r=n[0];if("'"===r)return en(n);var i=Gt[r];if(i)return!a.useAdditionalWeekYearTokens&&Ue(n)&&Ie(n,t,e),!a.useAdditionalDayOfYearTokens&&Ne(n)&&Ie(n,t,e),i(p,n,o.localize,v);if(r.match(Kt))throw new RangeError("Format string contains an unescaped latin alphabet character `"+r+"`");return n})).join("");return h}function en(e){return e.match(Xt)[1].replace(Jt,"'")}function tn(e,t){ge(2,arguments);var n=be(e),r=we(t);return isNaN(n.getTime())?new Date(NaN):(n.setFullYear(r),n)}function nn(e){ge(1,arguments);var t=be(e),n=t.getFullYear(),r=t.getMonth(),a=new Date(0);return a.setFullYear(n,r+1,0),a.setHours(0,0,0,0),a.getDate()}function rn(e,t){ge(2,arguments);var n=be(e),r=we(t),a=n.getFullYear(),o=n.getDate(),i=new Date(0);i.setFullYear(a,r,15),i.setHours(0,0,0,0);var u=nn(i);return n.setMonth(r,Math.min(o,u)),n}function an(e,t){ge(2,arguments);var n=be(e),r=we(t);return n.setHours(r),n}function on(e,t){ge(2,arguments);var n=be(e),r=we(t);return n.setMinutes(r),n}function un(e){ge(1,arguments);var t=be(e),n=t.getHours();return n}function ln(e){ge(1,arguments);var t=be(e),n=t.getMinutes();return n}function sn(e){ge(1,arguments);var t=be(e),n=t.getMonth();return n}function cn(e){ge(1,arguments);var t=be(e),n=t.getFullYear();return n}function dn(e,t){ge(1,arguments);var n=t||{},r=n.locale,a=r&&r.options&&r.options.weekStartsOn,o=null==a?0:we(a),i=null==n.weekStartsOn?o:we(n.weekStartsOn);if(!(i>=0&&i<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");var u=be(e),l=u.getDay(),s=(l<i?7:0)+l-i;return u.setDate(u.getDate()-s),u.setHours(0,0,0,0),u}function mn(e){return ge(1,arguments),dn(e,{weekStartsOn:1})}function fn(e){ge(1,arguments);var t=be(e),n=t.getFullYear(),r=new Date(0);r.setFullYear(n+1,0,4),r.setHours(0,0,0,0);var a=mn(r),o=new Date(0);o.setFullYear(n,0,4),o.setHours(0,0,0,0);var i=mn(o);return t.getTime()>=a.getTime()?n+1:t.getTime()>=i.getTime()?n:n-1}function pn(e){ge(1,arguments);var t=fn(e),n=new Date(0);n.setFullYear(t,0,4),n.setHours(0,0,0,0);var r=mn(n);return r}function vn(e,t){ge(2,arguments);var n=be(e),r=we(t);if(isNaN(r))return new Date(NaN);if(!r)return n;var a=n.getDate(),o=new Date(n.getTime());o.setMonth(n.getMonth()+r+1,0);var i=o.getDate();return a>=i?o:(n.setFullYear(o.getFullYear(),o.getMonth(),a),n)}function hn(e,t){ge(2,arguments);var n=we(t);return ke(e,36e5*n)}function yn(e,t){ge(2,arguments);var n=we(t);return ke(e,6e4*n)}var wn=function(e,t){var n=function(e,t,n,r){ge(3,arguments);var a=String(e),o=String(t),i=r||{},u=i.locale||ye;if(!u.match)throw new RangeError("locale must contain match property");var l=u.options&&u.options.firstWeekContainsDate,s=null==l?1:we(l),c=null==i.firstWeekContainsDate?s:we(i.firstWeekContainsDate);if(!(c>=1&&c<=7))throw new RangeError("firstWeekContainsDate must be between 1 and 7 inclusively");var d=u.options&&u.options.weekStartsOn,m=null==d?0:we(d),f=null==i.weekStartsOn?m:we(i.weekStartsOn);if(!(f>=0&&f<=6))throw new RangeError("weekStartsOn must be between 0 and 6 inclusively");if(""===o)return""===a?be(n):new Date(NaN);var p,v={firstWeekContainsDate:c,weekStartsOn:f,locale:u},h=[{priority:10,subPriority:-1,set:Nt,index:0}],y=o.match(xt).map((function(e){var t=e[0];return"p"===t||"P"===t?(0,Se[t])(e,u.formatLong,v):e})).join("").match(Ct),w=[];for(p=0;p<y.length;p++){var g=y[p];!i.useAdditionalWeekYearTokens&&Ue(g)&&Ie(g,o,e),!i.useAdditionalDayOfYearTokens&&Ne(g)&&Ie(g,o,e);var b=g[0],k=Dt[b];if(k){var T=k.incompatibleTokens;if(Array.isArray(T)){for(var _=void 0,D=0;D<w.length;D++){var C=w[D].token;if(-1!==T.indexOf(C)||C===b){_=w[D];break}}if(_)throw new RangeError("The format string mustn't contain `".concat(_.fullToken,"` and `").concat(g,"` at the same time"))}else if("*"===k.incompatibleTokens&&w.length)throw new RangeError("The format string mustn't contain `".concat(g,"` and any other token at the same time"));w.push({token:b,fullToken:g});var x=k.parse(a,g,u.match,v);if(!x)return new Date(NaN);h.push({priority:k.priority,subPriority:k.subPriority||0,set:k.set,validate:k.validate,value:x.value,index:h.length}),a=x.rest}else{if(b.match(Pt))throw new RangeError("Format string contains an unescaped latin alphabet character `"+b+"`");if("''"===g?g="'":"'"===b&&(g=Ut(g)),0!==a.indexOf(g))return new Date(NaN);a=a.slice(g.length)}}if(a.length>0&&Ot.test(a))return new Date(NaN);var S=h.map((function(e){return e.priority})).sort((function(e,t){return t-e})).filter((function(e,t,n){return n.indexOf(e)===t})).map((function(e){return h.filter((function(t){return t.priority===e})).sort((function(e,t){return t.subPriority-e.subPriority}))})).map((function(e){return e[0]})),M=be(n);if(isNaN(M))return new Date(NaN);var O=Te(M,Me(M)),P={};for(p=0;p<S.length;p++){var N=S[p];if(N.validate&&!N.validate(O,N.value,v))return new Date(NaN);var U=N.set(O,P,N.value,v);U[0]?(O=U[0],_e(P,U[1])):O=U}return O}(e,t.slice(0,e.length),new Date);return $t(n)&&It(n)?n:null},gn=function(e){var t=new Date(JSON.parse(JSON.stringify(e)));return t=function(e,t){ge(2,arguments);var n=be(e),r=we(t);return n.setSeconds(r),n}(t=on(t=an(t,0),0),0),t=function(e,t){ge(2,arguments);var n=be(e),r=we(t);return n.setMilliseconds(r),n}(t,0),t},bn=function(e){return Array.isArray(e)?$t(e[0])&&(!e[1]||$t(e[1])):!!e&&$t(e)},kn=function(e,t,n){var r=e?new Date(e):new Date;return(t||0===t)&&(r=an(r,t)),(n||0===n)&&(r=on(r,n)),r},Tn=function(e){var t=vn(e,1);return{month:sn(t),year:cn(t)}},_n=function(e,t,n){var r=e?new Date(e):new Date;return(t||0===t)&&(r=rn(r,t)),n&&(r=tn(r,n)),r},Dn=function(e,t,n,r,a){return e||(n?"MM/yyyy":r?t?"HH:mm":"hh:mm aa":a?"MM/dd/yyyy, ".concat(t?"HH:mm":"hh:mm aa"):"MM/dd/yyyy")},Cn=function(e){return{hours:un(e||new Date),minutes:ln(e||new Date)}},xn=function(e){return Array.isArray(e)?[Cn(e[0]),Cn(e[1])]:Cn(e)},Sn=function(e){return function(e){return{month:sn(e),year:cn(e)}}(e)},Mn=function(e,t){return Array.isArray(e)?"".concat(Zt(e[0],t)," - ").concat(e[1]?Zt(e[1],t):""):Zt(e,t)},On=function(e){return sn(e)},Pn=function(e){return cn(e)},Nn=function(e,t){return!(!e||!t)&&function(e,t){ge(2,arguments);var n=be(e),r=be(t);return n.getTime()>r.getTime()}(gn(e),gn(t))},Un=function(e,t){return!(!e||!t)&&function(e,t){ge(2,arguments);var n=be(e),r=be(t);return n.getTime()<r.getTime()}(gn(e),gn(t))},In=function(e,t){return!(!e||!t)&&function(e,t){ge(2,arguments);var n=be(e),r=be(t);return n.getTime()===r.getTime()}(gn(e),gn(t))},$n=function(e){return function(e){ge(1,arguments);var t=be(e),n=mn(t).getTime()-pn(t).getTime();return Math.round(n/6048e5)+1}(new Date(e))},Bn=function(e){return un(e||new Date)},An=function(e){return ln(e||new Date)},Yn=function(e,t){return function(e,t){ge(2,arguments);var n=be(e),r=we(t);return isNaN(r)?new Date(NaN):r?(n.setDate(n.getDate()+r),n):n}(e,t)},Hn=function(e,t){return un(function(e,t){ge(2,arguments);var n=we(t);return hn(e,-n)}(an(new Date,e),t))},jn=function(e,t){return ln(function(e,t){ge(2,arguments);var n=we(t);return yn(e,-n)}(on(new Date,e),t))},En=function(e,t){var n=function(e,t){ge(2,arguments);var n=we(t);return vn(e,-n)}(tn(rn(new Date,e),t),1);return{month:sn(n),year:cn(n)}},Vn=function(e,t){var n=vn(tn(rn(new Date,e),t),1);return{month:sn(n),year:cn(n)}},Fn=function(e){return function(e){return ge(1,arguments),be(e).getDay()}(new Date(e))},Rn=["aria-disabled","aria-readonly"],Wn={key:2,class:"dp__input_wrap"},qn=["placeholder","disabled","readonly","value","onKeydown"],Ln=["onClick"],Gn=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{inputValue:{type:String,default:""},placeholder:{type:String,default:""},hideInputIcon:{type:Boolean,default:!1},disabled:{type:Boolean,default:!0},readonly:{type:Boolean,default:!0},clearable:{type:Boolean,default:!0},range:{type:Boolean,default:!1},state:{type:Boolean,default:null},inputClassName:{type:String,default:null},inline:{type:Boolean,default:!1},textInput:{type:Boolean,default:!1},textInputOptions:{type:Object,default:function(){return null}},isMenuOpen:{type:Boolean,default:!1},autoApply:{type:Boolean,default:!1},pattern:{type:String,default:""}},emits:["clear","open","update:inputValue","setInputDate","close","selectDate","setEmptyDate"],setup:function(r,f){var p=f.emit,v=r,h=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(),y=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return A({dp__pointer:!v.disabled&&!v.readonly&&!v.textInput,dp__disabled:v.disabled,dp__input:!0,dp__input_icon_pad:!v.hideInputIcon,dp__input_valid:v.state,dp__input_invalid:!1===v.state},v.inputClassName,!!v.inputClassName)})),w=function(e){var t=e.target.value,n=v.textInputOptions,r=n.format,a=n.rangeSeparator;if(""!==t){if(v.range){var o=j(t.split("".concat(a)),2),i=o[0],u=o[1];if(i&&u){var l=wn(i.trim(),r||v.pattern),s=wn(u.trim(),r||v.pattern);h.value=l&&s?[l,s]:null}}else h.value=wn(t,r||v.pattern);p("setInputDate",h.value)}else p("setInputDate",null),v.autoApply&&(p("setEmptyDate"),h.value=null);p("update:inputValue",t)},g=function(){var e,t;null!==(e=v.textInputOptions)&&void 0!==e&&e.enterSubmit&&bn(h.value)&&""!==v.inputValue?(p("setInputDate",h.value,!0),h.value=null):null!==(t=v.textInputOptions)&&void 0!==t&&t.enterSubmit&&""===v.inputValue&&(h.value=null,p("clear"))},b=function(){var e,t;null!==(e=v.textInputOptions)&&void 0!==e&&e.tabSubmit&&bn(h.value)&&""!==v.inputValue?(p("setInputDate",h.value,!0),h.value=null):null!==(t=v.textInputOptions)&&void 0!==t&&t.tabSubmit&&""===v.inputValue&&(h.value=null,p("clear")),p("close")},k=function(){var e;v.textInput&&null!==(e=v.textInputOptions)&&void 0!==e&&e.openMenuOnFocus&&!v.isMenuOpen&&p("open")},T=function(){var e;v.textInput&&null!==(e=v.textInputOptions)&&void 0!==e&&e.openMenu&&!v.isMenuOpen?p("open"):v.textInput||p("open")},_=function(){v.autoApply&&v.textInput&&h.value&&(p("setInputDate",h.value),p("selectDate"),h.value=null)},D=function(e){e.stopImmediatePropagation()},C=function(){p("clear")};return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{onClick:T,"aria-label":"Datepicker input",role:"textbox","aria-multiline":"false","aria-disabled":r.disabled,"aria-readonly":r.readonly},[!a.$slots.trigger||a.$slots["dp-input"]||r.inline?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"trigger",{key:0}),!a.$slots["dp-input"]||a.$slots.trigger||r.inline?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"dp-input",{key:1,value:r.inputValue,onInput:w,onEnter:g,onTab:b}),a.$slots.trigger||a.$slots["dp-input"]||r.inline?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",Wn,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(y)),placeholder:r.placeholder,disabled:r.disabled,readonly:!r.textInput,value:r.inputValue,onInput:w,onKeydown:[(0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(g,["enter"]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.withKeys)(b,["tab"])],onFocus:k,onBlur:_},null,42,qn),a.$slots["input-icon"]&&!r.hideInputIcon?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span",{key:0,class:"dp__input_icon",onClick:D},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"input-icon")])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["input-icon"]||r.hideInputIcon?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(F),{key:1,class:"dp__input_icon dp__input_icons",onClick:D})),a.$slots["clear-icon"]&&r.clearable&&!r.disabled&&!r.readonly?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span",{key:2,class:"dp__clear_icon",onClick:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(C,["stop","prevent"])},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"clear-icon")],8,Ln)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),!r.clearable||a.$slots["clear-icon"]||!r.inputValue||r.disabled||r.readonly?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(q),{key:3,class:"dp__clear_icon dp__input_icons",onClick:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(C,["stop","prevent"])},null,8,["onClick"]))]))],8,Rn)}}});function Qn(e){return function(e){if(Array.isArray(e))return Y(e)}(e)||function(e){if("undefined"!=typeof Symbol&&null!=e[Symbol.iterator]||null!=e["@@iterator"])return Array.from(e)}(e)||H(e)||function(){throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.")}()}var zn=function(e,t,n,r){var a=[],o=new Date(t,e,1),i=new Date(t,e+1,0),u=function(e,t){var n=new Date(JSON.parse(JSON.stringify(e))),r=n.getDay(),a=Math.abs(t-r);return 0!==a?new Date(n.setDate(n.getDate()-a)):n}(o,n);return function t(n){var o=function(e,t,n){for(var r=new Date(JSON.parse(JSON.stringify(e))),a=[],o=0;o<7;o++){var i=new Date(new Date(JSON.parse(JSON.stringify(r))).getTime());i.setDate(r.getDate()+o);var u=JSON.parse(JSON.stringify(i.getMonth()))!==t;a.push({text:n&&u?"":i.getDate(),value:i,current:!u})}return a}(n,e,r);(a.push({days:o}),a[a.length-1].days.some((function(e){return In(gn(e.value),gn(i))})))||t(Yn(n,7))}(u),a},Xn=function(e){return function(t){for(var n="",r="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789",a=r.length,o=0;o<t;o++)n+=r.charAt(Math.floor(Math.random()*a));return n+e}(5)},Jn=function(e){var t,n=(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(e);return null!==(t=null==n?void 0:n.$el)&&void 0!==t?t:n};function Kn(e,t){var n=Object.keys(e);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(e);t&&(r=r.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),n.push.apply(n,r)}return n}function Zn(e){for(var t=1;t<arguments.length;t++){var n=null!=arguments[t]?arguments[t]:{};t%2?Kn(Object(n),!0).forEach((function(t){A(e,t,n[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(n)):Kn(Object(n)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(n,t))}))}return e}var er={class:"dp__overlay_container",role:"grid"},tr={class:"dp__selection_grid_header"},nr=["onClick","aria-selected","aria-disabled"],rr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{items:{type:Array,default:function(){return[]}},modelValue:{type:[String,Number],default:null},disabledValues:{type:Array,default:function(){return[]}},minValue:{type:[Number,String],default:null},maxValue:{type:[Number,String],default:null}},emits:["update:modelValue","selected","toggle"],setup:function(r,c){var d=c.emit,m=r,g=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),b=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null),k=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null);(0,vue__WEBPACK_IMPORTED_MODULE_0__.onBeforeUpdate)((function(){b.value=null})),(0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)((function(){S();var e=Jn(k);e&&(g.value=e.clientHeight<e.scrollHeight)}));var T=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__overlay:!0}})),_=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__overlay_col:!0}})),D=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return m.items.map((function(e){return e.filter((function(e){return e})).map((function(e){return Zn(Zn({},e),{},{className:{dp__overlay_cell_active:e.value===m.modelValue,dp__overlay_cell:e.value!==m.modelValue,dp__overlay_cell_disabled:m.disabledValues.some((function(t){return t===e.value}))||x(e.value),dp__overlay_cell_pad:!0}})}))}))})),C=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__button:!0,dp__overlay_action:!0,dp__over_action_scroll:g.value}})),x=function(e){var t=!!m.maxValue&&+e>+m.maxValue,n=!!m.minValue&&+e<+m.minValue;return t||n},S=function(){var e=Jn(b);if(e){var t=Jn(k);t&&(t.scrollTop=e.offsetTop-t.offsetTop-(t.getBoundingClientRect().height/2-e.getBoundingClientRect().height))}};return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["dp__overlay",(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(T)]),ref:function(e,t){t.gridWrapRef=e,k.value=e},role:"dialog"},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",er,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",tr,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"header")]),((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(D),(function(o,c){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:"dp__overlay_row",key:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Xn)(c),role:"row"},[((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(o,(function(o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{role:"gridcell",class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(_)),key:o.value,onClick:function(e){return t=o.value,void(m.disabledValues.some((function(e){return e===t}))||m.minValue&&!(+m.minValue<=t)||m.maxValue&&!(+m.maxValue>=t)||(d("update:modelValue",t),d("selected")));var t},"aria-selected":o.value===r.modelValue&&!r.disabledValues.includes(o.value),"aria-disabled":o.className.dp__overlay_cell_disabled,ref:function(e){o.value!==r.modelValue||r.disabledValues.includes(o.value)||(b.value=e)}},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(o.className)},[a.$slots.item?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"item",{key:0,item:o}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.item?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(o.text),1)],64))],2)],10,nr)})),128))])})),128)),a.$slots["button-icon"]?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:0,class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(C)),onClick:o[0]||(o[0]=function(e){return a.$emit("toggle")}),role:"button","aria-label":"Toggle overlay"},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"button-icon")],2)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)])],2)}}}),ar={class:"dp__time_input"},or={class:"dp__time_col"},ir=(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__time_col"},":",-1),ur={class:"dp__time_col"},lr={key:0},sr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{hours:{type:Number,default:0},minutes:{type:Number,default:0},hoursGridIncrement:{type:[String,Number],default:1},minutesGridIncrement:{type:[String,Number],default:5},hoursIncrement:{type:[Number,String],default:1},minutesIncrement:{type:[Number,String],default:1},is24:{type:Boolean,default:!0},filters:{type:Object,default:function(){return{}}},minTime:{type:Object,default:function(){return{}}},maxTime:{type:Object,default:function(){return{}}},noHoursOverlay:{type:Boolean,default:!1},noMinutesOverlay:{type:Boolean,default:!1}},emits:["setHours","setMinutes","update:hours","update:minutes"],setup:function(r,c){var m=c.emit,f=r,h=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),T=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),_=(0,vue__WEBPACK_IMPORTED_MODULE_0__.toRef)(f,"hours"),D=(0,vue__WEBPACK_IMPORTED_MODULE_0__.toRef)(f,"minutes"),C=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)("AM");(0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)((function(){U()}));var x=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){var e=B(_.value);return{text:e<10?"0".concat(e):"".concat(e),value:e}})),S=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{text:D.value<10?"0".concat(D.value):"".concat(D.value),value:D.value}})),M=function(e,t){for(var n=[],r=0;r<e;r+=t)n.push({value:r,text:r<10?"0".concat(r):"".concat(r)});return function(e){for(var t=arguments.length>1&&void 0!==arguments[1]?arguments[1]:3,n=[],r=0;r<e.length;r+=t)n.push([e[r],e[r+1],e[r+2]]);return n}(n)},O=function(){var e=f.is24?24:12;return M(e,+f.hoursGridIncrement)},P=function(){f.noHoursOverlay||(h.value=!h.value)},N=function(){f.noMinutesOverlay||(T.value=!T.value)},U=function(){Object.keys(f.maxTime).length&&(f.maxTime.hours&&_.value>f.maxTime.hours&&m("update:hours",+f.maxTime.hours),f.maxTime.minutes&&D.value>f.maxTime.minutes&&m("update:minutes",+f.maxTime.minutes)),Object.keys(f.minTime).length&&(f.minTime.hours&&_.value<f.minTime.hours&&m("update:hours",+f.minTime.hours),f.minTime.minutes&&D.value<f.minTime.minutes&&m("update:minutes",+f.minTime.minutes))},I=function(e){if("increment"===e){var t=function(e,t){return un(hn(an(new Date,e),t))}(_.value,+f.hoursIncrement);if(f.maxTime.hours&&t>+f.maxTime.hours)return;if(f.minTime.hours&&t<+f.minTime.hours)return;m("update:hours",t)}else{var n=Hn(_.value,+f.hoursIncrement);if(f.minTime.hours&&n<+f.minTime.hours)return;if(f.maxTime.hours&&n>+f.maxTime.hours)return;m("update:hours",n)}},$=function(e){if("increment"===e){var t=function(e,t){return ln(yn(on(new Date,e),t))}(D.value,+f.minutesIncrement);if(f.maxTime.minutes&&(t>+f.maxTime.minutes||0===t))return;if(f.minTime.minutes&&(t<+f.minTime.minutes||0===t))return;m("update:minutes",t)}else{var n=jn(D.value,+f.minutesIncrement);if(f.minTime.minutes&&(n<+f.minTime.minutes||0===n))return;if(f.maxTime.minutes&&n>+f.maxTime.minutes)return;m("update:minutes",n)}},B=function(e){return f.is24?e:(C.value=e>=12?"PM":"AM",[12,1,2,3,4,5,6,7,8,9,10,11,12,1,2,3,4,5,6,7,8,9,10,11][e])},A=function(){"PM"===C.value?(C.value="AM",m("update:hours",_.value-12)):(C.value="PM",m("update:hours",_.value+12))};return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",ar,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",or,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__inc_dec_button",onClick:o[0]||(o[0]=function(e){return I("increment")}),role:"button","aria-label":"Increment hours"},[a.$slots["arrow-up"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-up",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-up"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(re),{key:1}))]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(r.noHoursOverlay?"":"dp__time_display"),onClick:P,role:"button","aria-label":"Open hours overlay"},[a.$slots.hours?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"hours",{key:0,text:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(x).text,value:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(x).value}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.hours?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(x).text),1)],64))],2),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__inc_dec_button",onClick:o[1]||(o[1]=function(e){return I("decrement")}),role:"button","aria-label":"Decrement hours"},[a.$slots["arrow-down"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-down",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-down"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ie),{key:1}))])]),ir,(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",ur,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__inc_dec_button",onClick:o[2]||(o[2]=function(e){return $("increment")}),role:"button","aria-label":"Increment minutes"},[a.$slots["arrow-up"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-up",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-up"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(re),{key:1}))]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(r.noMinutesOverlay?"":"dp__time_display"),onClick:N,role:"button","aria-label":"Open minutes overlay"},[a.$slots.minutes?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"minutes",{key:0,text:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S).text,value:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S).value}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.minutes?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S).text),1)],64))],2),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__inc_dec_button",onClick:o[3]||(o[3]=function(e){return $("decrement")}),role:"button","aria-label":"Decrement minutes"},[a.$slots["arrow-down"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-down",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-down"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ie),{key:1}))])]),r.is24?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",lr,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button",{class:"dp__pm_am_button",role:"button","aria-label":"Switch AM/PM mode",onClick:A},(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(C.value),1)])),h.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(rr,{key:1,items:O(),"disabled-values":r.filters.times.hours,"min-value":r.minTime.hours,"max-value":r.maxTime.hours,"onUpdate:modelValue":o[4]||(o[4]=function(e){return a.$emit("update:hours",e)}),onSelected:P,onToggle:P},(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({"button-icon":(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(){return[a.$slots["clock-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"clock-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["clock-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ee),{key:1}))]})),_:2},[a.$slots["hours-overlay"]?{name:"item",fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(e){var t=e.item;return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"hours-overlay",{text:t.text,value:t.value})]}))}:void 0]),1032,["items","disabled-values","min-value","max-value"])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),T.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(rr,{key:2,items:M(60,+f.minutesGridIncrement),"disabled-values":r.filters.times.minutes,"min-value":r.minTime.minutes,"max-value":r.maxTime.minutes,"onUpdate:modelValue":o[5]||(o[5]=function(e){return a.$emit("update:minutes",e)}),onSelected:N,onToggle:N},(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({"button-icon":(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(){return[a.$slots["clock-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"clock-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["clock-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ee),{key:1}))]})),_:2},[a.$slots["minutes-overlay"]?{name:"item",fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(e){var t=e.item;return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"minutes-overlay",{text:t.text,value:t.value})]}))}:void 0]),1032,["items","disabled-values","min-value","max-value"])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)])}}}),cr=[{name:"clock-icon",use:["time","calendar"]},{name:"arrow-left",use:["month-year","calendar"]},{name:"arrow-right",use:["month-year","calendar"]},{name:"arrow-up",use:["time","calendar"]},{name:"arrow-down",use:["time","calendar"]},{name:"calendar-icon",use:["month-year","time","calendar"]},{name:"day",use:["calendar"]},{name:"month-overlay",use:["calendar","month-year"]},{name:"year-overlay",use:["calendar","month-year"]},{name:"hours-overlay",use:["calendar","time"]},{name:"minutes-overlay",use:["calendar","time"]},{name:"hours",use:["calendar","time"]},{name:"minutes",use:["calendar","time"]},{name:"month",use:["calendar","month-year"]},{name:"year",use:["calendar","month-year"]},{name:"action-select",use:["action"]},{name:"action-preview",use:["action"]},{name:"calendar-header",use:["calendar"]},{name:"now-button",use:[]}],dr=[{name:"trigger"},{name:"input-icon"},{name:"clear-icon"},{name:"dp-input"}],mr={all:function(){return cr},monthYear:function(){return cr.filter((function(e){return e.use.includes("month-year")}))},input:function(){return dr},timePicker:function(){return cr.filter((function(e){return e.use.includes("time")}))},action:function(){return cr.filter((function(e){return e.use.includes("action")}))},calendar:function(){return cr.filter((function(e){return e.use.includes("calendar")}))}},fr=function(e,t){var n=[];return mr[t]().forEach((function(t){e[t.name]&&n.push(t.name)})),n},pr={key:1,class:"dp__overlay"},vr={class:"dp__overlay_container"},hr={class:"dp__overlay_row"},yr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{hoursIncrement:{type:[Number,String],default:1},minutesIncrement:{type:[Number,String],default:1},is24:{type:Boolean,default:!0},hoursGridIncrement:{type:[String,Number],default:1},minutesGridIncrement:{type:[String,Number],default:5},range:{type:Boolean,default:!1},filters:{type:Object,default:function(){return{}}},minTime:{type:Object,default:function(){return{}}},maxTime:{type:Object,default:function(){return{}}},timePicker:{type:Boolean,default:!1},hours:{type:[Number,Array],default:0},minutes:{type:[Number,Array],default:0},instance:{type:[Number,Array],default:1},twoCalendars:{type:Boolean,default:!1},noHoursOverlay:{type:Boolean,default:!1},noMinutesOverlay:{type:Boolean,default:!1},customProps:{type:Object,default:null}},emits:["update:hours","update:minutes"],setup:function(r){var l=r,c=(0,vue__WEBPACK_IMPORTED_MODULE_0__.useSlots)(),m=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),f=function(e){m.value=e},p=fr(c,"timePicker"),y=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{is24:l.is24,hoursGridIncrement:l.hoursGridIncrement,minutesGridIncrement:l.minutesGridIncrement,hoursIncrement:l.hoursIncrement,minutesIncrement:l.minutesIncrement,filters:l.filters,maxTime:l.maxTime,minTime:l.minTime,noHoursOverlay:l.noHoursOverlay,noMinutesOverlay:l.noMinutesOverlay}}));return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",null,[r.timePicker?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:0,class:"dp__button",onClick:o[0]||(o[0]=function(e){return f(!0)}),role:"button","aria-label":"Open time picker"},[a.$slots["clock-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"clock-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["clock-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ee),{key:1}))])),m.value||r.timePicker?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",pr,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",vr,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",hr,[r.range?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(sr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:0,hours:r.hours,minutes:r.minutes},(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(y),{"onUpdate:hours":o[1]||(o[1]=function(e){return a.$emit("update:hours",e)}),"onUpdate:minutes":o[2]||(o[2]=function(e){return a.$emit("update:minutes",e)})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(p),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(t)))]}))}}))]),1040,["hours","minutes"])),r.range?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[r.twoCalendars&&1!==r.instance?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(sr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:0,hours:r.hours[0],minutes:r.minutes[0]},(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(y),{"onUpdate:hours":o[3]||(o[3]=function(e){return a.$emit("update:hours",[e,r.hours[1]])}),"onUpdate:minutes":o[4]||(o[4]=function(e){return a.$emit("update:minutes",[e,r.minutes[1]])})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(p),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(t)))]}))}}))]),1040,["hours","minutes"])),r.twoCalendars&&2!==r.instance?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(sr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:1,hours:r.hours[1],minutes:r.minutes[1]},(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(y),{"onUpdate:hours":o[5]||(o[5]=function(e){return a.$emit("update:hours",[r.hours[0],e])}),"onUpdate:minutes":o[6]||(o[6]=function(e){return a.$emit("update:minutes",[r.minutes[0],e])})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(p),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(t)))]}))}}))]),1040,["hours","minutes"]))],64)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)]),r.timePicker?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:0,class:"dp__button",onClick:o[7]||(o[7]=function(e){return f(!1)}),role:"button","aria-label":"Close time picker"},[a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"calendar-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(F),{key:1}))]))])])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)])}}}),wr={class:"dp__month_year_row"},gr={class:"dp__inner_nav",role:"button","aria-label":"Previous month"},br={class:"dp__inner_nav",role:"button","aria-label":"Next month"},kr={class:"dp__month_picker_header"},Tr={class:"dp__inner_nav",role:"button","aria-label":"Previous month"},_r={class:"dp__inner_nav",role:"button","aria-label":"Next month"},Dr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{months:{type:Array,default:function(){return[]}},years:{type:Array,default:function(){return[]}},year:{type:Number,default:0},month:{type:Number,default:0},filters:{type:Object,default:function(){return{}}},monthPicker:{type:Boolean,default:!1},instance:{type:Number,default:1},customProps:{type:Object,default:null},twoCalendars:{type:Boolean,default:!1},twoCalendarsSolo:{type:Boolean,default:!1}},emits:["update:month","update:year","monthYearSelect"],setup:function(r,l){var c=l.emit,m=r,f=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),p=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),h=function(e,t){var n=e.months.map((function(e){return e.value})),r=e.years.map((function(e){return e.value})),a=n.filter((function(t){return!e.filters.months.some((function(e){return e===t}))})),o=r.filter((function(t){return!e.filters.years.some((function(e){return e===t}))})),i=function(e,n){t("update:month",e),t("update:year",n)};return{onNext:function(){var t,n=e.month,u=e.year;if(11===e.month?(n=0,u=e.year+1):n+=1,e.filters.months.includes(n)&&(t=n=0===n?Math.min.apply(Math,Qn(a)):Math.max.apply(Math,Qn(a))),n===t&&(n=Math.min.apply(Math,Qn(a)),u=e.year+1),e.filters.years.includes(u)){var l=o.find((function(e){return e>u}));l&&(u=l)}u<=r[r.length-1]&&i(n,u)},onPrev:function(){var t,n=e.month,u=e.year;if(0===e.month?(n=11,u=e.year-1):n-=1,e.filters.months.includes(n)&&(t=n=11===n?Math.max.apply(Math,Qn(a)):Math.min.apply(Math,Qn(a))),n===t&&(n=Math.max.apply(Math,Qn(a)),u=e.year-1),e.filters.years.includes(u)){var l=o.reverse().find((function(e){return e<u}));l&&(u=l)}u>=r[0]&&i(n,u)}}}(m,c),g=h.onNext,T=h.onPrev,D=function(e){c("update:month",e),c("monthYearSelect"),U()},C=function(e){c("update:year",e),c("monthYearSelect",!0),I()},x=function(e){for(var t=[],n=0;n<e.length;n+=3)t.push([e[n],e[n+1],e[n+2]]);return t},S=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){var e=m.months.find((function(e){return e.value===m.month}));return e||{text:"",value:0}})),M=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return x(m.months)})),O=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return x(m.years)})),P=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return!m.twoCalendars||(!!m.twoCalendarsSolo||1===m.instance)})),N=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return!m.twoCalendars||(!!m.twoCalendarsSolo||2===m.instance)})),U=function(){f.value=!f.value},I=function(){p.value=!p.value},$=function(){var e=arguments.length>0&&void 0!==arguments[0]&&arguments[0];if(e){var t=m.year+1;c("update:year",t)}else{var n=m.year-1;c("update:year",n)}};return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",wr,[r.monthPicker?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:0},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(P)?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:0,class:"dp__month_year_col_nav",onClick:o[0]||(o[0]=function(){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(T)&&(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(T).apply(void 0,arguments)})},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",gr,[a.$slots["arrow-left"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-left",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-left"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Q),{key:1}))])])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__month_year_select",onClick:U,role:"button","aria-label":"Open months overlay"},[a.$slots.month?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"month",{key:0,value:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S).value,text:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S).text}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.month?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S).text),1)],64))]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__month_year_select",onClick:I,role:"button","aria-label":"Open years overlay"},[a.$slots.year?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"year",{key:0,year:r.year}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.year?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.year),1)],64))]),f.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(rr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:1},{modelValue:r.month,items:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(M),disabledValues:r.filters.months},{"onUpdate:modelValue":D,onToggle:U}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({"button-icon":(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(){return[a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"calendar-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(F),{key:1}))]})),_:2},[a.$slots["month-overlay"]?{name:"item",fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(e){var t=e.item;return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"month-overlay",{text:t.text,value:t.value})]}))}:void 0]),1040)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),p.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(rr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:2},{modelValue:r.year,items:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(O),disabledValues:r.filters.years},{"onUpdate:modelValue":C,onToggle:I}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({"button-icon":(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(){return[a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"calendar-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(F),{key:1}))]})),_:2},[a.$slots["year-overlay"]?{name:"item",fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(e){var t=e.item;return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"year-overlay",{text:t.text,value:t.value})]}))}:void 0]),1040)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(N)?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:3,class:"dp__month_year_col_nav",onClick:o[1]||(o[1]=function(){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(g)&&(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(g).apply(void 0,arguments)})},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",br,[a.$slots["arrow-right"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-right",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-right"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(J),{key:1}))])])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)],64)),r.monthPicker?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(rr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:1},{modelValue:r.month,items:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(M),disabledValues:r.filters.months},{"onUpdate:modelValue":D,onToggle:U}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({header:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",kr,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__month_year_col_nav",onClick:o[2]||(o[2]=function(e){return $(!1)})},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",Tr,[a.$slots["arrow-left"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-left",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-left"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Q),{key:1}))])]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{onClick:I,class:"dp__pointer",role:"button","aria-label":"Open years overlay"},[a.$slots.year?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"year",{key:0,year:r.year}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.year?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.year),1)],64))]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__month_year_col_nav",onClick:o[3]||(o[3]=function(e){return $(!0)})},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",_r,[a.$slots["arrow-right"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"arrow-right",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["arrow-right"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(J),{key:1}))])])]),p.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(rr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:0},{modelValue:r.year,items:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(O),disabledValues:r.filters.years},{"onUpdate:modelValue":C,onToggle:I}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({"button-icon":(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(){return[a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"calendar-icon",{key:0}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["calendar-icon"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(F),{key:1}))]})),_:2},[a.$slots["year-overlay"]?{name:"item",fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(e){var t=e.item;return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"year-overlay",{text:t.text,value:t.value})]}))}:void 0]),1040)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)]})),_:2},[a.$slots["month-overlay"]?{name:"item",fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(e){var t=e.item;return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"month-overlay",{text:t.text,value:t.value})]}))}:void 0]),1040)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)])}}}),Cr={class:"db__calendar_header",role:"row"},xr={key:0,class:"dp__calendar_header_item",role:"gridcell"},Sr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:"dp__calendar_header_separator"},null,-1),Mr={class:"dp__calendar",role:"grid","aria-label":"Calendar days"},Or={key:0,role:"gridcell",class:"dp__calendar_item dp__week_num"},Pr={class:"dp__cell_inner"},Nr=["onClick","onMouseover","aria-selected","aria-disabled"],Ur=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{locale:{type:String,default:"en-Us"},weekNumName:{type:String,default:"W"},weekStart:{type:[Number,String],default:1},weekNumbers:{type:Boolean,default:!1},mappedDates:{type:Array,default:function(){return[]}},enableTimePicker:{type:Boolean,default:!0},timePickerComponent:{type:Object,default:null},monthYearComponent:{type:Object,default:null},is24:{type:Boolean,default:!0},hoursIncrement:{type:[String,Number],default:1},minutesIncrement:{type:[String,Number],default:1},hoursGridIncrement:{type:[String,Number],default:1},minutesGridIncrement:{type:[String,Number],default:5},range:{type:Boolean,default:!1},filters:{type:Object,default:function(){return{}}},minTime:{type:Object,default:function(){return{}}},maxTime:{type:Object,default:function(){return{}}},customProps:{type:Object,default:null},hours:{type:[Number,Array],default:0},minutes:{type:[Number,Array],default:0},calendarClassName:{type:String,default:null},monthPicker:{type:Boolean,default:!1},timePicker:{type:Boolean,default:!1},disableMonthYearSelect:{type:Boolean,default:!1},getWeekNum:{type:Function,default:function(){return""}},instance:{type:Number,default:1},twoCalendars:{type:Boolean,default:!1},years:{type:Array,default:function(){return[]}},months:{type:Array,default:function(){return[]}},month:{type:Number,default:0},year:{type:Number,default:0},noHoursOverlay:{type:Boolean,default:!1},noMinutesOverlay:{type:Boolean,default:!1},twoCalendarsSolo:{type:Boolean,default:!1}},emits:["update:hours","update:minutes","selectDate","setHoverDate","update:month","update:year","monthYearSelect","handleScroll"],setup:function(r){var a=r,c=(0,vue__WEBPACK_IMPORTED_MODULE_0__.useSlots)(),f=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return function(e,t){var n,r,a=[1,2,3,4,5,6,7].map((function(t){return new Intl.DateTimeFormat(e,{weekday:"short",timeZone:"UTC"}).format(new Date("2017-01-0".concat(t,"T00:00:00+00:00"))).slice(0,2)})),o=a.slice(0,t),i=a.slice(t+1,a.length);return(n=(r=[a[t]]).concat.apply(r,Qn(i))).concat.apply(n,Qn(o))}(a.locale,+a.weekStart)})),p=fr(c,"timePicker"),g=fr(c,"monthYear"),S=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return a.monthPicker||a.timePicker})),M=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return A({dp__calendar_wrap:!0},a.calendarClassName,!!a.calendarClassName)})),O=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__calendar:!0,dp__calendar_next:2===a.instance}})),P=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__calendar_content_wrap:!0,dp_calendar_fixed:S.value}}));return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(O))},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(P))},[r.disableMonthYearSelect||r.timePicker?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveDynamicComponent)(r.monthYearComponent?r.monthYearComponent:Dr),(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:0},{months:r.months,years:r.years,filters:r.filters,monthPicker:r.monthPicker,month:r.month,year:r.year,customProps:r.customProps,twoCalendars:r.twoCalendars,twoCalendarsSolo:r.twoCalendarsSolo,instance:r.instance},{"onUpdate:month":o[0]||(o[0]=function(e){return a.$emit("update:month",e)}),"onUpdate:year":o[1]||(o[1]=function(e){return a.$emit("update:year",e)}),onMonthYearSelect:o[2]||(o[2]=function(e){return a.$emit("monthYearSelect",e)})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(g),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(t)))]}))}}))]),1040)),(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(S)?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:1,class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(M)),role:"grid","aria-label":"Calendar wrapper",onWheel:o[3]||(o[3]=(0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)((function(e){return a.$emit("handleScroll",e)}),["prevent"]))},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",Cr,[r.weekNumbers?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",xr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.weekNumName),1)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(f),(function(n,r){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:"dp__calendar_header_item",role:"gridcell",key:r},[a.$slots["calendar-header"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"calendar-header",{key:0,day:n,index:r}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["calendar-header"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(n),1)],64))])})),128))]),Sr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",Mr,[((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(r.mappedDates,(function(o,s){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:"dp__calendar_row",role:"row",key:s},[r.weekNumbers?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",Or,[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",Pr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.getWeekNum(o.days)),1)])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(!0),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)(o.days,(function(r,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{role:"gridcell",class:"dp__calendar_item",key:o+s,onClick:function(e){return a.$emit("selectDate",r)},onMouseover:function(e){return a.$emit("setHoverDate",r)},"aria-selected":r.classData.dp__active_date||r.classData.dp__range_start||r.classData.dp__range_start,"aria-disabled":r.classData.dp__cell_disabled},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)(["dp__cell_inner",r.classData])},[a.$slots.day?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"day",{key:0,day:+r.text,date:r.value}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots.day?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.text),1)],64))],2)],40,Nr)})),128))])})),128))])],34)),r.enableTimePicker?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveDynamicComponent)(r.timePickerComponent?r.timePickerComponent:yr),(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:2},{is24:r.is24,hoursIncrement:r.hoursIncrement,minutesIncrement:r.minutesIncrement,hoursGridIncrement:r.hoursGridIncrement,minutesGridIncrement:r.minutesGridIncrement,noHoursOverlay:r.noHoursOverlay,noMinutesOverlay:r.noMinutesOverlay,range:r.range,filters:r.filters,minTime:r.minTime,maxTime:r.maxTime,timePicker:r.timePicker,hours:r.hours,minutes:r.minutes,customProps:r.customProps,twoCalendars:r.twoCalendars,instance:r.instance},{"onUpdate:hours":o[4]||(o[4]=function(e){return a.$emit("update:hours",e)}),"onUpdate:minutes":o[5]||(o[5]=function(e){return a.$emit("update:minutes",e)})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(p),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(t)))]}))}}))]),1040)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)],2)],2)}}});function Ir(e){return Ir="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(e){return typeof e}:function(e){return e&&"function"==typeof Symbol&&e.constructor===Symbol&&e!==Symbol.prototype?"symbol":typeof e},Ir(e)}var $r=function(e){return Array.isArray(e)},Br=function(e){return Array.isArray(e)},Ar=function(e){return Array.isArray(e)&&2===e.length},Yr=function(e,t){return t?Array.isArray(e):Ar(e)},Hr=function(e){return"string"==typeof e},jr={class:"dp__selection_preview"},Er={class:"dp__action_buttons"},Vr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{selectText:{type:String,default:"Select"},cancelText:{type:String,default:"Cancel"},internalModelValue:{type:[Date,Array],default:null},range:{type:Boolean,default:!1},previewFormat:{type:[String,Function],default:function(){return""}},inline:{type:Boolean,default:!1},monthPicker:{type:Boolean,default:!1},timePicker:{type:Boolean,default:!1},twoCalendars:{type:Boolean,default:!1},calendarWidth:{type:Number,default:0},menuMount:{type:Boolean,default:!1},customProps:{type:Object,default:null}},emits:["closePicker","selectDate"],setup:function(r){var a=r,l=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return a.internalModelValue&&a.menuMount?"string"==typeof a.previewFormat?$r(a.internalModelValue)?2===a.internalModelValue.length&&a.internalModelValue[1]?a.twoCalendars?"".concat(Mn(a.internalModelValue[0],a.previewFormat)," - ").concat(Mn(a.internalModelValue[1],a.previewFormat)):[Mn(a.internalModelValue[0],a.previewFormat),Mn(a.internalModelValue[1],a.previewFormat)]:"".concat(Mn(a.internalModelValue[0],a.previewFormat)," -"):Mn(a.internalModelValue,a.previewFormat):a.timePicker?a.previewFormat(xn(a.internalModelValue)):a.monthPicker?a.previewFormat(Sn(a.internalModelValue)):a.previewFormat(a.internalModelValue):""}));return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:"dp__action_row",style:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeStyle)(r.calendarWidth?{width:"".concat(r.calendarWidth,"px")}:{})},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",jr,[a.$slots["action-preview"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"action-preview",{key:0,value:r.internalModelValue}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["action-preview"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[Array.isArray((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(l))?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:0},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)((0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(l)),1)],64)),Array.isArray((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(l))?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(l)[0]),1),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",null,(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(l)[1]),1)],64)):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)],64))]),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",Er,[a.$slots["action-select"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"action-select",{key:0,value:r.internalModelValue}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["action-select"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Fragment,{key:1},[r.inline?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("span",{key:0,class:"dp__action dp__cancel",onClick:o[0]||(o[0]=function(e){return a.$emit("closePicker")})},(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.cancelText),1)),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("span",{class:"dp__action dp__select",onClick:o[1]||(o[1]=function(e){return a.$emit("selectDate")})},(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.selectText),1)],64))])],4)}}}),Fr=function(e,t){var n=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(new Date),r=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(),i=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(On(new Date)),u=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(Pn(new Date)),l=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(Tn(new Date).month),s=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(Tn(new Date).year),c=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(e.range?[Bn(),Bn()]:Bn()),d=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(e.range?[An(),An()]:An());(0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)((function(){y(),f.value||(e.startDate&&(i.value=On(new Date(e.startDate)),u.value=Pn(new Date(e.startDate)),e.twoCalendars&&(l.value=Tn(new Date(e.startDate)).month,s.value=Tn(new Date(e.startDate)).year)),e.startTime&&m())}));var m=function(){var t;e.startTime&&(t=e.startTime,Array.isArray(t)?(c.value=[+e.startTime[0].hours,+e.startTime[1].hours],d.value=[+e.startTime[0].minutes,+e.startTime[1].minutes]):(c.value=+e.startTime.hours,d.value=+e.startTime.minutes))},f=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)({get:function(){return e.internalModelValue},set:function(e){t("update:internalModelValue",e)}});(0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(f,(function(){return y()}));var v=function(t){var n=!!e.maxDate&&Nn(t,e.maxDate),r=!!e.minDate&&Un(t,e.minDate),a=e.disabledDates.some((function(e){return In(e,t)})),o=e.filters.months.length?e.filters.months.map((function(e){return+e})):[],i=o.includes(On(t)),u=!!e.disabledWeekDays.length&&e.disabledWeekDays.some((function(e){return+e===Fn(t)})),l=!!e.allowedDates.length&&!e.allowedDates.some((function(e){return In(new Date(e),t)})),s=Pn(t),c=s<+e.yearRange[0]||s>+e.yearRange[1];return n||r||a||i||c||u||l},h=function(e){i.value=On(e),u.value=Pn(e)},y=function(){f.value?$r(f.value)?(2===f.value.length&&(h(f.value[0]),c.value=[Bn(f.value[0]),Bn(f.value[1])],d.value=[An(f.value[0]),An(f.value[1])]),e.twoCalendars&&g()):(h(f.value),c.value=Bn(f.value),d.value=An(f.value)):e.timePicker?e.range?Br(c.value)&&Br(d.value)&&(f.value=[kn(new Date,c.value[0],d.value[0]),kn(new Date,c.value[1],d.value[1])]):f.value=kn(new Date,c.value,d.value):e.monthPicker&&(f.value=_n(new Date,i.value,u.value))},w=function(e){var t=On(new Date(e)),n=Pn(new Date(e)),r=Tn(new Date(e));i.value=t,u.value=n,l.value=r.month,s.value=r.year},g=function(){if(Array.isArray(f.value)&&2===f.value.length){var t=new Date(f.value[1]);if(l.value===i.value&&s.value===u.value||!e.twoCalendarsSolo){var n=Vn(i.value,u.value);l.value=n.month,s.value=n.year}else On(f.value[0])!==On(f.value[1])&&(l.value=On(t),s.value=Pn(t))}},b=function(t,n){if(!e.twoCalendarsSolo){var r=En(t,n);i.value=r.month,u.value=r.year}},k=function(t,n){if(!e.twoCalendarsSolo){var r=Vn(t,n);l.value=r.month,s.value=r.year}},T=function(t){var n=!(arguments.length>1&&void 0!==arguments[1])||arguments[1],r=arguments.length>2&&void 0!==arguments[2]&&arguments[2];n?r?(b(t,s.value),l.value=t):(k(t,u.value),i.value=t):r?(b(l.value,t),s.value=t):(k(i.value,t),u.value=t),e.monthPicker&&(f.value?f.value=_n(f.value,i.value,u.value):f.value=_n(new Date,i.value,u.value))},_=function(n){Ar(n)&&Br(c.value)&&Br(d.value)?f.value=[kn(n[0],c.value[0],d.value[0]),kn(n[1],c.value[1],d.value[1])]:e.range||Ar(n)||(f.value=kn(n,c.value,d.value)),t("timeUpdate")},D=function(e){return!(Yr(f.value,!0)&&f.value[0]&&r.value)||(e?Nn(r.value,f.value[0]):Un(r.value,f.value[0]))};return{today:n,hours:c,month:i,year:u,monthNext:l,yearNext:s,minutes:d,monthYearSelect:function(){var n=arguments.length>0&&void 0!==arguments[0]&&arguments[0];e.autoApply&&e.monthPicker&&t("autoApply",n)},isDisabled:v,updateTime:function(t){var n=!(arguments.length>1&&void 0!==arguments[1])||arguments[1];n?c.value=t:d.value=t,f.value?_(f.value):e.timePicker&&_(e.range?[new Date,new Date]:new Date)},setHoverDate:function(t){!t.current&&e.hideOffsetDates||(r.value=t.value)},getWeekNum:function(e){var t=e.find((function(e){return e.current}));return t?$n(t.value):""},selectDate:function(n){var r=arguments.length>1&&void 0!==arguments[1]&&arguments[1];if(!v(n.value)&&(n.current||!e.hideOffsetDates))if(e.range||Br(c.value)||Br(d.value)){if(Br(c.value)&&Br(d.value)){var a=f.value?f.value.slice():[];2===a.length&&(a=[]),e.autoRange?(r&&w(n.value),a=[new Date(n.value),Yn(new Date(n.value),+e.autoRange)]):a[0]?Un(new Date(n.value),new Date(a[0]))?a.unshift(new Date(n.value)):a[1]=new Date(n.value):a[0]=new Date(n.value),a[0]&&!a[1]?a[0]=kn(a[0],c.value[0],d.value[0]):(a[0]=kn(a[0],c.value[0],d.value[0]),a[1]=kn(a[1],c.value[1],d.value[1])),f.value=a,a[0]&&a[1]&&e.autoApply&&t("autoApply")}}else f.value=kn(new Date(n.value),c.value,d.value),e.autoApply&&t("autoApply")},rangeActive:function(e){return $r(f.value)&&f.value[0]&&f.value[1]?Nn(e.value,f.value[0])&&Un(e.value,f.value[1]):!!($r(f.value)&&f.value[0]&&r.value)&&(Nn(e.value,f.value[0])&&Un(e.value,r.value)||Un(e.value,f.value[0])&&Nn(e.value,r.value))},isActiveDate:function(t){return!!f.value&&(!(e.hideOffsetDates&&!t.current)&&(!e.range&&In(t.value,f.value?f.value:n.value)))},updateMonthYear:T,isHoverRangeEnd:function(t){if(e.autoRange){if(r.value){if(e.hideOffsetDates&&!t.current)return!1;var n=Yn(r.value,+e.autoRange);return In(n,new Date(t.value))}return!1}return!1},isAutoRangeInBetween:function(t){if(e.autoRange){if(r.value){var n=Yn(r.value,+e.autoRange);return!(e.hideOffsetDates&&!t.current)&&(Nn(t.value,r.value)&&Un(t.value,n))}return!1}return!1},isAutoRangeStart:function(t){return!!e.autoRange&&(!!r.value&&(!(e.hideOffsetDates&&!t.current)&&In(r.value,t.value)))},clearHoverDate:function(){r.value=null},rangeActiveStartEnd:function(t){var n=!(arguments.length>1&&void 0!==arguments[1])||arguments[1];return e.range&&Ar(f.value)?!(e.hideOffsetDates&&!t.current)&&In(new Date(t.value),f.value[n?0:1]):!!e.range&&(In(new Date(t.value),f.value&&Array.isArray(f.value)?n?f.value[0]||null:f.value[1]:null)&&(!n||!Un(r.value||null,Array.isArray(f.value)?f.value[0]:null))||In(t.value,Array.isArray(f.value)?f.value[0]:null)&&D(n))},handleScroll:function(t){var n=arguments.length>1&&void 0!==arguments[1]&&arguments[1];if(e.monthChangeOnScroll){var r=n?[l.value,s.value]:[i.value,u.value],a=t.deltaY<0?Vn.apply(void 0,r):En.apply(void 0,r);T(a.month,!0,n)}}}};function Rr(e,t){var n=Object.keys(e);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(e);t&&(r=r.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),n.push.apply(n,r)}return n}function Wr(e){for(var t=1;t<arguments.length;t++){var n=null!=arguments[t]?arguments[t]:{};t%2?Rr(Object(n),!0).forEach((function(t){A(e,t,n[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(n)):Rr(Object(n)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(n,t))}))}return e}var qr,Lr={key:1,class:"dp__now_wrap"},Gr=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{internalModelValue:{type:[Date,Array],default:null},weekNumbers:{type:Boolean,default:!1},weekStart:{type:[Number,String],default:1},disableMonthYearSelect:{type:Boolean,default:!1},menuClassName:{type:String,default:null},calendarClassName:{type:String,default:null},yearRange:{type:Array,default:function(){return[1970,2100]}},range:{type:Boolean,default:!1},twoCalendars:{type:Boolean,default:!1},twoCalendarsSolo:{type:Boolean,default:!1},calendarCellClassName:{type:String,default:null},enableTimePicker:{type:Boolean,default:!1},is24:{type:Boolean,default:!0},hoursIncrement:{type:[String,Number],default:1},minutesIncrement:{type:[String,Number],default:1},hoursGridIncrement:{type:[String,Number],default:1},minutesGridIncrement:{type:[String,Number],default:5},minDate:{type:[Date,String],default:null},maxDate:{type:[Date,String],default:null},autoApply:{type:Boolean,default:!1},selectText:{type:String,default:"Select"},cancelText:{type:String,default:"Cancel"},previewFormat:{type:[String,Function],default:function(){return null}},locale:{type:String,default:"en-US"},weekNumName:{type:String,default:"W"},disabledDates:{type:Array,default:function(){return[]}},filters:{type:Object,default:function(){return{}}},minTime:{type:Object,default:function(){return{}}},maxTime:{type:Object,default:function(){return{}}},inline:{type:Boolean,default:!1},openOnTop:{type:Boolean,default:!1},monthPicker:{type:Boolean,default:!1},timePicker:{type:Boolean,default:!1},monthNameFormat:{type:String,default:"short"},startDate:{type:[Date,String],default:null},startTime:{type:[Object,Array],default:null},monthYearComponent:{type:Object,default:null},timePickerComponent:{type:Object,default:null},actionRowComponent:{type:Object,default:null},customProps:{type:Object,default:null},hideOffsetDates:{type:Boolean,default:!1},autoRange:{type:[Number,String],default:null},noToday:{type:Boolean,default:!1},noHoursOverlay:{type:Boolean,default:!1},noMinutesOverlay:{type:Boolean,default:!1},disabledWeekDays:{type:Array,default:function(){return[]}},allowedDates:{type:Array,default:function(){return[]}},showNowButton:{type:Boolean,default:!1},nowButtonLabel:{type:String,default:"Now"},monthChangeOnScroll:{type:Boolean,default:!0}},emits:["update:internalModelValue","closePicker","selectDate","dpOpen","autoApply","timeUpdate"],setup:function(r,c){var m=c.emit,f=r,v=(0,vue__WEBPACK_IMPORTED_MODULE_0__.useSlots)(),y=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null),g=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(0),S=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1);(0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)((function(){S.value=!0;var e=Jn(y);e&&(g.value=e.getBoundingClientRect().width),f.inline||(0,vue__WEBPACK_IMPORTED_MODULE_0__.nextTick)((function(){return m("dpOpen")}))}));var M=Fr(f,m),N=M.updateTime,U=M.updateMonthYear,I=M.today,$=M.month,B=M.year,Y=M.monthNext,H=M.yearNext,j=M.hours,E=M.minutes,V=M.isDisabled,F=M.isActiveDate,R=M.selectDate,W=M.getWeekNum,q=M.setHoverDate,L=M.isHoverRangeEnd,G=M.isAutoRangeInBetween,Q=M.isAutoRangeStart,z=M.rangeActive,X=M.clearHoverDate,J=M.rangeActiveStartEnd,K=M.monthYearSelect,Z=M.handleScroll,ee=fr(v,"calendar"),te=fr(v,"action"),ne=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return f.openOnTop?"dp__arrow_bottom":"dp__arrow_top"})),re=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return function(e){for(var t=[],n=+e[0];n<=+e[1];n++)t.push({value:+n,text:"".concat(n)});return t}(f.yearRange)})),ae=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return function(e,t){var n=new Intl.DateTimeFormat(e,{month:t,timeZone:"UTC"});return[1,2,3,4,5,6,7,8,9,10,11,12].map((function(e){var t=e<10?"0".concat(e):e;return new Date("2017-".concat(t,"-01T00:00:00+00:00"))})).map((function(e,t){return{text:n.format(e),value:t}}))}(f.locale,f.monthNameFormat)})),oe=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return zn($.value,B.value,+f.weekStart,f.hideOffsetDates)})),ie=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return zn(Y.value,H.value,+f.weekStart,f.hideOffsetDates)})),ue=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return f.monthPicker||f.timePicker})),le=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__calendar_wrapper:!0,dp__flex_display:f.twoCalendars}})),se=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return fe(oe)})),ce=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return fe(ie)})),de=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{locale:f.locale,weekNumName:f.weekNumName,weekStart:f.weekStart,weekNumbers:f.weekNumbers,enableTimePicker:f.enableTimePicker,disableMonthYearSelect:f.disableMonthYearSelect,is24:f.is24,hoursIncrement:f.hoursIncrement,minutesIncrement:f.minutesIncrement,hoursGridIncrement:f.hoursGridIncrement,minutesGridIncrement:f.minutesGridIncrement,monthPicker:f.monthPicker,timePicker:f.timePicker,range:f.range,filters:f.filters,minTime:f.minTime,maxTime:f.maxTime,customProps:f.customProps,hours:j.value,minutes:E.value,calendarClassName:f.calendarClassName,specificMode:ue.value,getWeekNum:W,twoCalendars:f.twoCalendars,months:ae.value,years:re.value,noHoursOverlay:f.noHoursOverlay,noMinutesOverlay:f.noMinutesOverlay,twoCalendarsSolo:f.twoCalendarsSolo}})),me=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){var e;return A(e={dp__menu:!0},f.menuClassName,!!f.menuClassName),A(e,"dp__relative",f.inline),e})),fe=function(e){return e.value.map((function(e){return Wr(Wr({},e),{},{days:e.days.map((function(e){var t=V(e.value);return e.classData=A({dp__cell_offset:!e.current,dp__pointer:!(t||!e.current&&f.hideOffsetDates),dp__active_date:!f.range&&F(e),dp__date_hover:!(t||F(e)||!e.current&&f.hideOffsetDates||f.range&&(J(e)||J(e,!1))),dp__range_between:!(!f.range||f.twoCalendars&&!e.current||t||!e.current&&f.hideOffsetDates||F(e))&&z(e),dp__today:!f.noToday&&In(e.value,I.value),dp__cell_disabled:t,dp__cell_auto_range:G(e),dp__cell_auto_range_start:Q(e),dp__cell_auto_range_end:L(e),dp__range_start:f.twoCalendars?e.current&&J(e):J(e),dp__range_end:f.twoCalendars?e.current&&J(e,!1):J(e,!1)},f.calendarCellClassName,!!f.calendarCellClassName),e}))})}))},pe=function(e){e.stopImmediatePropagation()},ve=function(){m("update:internalModelValue",new Date),m("selectDate")};return function(a,o){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(me)),onMouseleave:o[15]||(o[15]=function(){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(X)&&(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(X).apply(void 0,arguments)}),role:"dialog","aria-label":"Datepicker menu",onClick:pe},[r.inline?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{key:0,class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ne))},null,2)),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(le)),ref:function(e,t){t.calendarWrapperRef=e,y.value=e},role:"document"},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(Ur,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(de),{instance:1,"mapped-dates":(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(se),month:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)($),year:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(B),"month-year-component":r.monthYearComponent,"time-picker-component":r.timePickerComponent,"onUpdate:hours":o[0]||(o[0]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(N)(e)}),"onUpdate:minutes":o[1]||(o[1]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(N)(e,!1)}),"onUpdate:month":o[2]||(o[2]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(U)(e)}),"onUpdate:year":o[3]||(o[3]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(U)(e,!1)}),onMonthYearSelect:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(K),onSelectDate:o[4]||(o[4]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(R)(e)}),onSetHoverDate:o[5]||(o[5]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(q)(e)}),onHandleScroll:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Z)}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ee),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(Wr({},t))))]}))}}))]),1040,["mapped-dates","month","year","month-year-component","time-picker-component","onMonthYearSelect","onHandleScroll"]),r.range&&r.twoCalendars?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(Ur,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:0},(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(de),{instance:2,"mapped-dates":(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ce),month:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Y),year:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(H),"month-year-component":r.monthYearComponent,"time-picker-component":r.timePickerComponent,"onUpdate:hours":o[6]||(o[6]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(N)(e)}),"onUpdate:minutes":o[7]||(o[7]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(N)(e,!1)}),"onUpdate:month":o[8]||(o[8]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(U)(e,!0,!0)}),"onUpdate:year":o[9]||(o[9]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(U)(e,!1,!0)}),onSelectDate:o[10]||(o[10]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(R)(e,!0)}),onSetHoverDate:o[11]||(o[11]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(q)(e)}),onHandleScroll:o[12]||(o[12]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Z)(e,!0)})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(ee),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(Wr({},t))))]}))}}))]),1040,["mapped-dates","month","year","month-year-component","time-picker-component"])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)],2),r.showNowButton?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",Lr,[a.$slots["now-button"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,"now-button",{key:0,selectCurrentDate:ve}):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),a.$slots["now-button"]?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("button",{key:1,type:"button",role:"button",class:"dp__now_button",onClick:ve},(0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)(r.nowButtonLabel),1))])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0),r.autoApply?(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0):((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)((0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveDynamicComponent)(r.actionRowComponent?r.actionRowComponent:Vr),(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:2},{calendarWidth:g.value,selectText:r.selectText,cancelText:r.cancelText,internalModelValue:r.internalModelValue,range:r.range,previewFormat:r.previewFormat,inline:r.inline,monthPicker:r.monthPicker,timePicker:r.timePicker,customProps:r.customProps,twoCalendars:r.twoCalendars,menuMount:S.value},{onClosePicker:o[13]||(o[13]=function(e){return a.$emit("closePicker")}),onSelectDate:o[14]||(o[14]=function(e){return a.$emit("selectDate")})}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(te),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(a.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(Wr({},t))))]}))}}))]),1040))],34)}}});!function(e){e.center="center",e.left="left",e.right="right"}(qr||(qr={}));var Qr=function(e,t,n,r,o,i,u,l){var s=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(""),c=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(),d=function(){if(c.value)if(e&&"string"!=typeof e)s.value=e(t?xn(c.value):n?Sn(c.value):c.value);else{var r=Dn(e,i,n,t,u);s.value=Mn(c.value,r)}else s.value=""};return{parseExternalModelValue:function(e){var a=null;e?t?function(e){return Array.isArray(e)&&2===e.length}(e)&&"hours"in e[0]&&"minutes"in e[0]?a=[kn(null,+e[0].hours,+e[0].minutes),kn(null,+e[1].hours,+e[1].minutes)]:function(e){return"object"===Ir(e)}(e)&&(a=kn(null,+e.hours,+e.minutes)):n?function(e){return"object"===Ir(e)}(e)&&"month"in e&&"year"in e&&(a=_n(null,+e.month,+e.year)):r?Yr(e,o)&&(a=[new Date(e[0]),e[1]?new Date(e[1]):null]):function(e){return"string"==typeof e||"object"===Ir(e)}(e)&&(a=new Date(e)):a=null,bn(a)?(c.value=a,d()):(c.value=null,s.value="")},formatInputValue:d,internalModelValue:c,inputValue:s,emitModelValue:function(){n?l("update:modelValue",Sn(c.value)):t?l("update:modelValue",xn(c.value)):(r&&o&&1===c.value.length&&c.value.push(null),l("update:modelValue",c.value)),d()},checkBeforeEmit:function(){return!!c.value&&(r?o?c.value.length>=1:2===c.value.length:!!c.value)}}},zr="undefined"!=typeof window?window:void 0,Xr=function(){},Jr=function(e,t,n,r){if(!e)return Xr;var a,o=Xr,i=(0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)((function(){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(e)}),(function(e){o(),e&&(e.addEventListener(t,n,r),o=function(){e.removeEventListener(t,n,r),o=Xr})}),{immediate:!0,flush:"post"}),u=function(){i(),o()};return a=u,(0,vue__WEBPACK_IMPORTED_MODULE_0__.getCurrentScope)()&&(0,vue__WEBPACK_IMPORTED_MODULE_0__.onScopeDispose)(a),u};function Kr(e,t){var n=Object.keys(e);if(Object.getOwnPropertySymbols){var r=Object.getOwnPropertySymbols(e);t&&(r=r.filter((function(t){return Object.getOwnPropertyDescriptor(e,t).enumerable}))),n.push.apply(n,r)}return n}function Zr(e){for(var t=1;t<arguments.length;t++){var n=null!=arguments[t]?arguments[t]:{};t%2?Kr(Object(n),!0).forEach((function(t){A(e,t,n[t])})):Object.getOwnPropertyDescriptors?Object.defineProperties(e,Object.getOwnPropertyDescriptors(n)):Kr(Object(n)).forEach((function(t){Object.defineProperty(e,t,Object.getOwnPropertyDescriptor(n,t))}))}return e}var ea=(0,vue__WEBPACK_IMPORTED_MODULE_0__.defineComponent)({props:{is24:{type:Boolean,default:!0},enableTimePicker:{type:Boolean,default:!0},locale:{type:String,default:"en-US"},range:{type:Boolean,default:!1},twoCalendars:{type:Boolean,default:!1},twoCalendarsSolo:{type:Boolean,default:!1},modelValue:{type:[String,Date,Array,Object],default:null},position:{type:String,default:"center"},placeholder:{type:String,default:null},weekNumbers:{type:Boolean,default:!1},dark:{type:Boolean,default:!1},hoursIncrement:{type:[String,Number],default:1},minutesIncrement:{type:[String,Number],default:1},hoursGridIncrement:{type:[String,Number],default:1},minutesGridIncrement:{type:[String,Number],default:5},minDate:{type:[Date,String],default:null},maxDate:{type:[Date,String],default:null},minTime:{type:Object,default:function(){return{}}},maxTime:{type:Object,default:function(){return{}}},weekStart:{type:[String,Number],default:1},disabled:{type:Boolean,default:!1},readonly:{type:Boolean,default:!1},monthNameFormat:{type:String,default:"short"},weekNumName:{type:String,default:"W"},format:{type:[String,Function],default:function(){return null}},previewFormat:{type:[String,Function],default:function(){return null}},inputClassName:{type:String,default:null},menuClassName:{type:String,default:null},calendarClassName:{type:String,default:null},calendarCellClassName:{type:String,default:null},hideInputIcon:{type:Boolean,default:!1},state:{type:Boolean,default:null},clearable:{type:Boolean,default:!0},closeOnScroll:{type:Boolean,default:!1},autoApply:{type:Boolean,default:!1},filters:{type:Object,default:function(){return{}}},disableMonthYearSelect:{type:Boolean,default:!1},yearRange:{type:Array,default:function(){return[1970,2100]}},disabledDates:{type:Array,default:function(){return[]}},disabledWeekDays:{type:Array,default:function(){return[]}},inline:{type:Boolean,default:!1},selectText:{type:String,default:"Select"},cancelText:{type:String,default:"Cancel"},autoPosition:{type:Boolean,default:!0},monthPicker:{type:Boolean,default:!1},timePicker:{type:Boolean,default:!1},closeOnAutoApply:{type:Boolean,default:!0},textInput:{type:Boolean,default:!1},textInputOptions:{type:Object,default:function(){return{}}},teleport:{type:String,default:"body"},startDate:{type:[Date,String],default:null},startTime:{type:[Object,Array],default:null},monthYearComponent:{type:Object,default:null},timePickerComponent:{type:Object,default:null},actionRowComponent:{type:Object,default:null},customProps:{type:Object,default:null},hideOffsetDates:{type:Boolean,default:!1},autoRange:{type:[Number,String],default:null},noToday:{type:Boolean,default:!1},noHoursOverlay:{type:Boolean,default:!1},noMinutesOverlay:{type:Boolean,default:!1},altPosition:{type:Boolean,default:!1},allowedDates:{type:Array,default:function(){return[]}},showNowButton:{type:Boolean,default:!1},nowButtonLabel:{type:String,default:"Now"},partialRange:{type:Boolean,default:!0},monthChangeOnScroll:{type:Boolean,default:!0}},emits:["update:modelValue","textSubmit","closed","cleared","open"],setup:function(n,r){var c=r.expose,m=r.emit,f=n,v=(0,vue__WEBPACK_IMPORTED_MODULE_0__.useSlots)(),y=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),w=(0,vue__WEBPACK_IMPORTED_MODULE_0__.toRef)(f,"modelValue"),x=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null),S=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(null);(0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)((function(){R(f.modelValue),f.inline||(window.addEventListener("scroll",Z),window.addEventListener("resize",ee)),f.inline&&(y.value=!0)})),(0,vue__WEBPACK_IMPORTED_MODULE_0__.onUnmounted)((function(){f.inline||(window.removeEventListener("scroll",Z),window.removeEventListener("resize",ee))}));var O=fr(v,"all"),N=fr(v,"input");(0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(w,(function(){R(w.value)}),{deep:!0});var U=function(e,t,n,r){var o=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)({top:"0",left:"0",transform:"none"}),i=(0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(!1),u=function(e){var t=e.getBoundingClientRect();return{left:t.left+window.scrollX,top:t.top+window.scrollY}},l=function(e){for(var t=0,n=0;e&&!isNaN(e.offsetLeft)&&!isNaN(e.offsetTop);)t+=e.offsetLeft-e.scrollLeft,n+=e.offsetTop-e.scrollTop,e=e.offsetParent;return{top:n,left:t}},s=function(){var n=!(arguments.length>0&&void 0!==arguments[0])||arguments[0],a=Jn(r);if(a){var i=a.getBoundingClientRect(),s=i.left,d=i.width,m=i.height,f=(t?l(a):u(a)).top,p={top:"".concat(m+f+10,"px"),left:"",transform:"none"};e===qr.left&&(p.left="".concat(s,"px")),e===qr.right&&(p.left="".concat(s+d,"px"),p.transform="translateX(-100%)"),e===qr.center&&(p.left="".concat(s+d/2,"px"),p.transform="translateX(-50%)"),o.value=p,n&&c()}},c=function(){var e=Jn(r);if(e){var a=e.getBoundingClientRect(),c=a.height,d=a.top,m=(t?l(e):u(e)).top,f=window.innerHeight-d-c,p=Jn(n);if(p){var v=p.getBoundingClientRect().height,h=v+c;h>d&&h>f?d<f&&(s(!1),i.value=!1):h>f?(o.value.top="".concat(m-v-10,"px"),i.value=!0):(s(!1),i.value=!1)}}};return{openOnTop:i,menuPosition:o,setMenuPosition:s,recalculatePosition:c}}(f.position,f.altPosition,x,S),A=U.openOnTop,Y=U.menuPosition,H=U.setMenuPosition,j=U.recalculatePosition,E=Qr(f.format,f.timePicker,f.monthPicker,f.range,f.partialRange,f.is24,f.enableTimePicker,m),V=E.internalModelValue,F=E.inputValue,R=E.parseExternalModelValue,W=E.emitModelValue,q=E.checkBeforeEmit,L=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return{dp__main:!0,dp__theme_dark:f.dark,dp__theme_light:!f.dark,dp__flex_display:f.inline}})),G=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return Hr(f.format)?f.format:Dn(null,f.is24,f.monthPicker,f.timePicker,f.enableTimePicker)})),Q=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return f.previewFormat?f.previewFormat:Hr(G.value)?G.value:f.format})),z=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return f.dark?"dp__theme_dark":"dp__theme_light"})),X=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return Object.assign({enterSubmit:!0,tabSubmit:!0,openMenu:!0,openMenuOnFocus:!0,rangeSeparator:"-"},f.textInputOptions)})),J=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){return e=f.filters,Object.assign({months:[],years:[],times:{hours:[],minutes:[]}},e);var e})),K=(0,vue__WEBPACK_IMPORTED_MODULE_0__.computed)((function(){var e=function(e){var t={hours:Bn(),minutes:An()};return Object.assign(t,e)};return f.range?f.startTime&&Array.isArray(f.startTime)?[e(f.startTime[0]),e(f.startTime[1])]:null:f.startTime&&!Array.isArray(f.startTime)?e(f.startTime):null})),Z=function e(){y.value&&(f.closeOnScroll?ie():f.autoPosition?H():window.removeEventListener("scroll",e))},ee=function(){y.value&&H()},te=function(){f.disabled||f.readonly||(H(),y.value=!y.value,y.value||oe(),y.value&&m("open"),R(f.modelValue))},ne=function(){F.value="",oe(),m("update:modelValue",null),m("cleared"),ie()},re=function(){q()&&(W(),ie())},ae=function(){var e=arguments.length>0&&void 0!==arguments[0]&&arguments[0];f.autoApply&&(W(),f.closeOnAutoApply&&!e&&ie())},oe=function(){V.value=null},ie=function(){f.inline||(y.value&&(y.value=!1,m("closed")),oe())},ue=function(e,t){e?(V.value=e,t&&(re(),m("textSubmit"))):V.value=null},le=function(){f.autoApply&&W()};return function(e,t,n){var r=arguments.length>3&&void 0!==arguments[3]?arguments[3]:{},a=r.window,o=void 0===a?zr:a,i=r.event,u=void 0===i?"pointerdown":i;if(o){var l=function(r){var a=Jn(e),o=Jn(t);a&&o&&(a===r.target||r.composedPath().includes(a)||r.composedPath().includes(o)||n(r))};Jr(o,u,l,{passive:!0})}}(x,S,ie),c({closeMenu:ie,selectDate:re,clearValue:ne,openMenu:te}),function(r,a){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div",{class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeClass)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(L))},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.createVNode)(Gn,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({ref:function(e,t){t.inputRef=e,S.value=e}},{placeholder:n.placeholder,hideInputIcon:n.hideInputIcon,readonly:n.readonly,disabled:n.disabled,inputClassName:n.inputClassName,clearable:n.clearable,state:n.state,inline:n.inline,textInput:n.textInput,textInputOptions:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(X),range:n.range,isMenuOpen:y.value,pattern:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(G),autoApply:n.autoApply},{"input-value":(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(F),"onUpdate:input-value":a[0]||(a[0]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.isRef)(F)?F.value=e:null}),onClear:ne,onOpen:te,onSetInputDate:ue,onSetEmptyDate:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(W),onSelectDate:re,onClose:ie}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(N),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(r.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(t)))]}))}}))]),1040,["input-value","onSetEmptyDate"]),y.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(vue__WEBPACK_IMPORTED_MODULE_0__.Teleport,{key:0,to:n.teleport,disabled:n.inline},[y.value?((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createBlock)(Gr,(0,vue__WEBPACK_IMPORTED_MODULE_0__.mergeProps)({key:0,ref:function(e,t){t.dpMenuRef=e,x.value=e},class:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(z),style:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Y)},{weekNumbers:n.weekNumbers,weekStart:n.weekStart,disableMonthYearSelect:n.disableMonthYearSelect,menuClassName:n.menuClassName,calendarClassName:n.calendarClassName,yearRange:n.yearRange,range:n.range,twoCalendars:n.twoCalendars,calendarCellClassName:n.calendarCellClassName,enableTimePicker:n.enableTimePicker,is24:n.is24,hoursIncrement:n.hoursIncrement,minutesIncrement:n.minutesIncrement,hoursGridIncrement:n.hoursGridIncrement,minutesGridIncrement:n.minutesGridIncrement,minDate:n.minDate,maxDate:n.maxDate,autoApply:n.autoApply,selectText:n.selectText,cancelText:n.cancelText,previewFormat:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(Q),locale:n.locale,weekNumName:n.weekNumName,disabledDates:n.disabledDates,filters:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(J),minTime:n.minTime,maxTime:n.maxTime,inline:n.inline,openOnTop:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(A),monthPicker:n.monthPicker,timePicker:n.timePicker,monthNameFormat:n.monthNameFormat,startDate:n.startDate,startTime:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(K),monthYearComponent:n.monthYearComponent,timePickerComponent:n.timePickerComponent,actionRowComponent:n.actionRowComponent,customProps:n.customProps,hideOffsetDates:n.hideOffsetDates,autoRange:n.autoRange,noToday:n.noToday,noHoursOverlay:n.noHoursOverlay,noMinutesOverlay:n.noMinutesOverlay,twoCalendarsSolo:n.twoCalendarsSolo,disabledWeekDays:n.disabledWeekDays,allowedDates:n.allowedDates,showNowButton:n.showNowButton,nowButtonLabel:n.nowButtonLabel,monthChangeOnScroll:n.monthChangeOnScroll},{internalModelValue:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(V),"onUpdate:internalModelValue":a[1]||(a[1]=function(e){return (0,vue__WEBPACK_IMPORTED_MODULE_0__.isRef)(V)?V.value=e:null}),onClosePicker:ie,onSelectDate:re,onDpOpen:(0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(j),onAutoApply:ae,onTimeUpdate:le}),(0,vue__WEBPACK_IMPORTED_MODULE_0__.createSlots)({_:2},[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderList)((0,vue__WEBPACK_IMPORTED_MODULE_0__.unref)(O),(function(e,t){return{name:e,fn:(0,vue__WEBPACK_IMPORTED_MODULE_0__.withCtx)((function(t){return[(0,vue__WEBPACK_IMPORTED_MODULE_0__.renderSlot)(r.$slots,e,(0,vue__WEBPACK_IMPORTED_MODULE_0__.normalizeProps)((0,vue__WEBPACK_IMPORTED_MODULE_0__.guardReactiveProps)(Zr({},t))))]}))}}))]),1040,["class","style","internalModelValue","onDpOpen"])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)],8,["to","disabled"])):(0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("",!0)],2)}}}),ta=function(){var e=ea;return e.install=function(t){t.component("Vue3DatePicker",e)},e}();
 
 
 /***/ }),

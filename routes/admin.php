@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\CalendarEventsController;
 use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClassroomMembersController;
 use App\Http\Controllers\Admin\ClassroomPostsController;
@@ -92,4 +93,13 @@ Route::prefix("teachers")->name('teachers.')->group(function () {
     Route::get('edit/{teacher:name}', [TeachersController::class, 'edit']);
     Route::patch('{teacher:uuid}', [TeachersController::class, 'update']);
     Route::delete('{teacher:uuid}', [TeachersController::class, 'destroy']);
+});
+
+/**
+ * Manage calendar events routes
+ */
+Route::prefix('calendar-events')->name('calendar_events.')->group(function () {
+    Route::get('list', [CalendarEventsController::class, 'getList']);
+    Route::post('store', [CalendarEventsController::class, 'store']);
+    Route::delete('destroy/{event}', [CalendarEventsController::class, 'destroy']);
 });

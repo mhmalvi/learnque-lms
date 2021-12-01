@@ -1,0 +1,44 @@
+<?php
+
+namespace App\Http\Requests\Admin\CalendarEvents;
+
+use App\Models\CalendarEvent;
+use Illuminate\Foundation\Http\FormRequest;
+
+class CreateCalendarEventRequest extends FormRequest
+{
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return auth()->guard('admin')->check();
+    }
+
+    /**
+     * Get the validation rules that apply to the request.
+     *
+     * @return array
+     */
+    public function rules()
+    {
+        return [
+            'title' => 'required',
+            'date' => 'required',
+        ];
+    }
+
+    public function save()
+    {
+        $start_date = date('Y-m-d', strtotime($this->date[0]));
+        $end_date = date('Y-m-d', strtotime($this->date[1]));
+
+        CalendarEvent::create([
+            'title' => $this->title,
+            'start_date' => $start_date,
+            'end_date' => $end_date,
+        ]);
+    }
+}
