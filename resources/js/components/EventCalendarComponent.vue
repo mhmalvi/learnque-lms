@@ -1,6 +1,6 @@
 <template>
   <div class="row">
-    <div class="col-md-8 d-relative">
+    <div class="d-relative" :class="editable ? 'col-md-8' : 'col-md-12'">
       <FullCalendar ref="fullCalendar" :options="calendarOptions" />
 
       <transition name="fade">
@@ -18,7 +18,7 @@
       </transition>
     </div>
 
-    <div class="col-md-4">
+    <div class="col-md-4" v-if="editable">
       <create-event-form-component @newEventAdded="handleNewEvent" />
     </div>
   </div>
@@ -41,7 +41,8 @@ export default {
     FullCalendar,
     CreateEventFormComponent,
   },
-  setup() {
+  props: ["editable"],
+  setup({ editable }) {
     const fetchingData = ref(false);
     const calendarOptions = reactive({
       plugins: [
@@ -60,7 +61,9 @@ export default {
       events: [],
       eventColor: "#402cdb",
       eventClick: (info) => {
-        attemptEventDelete(info);
+        if (editable) {
+          attemptEventDelete(info);
+        }
       },
     });
 
@@ -82,7 +85,7 @@ export default {
     const getEvents = () => {
       fetchingData.value = true;
       axios
-        .get("/admin/calendar-events/list")
+        .get("/calendar-events/list")
         .then((res) => {
           calendarApi.removeAllEvents();
           putEventsInCalendar(res.data.data);
@@ -164,6 +167,7 @@ export default {
       fullCalendar,
       fetchingData,
       handleNewEvent,
+      editable,
     };
   },
 };

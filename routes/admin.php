@@ -99,7 +99,6 @@ Route::prefix("teachers")->name('teachers.')->group(function () {
  * Manage calendar events routes
  */
 Route::prefix('calendar-events')->name('calendar_events.')->group(function () {
-    Route::get('list', [CalendarEventsController::class, 'getList']);
     Route::post('store', [CalendarEventsController::class, 'store']);
     Route::delete('destroy/{event}', [CalendarEventsController::class, 'destroy']);
 });

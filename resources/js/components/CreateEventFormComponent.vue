@@ -65,6 +65,12 @@
           </p>
         </div>
       </div>
+      <div class="form-group">
+        <label for="custom_color" class="form-label">Select a Color</label>
+        <div>
+          <color-picker />
+        </div>
+      </div>
       <div class="form-group d-flex justify-content-end">
         <button
           class="btn btn-outline-primary btn-sm"
@@ -85,9 +91,12 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { ref, reactive } from "vue";
 import Datepicker from "vue3-date-time-picker";
+import { ColorPicker } from "vue3-colorpicker";
+import "vue3-colorpicker/style.css";
 
 export default {
   components: {
+    ColorPicker,
     Datepicker,
   },
   setup(props, context) {

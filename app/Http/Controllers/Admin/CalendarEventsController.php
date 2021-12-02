@@ -10,21 +10,6 @@ use Illuminate\Http\Request;
 
 class CalendarEventsController extends Controller
 {
-    public function getList()
-    {
-        try {
-
-            return new CalendarEventsCollection(
-                CalendarEvent::all()
-            );
-        } catch (\Throwable $e) {
-            return response()->json([
-                'message' => $e->getMessage(),
-                'error_code' => 500,
-            ], 500);
-        }
-    }
-
     public function store(CreateCalendarEventRequest $request)
     {
         try {
