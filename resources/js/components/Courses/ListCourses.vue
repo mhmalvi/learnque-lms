@@ -52,7 +52,7 @@
 </template>
 
 <script>
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
 
@@ -63,10 +63,9 @@ export default {
     const search = ref("");
     const isLoading = ref(false);
 
-    // on mount
-    (() => {
+    onMounted(() => {
       getCourses();
-    })();
+    });
 
     const getCourses = () => {
       isLoading.value = true;

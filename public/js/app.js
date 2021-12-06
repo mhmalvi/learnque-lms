@@ -41719,11 +41719,10 @@ __webpack_require__.r(__webpack_exports__);
     var courses = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)([]);
     var itemsPerPage = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(5);
     var search = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)("");
-    var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false); // on mount
-
-    (function () {
+    var isLoading = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
+    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       getCourses();
-    })();
+    });
 
     var getCourses = function getCourses() {
       isLoading.value = true;
