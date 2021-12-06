@@ -30,10 +30,11 @@ class ProfileController extends Controller
     public function avatarUpdate(UpdateAvatarRequest $request)
     {
         try {
-            $request->update();
+            $new_image_name = $request->update();
 
             return response()->json([
                 'message' => "Successfully updated your avatar",
+                'avatar' => $new_image_name,
             ], 201);
         } catch (\Throwable $e) {
             return response()->json([

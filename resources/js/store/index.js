@@ -15,6 +15,7 @@ export default createStore({
         return {
             user_mode: "", // 'teacher' | 'admin' | 'student'
             classroom_id: "", // classroom unique_id
+            avatar: "",
         };
     },
     getters: {
@@ -24,6 +25,9 @@ export default createStore({
         getUserMode(state) {
             return state.user_mode;
         },
+        getAvatar(state) {
+            return state.avatar;
+        },
     },
     mutations: {
         updateClassroomId(state, id) {
@@ -32,6 +36,13 @@ export default createStore({
         updateUserMode(state, mode) {
             state.user_mode = mode;
         },
+        updateAvatar(state, avatar) {
+            state.avatar = avatar;
+        },
     },
-    actions: {},
+    actions: {
+        newAvatarAdded(context, url) {
+            context.commit("updateAvatar", url);
+        },
+    },
 });

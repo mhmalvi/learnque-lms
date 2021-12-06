@@ -81,6 +81,7 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { ref, reactive, onMounted } from "vue";
 import ImagePickerComponent from "../ImagePickerComponent.vue";
+import { useStore } from "vuex";
 
 export default {
   props: ["user_data"],
@@ -88,6 +89,7 @@ export default {
   setup(props) {
     const user = JSON.parse(props.user_data);
     const isSubmitting = ref(false);
+    const store = useStore();
 
     const form = reactive({
       username: user.username,
@@ -144,6 +146,8 @@ export default {
             })
             .then((res) => {
               avatar_component.value.setImage(data.image);
+
+              store.dispatch("newAvatarAdded", res.data.avatar);
             })
             .catch((err) => {
               Swal.fire({
@@ -172,6 +176,8 @@ export default {
                 title: res.data.message,
               });
               avatar_component.value.deleteImage();
+
+              store.dispatch("newAvatarAdded", "");
             })
             .catch((err) => {
               Swal.fire({

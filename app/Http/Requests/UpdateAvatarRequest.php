@@ -46,5 +46,6 @@ class UpdateAvatarRequest extends AvatarRequest
         $user->update([
             'avatar' => $image_name
         ]);
+        return $image_name;
     }
 }
