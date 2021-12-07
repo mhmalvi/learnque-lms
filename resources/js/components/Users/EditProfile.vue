@@ -177,7 +177,7 @@ export default {
               });
               avatar_component.value.deleteImage();
 
-              store.dispatch("newAvatarAdded", "");
+              store.dispatch("newAvatarAdded", res.data.avatar);
             })
             .catch((err) => {
               Swal.fire({

@@ -45,13 +45,16 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
     ];
 
+    protected $appends = ['avatar_url'];
+
     public function info()
     {
         return $this->hasOne(UserInfo::class);
     }
 
-    public function getAvatarAttribute($value)
+    public function getAvatarUrlAttribute()
     {
-        return $value ? asset('storage/avatars/' . $value) : null;
+        return $this->avatar ? asset('storage/avatars/' . $this->avatar)
+            : asset('assets/images/user_default.webp');
     }
 }

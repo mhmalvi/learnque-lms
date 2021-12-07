@@ -32,7 +32,7 @@ class DeleteAvatarRequest extends AvatarRequest
         }
 
         $user->update([
-            'avatar' => '',
+            'avatar' => null,
         ]);
     }
 }

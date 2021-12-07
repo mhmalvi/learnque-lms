@@ -30,11 +30,11 @@ class ProfileController extends Controller
     public function avatarUpdate(UpdateAvatarRequest $request)
     {
         try {
-            $new_image_name = $request->update();
+            $request->update();
 
             return response()->json([
                 'message' => "Successfully updated your avatar",
-                'avatar' => url('storage/avatars/' . $new_image_name),
+                'avatar' => auth()->user()->avatar_url,
             ], 201);
         } catch (\Throwable $e) {
             return response()->json([
@@ -50,6 +50,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'message' => "Successfully deleted your avatar!",
+                'avatar' => auth()->user()->avatar_url,
             ], 202);
         } catch (\Throwable $e) {
             return response()->json([

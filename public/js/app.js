@@ -40613,7 +40613,7 @@ __webpack_require__.r(__webpack_exports__);
     });
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       user.name = data.info.first_name + " " + data.info.last_name;
-      user.avatar = data.avatar;
+      user.avatar = data.avatar_url;
     });
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(function () {
       return store.getters.getAvatar;
@@ -42760,7 +42760,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
               title: res.data.message
             });
             avatar_component.value.deleteImage();
-            store.dispatch("newAvatarAdded", "");
+            store.dispatch("newAvatarAdded", res.data.avatar);
           })["catch"](function (err) {
             sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
               icon: "error",

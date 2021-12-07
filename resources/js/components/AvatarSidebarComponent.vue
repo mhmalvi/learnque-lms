@@ -29,7 +29,7 @@ export default {
 
     onMounted(() => {
       user.name = data.info.first_name + " " + data.info.last_name;
-      user.avatar = data.avatar;
+      user.avatar = data.avatar_url;
     });
 
     watch(
