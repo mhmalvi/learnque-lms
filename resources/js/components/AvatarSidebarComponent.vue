@@ -29,8 +29,7 @@ export default {
 
     onMounted(() => {
       user.name = data.info.first_name + " " + data.info.last_name;
-      user.avatar = getAvatarLink(data.avatar);
-      store.dispatch("newAvatarAdded", user.avatar);
+      user.avatar = data.avatar;
     });
 
     watch(
@@ -40,17 +39,10 @@ export default {
       (newVal, oldVal) => {
         if (newVal != user.avatar) {
           console.log("changing avatar");
-          user.avatar = getAvatarLink(newVal);
+          user.avatar = newVal;
         }
       }
     );
-
-    const getAvatarLink = (avatar) => {
-      if (avatar) {
-        return "/storage/avatars/" + avatar;
-      }
-      return;
-    };
 
     return {
       user,

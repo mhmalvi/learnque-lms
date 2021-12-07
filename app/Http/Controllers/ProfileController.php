@@ -34,7 +34,7 @@ class ProfileController extends Controller
 
             return response()->json([
                 'message' => "Successfully updated your avatar",
-                'avatar' => $new_image_name,
+                'avatar' => url('storage/avatars/' . $new_image_name),
             ], 201);
         } catch (\Throwable $e) {
             return response()->json([

@@ -2,7 +2,7 @@
     <div class="sidebar sidebar-dark-pickled-bluewood sidebar-left" data-perfect-scrollbar>
         <!-- Sidebar Content -->
         <div>
-            <avatar-sidebar-component user_data="{{ auth()->user() }}" />
+            <avatar-sidebar-component user_data="{{ auth()->user()->load('info') }}" />
         </div>
 
         <div class="sidebar-heading">User Type</div>

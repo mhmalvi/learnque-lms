@@ -49,4 +49,9 @@ class User extends Authenticatable
     {
         return $this->hasOne(UserInfo::class);
     }
+
+    public function getAvatarAttribute($value)
+    {
+        return $value ? asset('storage/avatars/' . $value) : null;
+    }
 }

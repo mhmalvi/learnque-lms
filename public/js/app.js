@@ -40613,26 +40613,16 @@ __webpack_require__.r(__webpack_exports__);
     });
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       user.name = data.info.first_name + " " + data.info.last_name;
-      user.avatar = getAvatarLink(data.avatar);
-      store.dispatch("newAvatarAdded", user.avatar);
+      user.avatar = data.avatar;
     });
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(function () {
       return store.getters.getAvatar;
     }, function (newVal, oldVal) {
       if (newVal != user.avatar) {
         console.log("changing avatar");
-        user.avatar = getAvatarLink(newVal);
+        user.avatar = newVal;
       }
     });
-
-    var getAvatarLink = function getAvatarLink(avatar) {
-      if (avatar) {
-        return "/storage/avatars/" + avatar;
-      }
-
-      return;
-    };
-
     return {
       user: user
     };

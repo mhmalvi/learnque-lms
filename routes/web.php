@@ -21,8 +21,6 @@ use Illuminate\Support\Facades\Route;
 
 Route::view('/', 'index')->middleware('guest')->name('learnque');
 
-Route::view('dashboard', 'pages.dashboard')->middleware('auth');
-
 Route::view('courses', 'pages.courses')->middleware('auth');
 Route::view('my-courses', 'pages.my-courses')->middleware('auth');
 Route::view('my-paths', 'pages.my-paths')->middleware('auth');
@@ -43,6 +41,8 @@ require __DIR__ . '/auth.php';
 
 
 Route::middleware('auth:web,admin')->group(function () {
+    Route::view('dashboard', 'pages.dashboard')->name('dashboard');
+
     /**
      * User profile routes
      */
