@@ -1,5 +1,7 @@
 require("./bootstrap");
 import { createApp } from "vue";
+import Antd from "ant-design-vue";
+import "ant-design-vue/dist/antd.css";
 import store from "./store";
 import axios from "axios";
 import CopyWrite from "./components/CopyWrite.vue";
@@ -28,11 +30,13 @@ import ClassroomView from "./components/Classrooms/ClassroomView.vue";
 
 import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
+import LiveClass from "./components/LiveClass/CreateClass.vue";
+
 /**
  * importing students components
  */
-import StudentClassroomList from './components/Users/StudentClassroomList.vue';
-import StudentClassroomView from './components/Users/StudentClassroomView.vue';
+import StudentClassroomList from "./components/Users/StudentClassroomList.vue";
+import StudentClassroomView from "./components/Users/StudentClassroomView.vue";
 
 const app = createApp({});
 
@@ -60,11 +64,13 @@ app.component("user-edit-profile", UserEditProfile);
 
 app.component("classroom-items-grid-list", ClassroomItemsGridList);
 app.component("classroom-view", ClassroomView);
+
+app.component("live-class", LiveClass);
 // End of Admin components
 
 // Students components
-app.component('student-classroom-list', StudentClassroomList);
-app.component('student-classroom-view', StudentClassroomView);
+app.component("student-classroom-list", StudentClassroomList);
+app.component("student-classroom-view", StudentClassroomView);
 // End of students components
 
 /**
@@ -80,6 +86,6 @@ app.component("home-course-list-component", HomeCourseListComponent);
  */
 app.component("admin-login", AdminLogin);
 
-app.use(store).mount("#app");
+app.use(store).use(Antd).mount("#app");
 
 require("alpinejs");
