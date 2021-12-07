@@ -42158,6 +42158,7 @@ __webpack_require__.r(__webpack_exports__);
   props: ["label"],
   setup: function setup(_ref, context) {
     var label = _ref.label;
+    var isUploading = (0,vue__WEBPACK_IMPORTED_MODULE_0__.ref)(false);
     var state = (0,vue__WEBPACK_IMPORTED_MODULE_0__.reactive)({
       label_text: "image",
       image_dataUrl: "",
@@ -42167,6 +42168,7 @@ __webpack_require__.r(__webpack_exports__);
     if (label) state.label_text = label;
 
     var handleImageChange = function handleImageChange(e) {
+      state.errors = [];
       if (e.target.files.length == 0) return;
       var file = e.target.files[0];
       _modules_ImageHandler__WEBPACK_IMPORTED_MODULE_1__["default"].convertToDataUrl(file).then(function (result) {
@@ -42196,13 +42198,24 @@ __webpack_require__.r(__webpack_exports__);
       state.previous_image_dataUrl = dataUrl;
     };
 
+    var turnOnUploading = function turnOnUploading() {
+      isUploading.value = true;
+    };
+
+    var turnOffUploading = function turnOffUploading() {
+      isUploading.value = false;
+    };
+
     return {
       state: state,
       handleImageChange: handleImageChange,
       handleImageDelete: handleImageDelete,
       deleteImage: deleteImage,
       setPreviousImage: setPreviousImage,
-      setImage: setImage
+      setImage: setImage,
+      isUploading: isUploading,
+      turnOnUploading: turnOnUploading,
+      turnOffUploading: turnOffUploading
     };
   }
 });
@@ -42729,6 +42742,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
         confirmButtonText: "Yes, update it!"
       }).then(function (res) {
         if (res.isConfirmed) {
+          avatar_component.value.turnOnUploading();
           axios__WEBPACK_IMPORTED_MODULE_0___default().post("/profile/avatar/update", {
             _method: "PUT",
             avatar: data.image
@@ -42740,6 +42754,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
               icon: "error",
               title: err.response.data.message
             });
+          })["finally"](function () {
+            avatar_component.value.turnOffUploading();
           });
         }
       });
@@ -45687,43 +45703,49 @@ var _hoisted_2 = {
   "class": "form-group img-container"
 };
 var _hoisted_3 = {
+  key: 0,
   "for": "image_picker",
   "class": "img-container-lbl"
 };
 var _hoisted_4 = {
-  key: 0,
-  "class": "row w-100"
+  key: 1,
+  "for": "",
+  "class": "img-container-lbl"
 };
 var _hoisted_5 = {
+  key: 2,
+  "class": "row w-100"
+};
+var _hoisted_6 = {
   "class": "col-12 img-wrapper"
 };
 
-var _hoisted_6 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
+var _hoisted_7 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("i", {
   "class": "fas fa-times"
 }, null, -1
 /* HOISTED */
 );
 
-var _hoisted_7 = [_hoisted_6];
-var _hoisted_8 = ["src"];
-var _hoisted_9 = {
+var _hoisted_8 = [_hoisted_7];
+var _hoisted_9 = ["src"];
+var _hoisted_10 = {
   key: 0
 };
 function render(_ctx, _cache, $props, $setup, $data, $options) {
-  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("label", _hoisted_3, "Click here to upload " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.state.label_text), 1
+  return (0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", null, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_1, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_2, [!$setup.isUploading ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_3, "Click here to upload " + (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.state.label_text), 1
   /* TEXT */
-  ), $setup.state.image_dataUrl ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_4, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
+  )) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("label", _hoisted_4, " Uploading... ")), $setup.state.image_dataUrl ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("div", _hoisted_5, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_6, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
     href: "javascript:void(0)",
     onClick: _cache[0] || (_cache[0] = (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
       return $setup.handleImageDelete();
     }, ["prevent"])),
     "class": "text-danger d-block img-remove"
-  }, _hoisted_7), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("img", {
+  }, _hoisted_8), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("img", {
     src: $setup.state.image_dataUrl,
     "class": "img-fluid"
   }, null, 8
   /* PROPS */
-  , _hoisted_8)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
+  , _hoisted_9)])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("input", {
     type: "file",
     id: "image_picker",
     "class": "form-control d-none",
@@ -45732,7 +45754,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     })
   }, null, 32
   /* HYDRATE_EVENTS */
-  )])]), $setup.state.errors.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_9, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.state.errors[0]), 1
+  )])]), $setup.state.errors.length > 0 ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("p", _hoisted_10, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.state.errors[0]), 1
   /* TEXT */
   )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]);
 }

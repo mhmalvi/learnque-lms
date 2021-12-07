@@ -139,6 +139,7 @@ export default {
         confirmButtonText: "Yes, update it!",
       }).then((res) => {
         if (res.isConfirmed) {
+          avatar_component.value.turnOnUploading();
           axios
             .post("/profile/avatar/update", {
               _method: "PUT",
@@ -154,6 +155,9 @@ export default {
                 icon: "error",
                 title: err.response.data.message,
               });
+            })
+            .finally(() => {
+              avatar_component.value.turnOffUploading();
             });
         }
       });
