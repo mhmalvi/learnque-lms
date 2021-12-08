@@ -40905,8 +40905,8 @@ __webpack_require__.r(__webpack_exports__);
     });
 
     var getFullName = function getFullName(student) {
-      if (student.info) {
-        return student.info.first_name ? student.info.first_name : "" + " " + student.info.last_name ? student.info.last_name : 0;
+      if (student.info && student.info.first_name && student.info.last_name) {
+        return "(" + student.info.first_name + " " + student.info.last_name + ")";
       }
 
       return "";

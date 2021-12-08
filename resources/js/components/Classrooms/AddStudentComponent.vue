@@ -134,12 +134,10 @@ export default {
     });
 
     const getFullName = (student) => {
-      if (student.info) {
-        return student.info.first_name
-          ? student.info.first_name
-          : "" + " " + student.info.last_name
-          ? student.info.last_name
-          : "";
+      if (student.info && student.info.first_name && student.info.last_name) {
+        return (
+          "(" + student.info.first_name + " " + student.info.last_name + ")"
+        );
       }
       return "";
     };
