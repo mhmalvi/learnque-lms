@@ -15,7 +15,6 @@ export default {
 
     onMounted(() => {
       avatar.value = avatar_url;
-      console.log(avatar.value);
     });
 
     watch(

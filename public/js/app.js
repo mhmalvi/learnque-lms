@@ -40609,7 +40609,6 @@ __webpack_require__.r(__webpack_exports__);
     var store = (0,vuex__WEBPACK_IMPORTED_MODULE_1__.useStore)();
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       avatar.value = avatar_url;
-      console.log(avatar.value);
     });
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.watch)(function () {
       return store.getters.getAvatar;
@@ -42185,7 +42184,6 @@ __webpack_require__.r(__webpack_exports__);
 
     var setImage = function setImage(imageData) {
       state.errors = [];
-      console.log(imageData);
       state.image_dataUrl = imageData;
     };
 

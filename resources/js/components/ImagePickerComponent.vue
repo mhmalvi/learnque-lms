@@ -75,7 +75,6 @@ export default {
 
     const setImage = (imageData) => {
       state.errors = [];
-      console.log(imageData);
       state.image_dataUrl = imageData;
     };
 
