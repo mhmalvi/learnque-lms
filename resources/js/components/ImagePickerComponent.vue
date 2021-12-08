@@ -70,17 +70,13 @@ export default {
     };
 
     const deleteImage = () => {
-      state.previous_image_dataUrl = state.image_dataUrl;
       state.image_dataUrl = "";
     };
 
     const setImage = (imageData) => {
       state.errors = [];
+      console.log(imageData);
       state.image_dataUrl = imageData;
-    };
-
-    const setPreviousImage = (dataUrl) => {
-      state.previous_image_dataUrl = dataUrl;
     };
 
     const turnOnUploading = () => {
@@ -96,7 +92,6 @@ export default {
       handleImageChange,
       handleImageDelete,
       deleteImage,
-      setPreviousImage,
       setImage,
       isUploading,
       turnOnUploading,

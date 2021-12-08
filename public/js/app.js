@@ -42180,17 +42180,13 @@ __webpack_require__.r(__webpack_exports__);
     };
 
     var deleteImage = function deleteImage() {
-      state.previous_image_dataUrl = state.image_dataUrl;
       state.image_dataUrl = "";
     };
 
     var setImage = function setImage(imageData) {
       state.errors = [];
+      console.log(imageData);
       state.image_dataUrl = imageData;
-    };
-
-    var setPreviousImage = function setPreviousImage(dataUrl) {
-      state.previous_image_dataUrl = dataUrl;
     };
 
     var turnOnUploading = function turnOnUploading() {
@@ -42206,7 +42202,6 @@ __webpack_require__.r(__webpack_exports__);
       handleImageChange: handleImageChange,
       handleImageDelete: handleImageDelete,
       deleteImage: deleteImage,
-      setPreviousImage: setPreviousImage,
       setImage: setImage,
       isUploading: isUploading,
       turnOnUploading: turnOnUploading,
@@ -42770,7 +42765,7 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
               icon: "success",
               title: res.data.message
             });
-            avatar_component.value.deleteImage();
+            avatar_component.value.setImage(res.data.avatar);
             store.dispatch("newAvatarAdded", res.data.avatar);
           })["catch"](function (err) {
             sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({

@@ -179,7 +179,7 @@ export default {
                 icon: "success",
                 title: res.data.message,
               });
-              avatar_component.value.deleteImage();
+              avatar_component.value.setImage(res.data.avatar);
 
               store.dispatch("newAvatarAdded", res.data.avatar);
             })
