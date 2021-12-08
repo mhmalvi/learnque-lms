@@ -1,7 +1,5 @@
 require("./bootstrap");
 import { createApp } from "vue";
-import Antd from "ant-design-vue";
-import "ant-design-vue/dist/antd.css";
 import store from "./store";
 import axios from "axios";
 import CopyWrite from "./components/CopyWrite.vue";
@@ -86,6 +84,6 @@ app.component("home-course-list-component", HomeCourseListComponent);
  */
 app.component("admin-login", AdminLogin);
 
-app.use(store).use(Antd).mount("#app");
+app.use(store).mount("#app");
 
 require("alpinejs");
