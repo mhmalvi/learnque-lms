@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
+use App\Http\Controllers\Admin\ProfileController;
 use App\Http\Controllers\Admin\StudentsController;
 use App\Http\Controllers\Admin\TeachersController;
 use Illuminate\Support\Facades\Route;

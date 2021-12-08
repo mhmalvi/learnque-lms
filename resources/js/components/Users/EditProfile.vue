@@ -94,8 +94,8 @@ export default {
     const form = reactive({
       username: user.username,
       email: user.email,
-      first_name: user.info.first_name,
-      last_name: user.info.last_name,
+      first_name: user.info ? user.info.first_name : "",
+      last_name: user.info ? user.info.last_name : "",
     });
 
     const avatar_component = ref(null);

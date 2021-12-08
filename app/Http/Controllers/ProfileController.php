@@ -11,7 +11,11 @@ class ProfileController extends Controller
 {
     public function edit()
     {
-        $user = auth()->user()->load('info');
+        if (auth('admin')->check()) {
+            $user = auth('admin')->user()->load('info');
+        } else {
+            $user = auth()->user()->load('info');
+        }
 
         $user = new UserResource($user);
 
@@ -20,7 +24,8 @@ class ProfileController extends Controller
 
     public function update(UpdateProfileRequest $request)
     {
-        $request->update(auth()->user());
+        $user = auth('admin')->check() ? auth('admin')->user() : auth()->user();
+        $request->update($user);
 
         return response()->json([
             'message' => "Successfully updated your profile!",
@@ -30,7 +35,8 @@ class ProfileController extends Controller
     public function avatarUpdate(UpdateAvatarRequest $request)
     {
         try {
-            $request->update();
+            $user = auth('admin')->check() ? auth('admin')->user() : auth()->user();
+            $request->update($user);
 
             return response()->json([
                 'message' => "Successfully updated your avatar",
@@ -46,7 +52,8 @@ class ProfileController extends Controller
     public function avatarDelete(DeleteAvatarRequest $request)
     {
         try {
-            $request->delete();
+            $user = auth('admin')->check() ? auth('admin')->user() : auth()->user();
+            $request->delete($user);
 
             return response()->json([
                 'message' => "Successfully deleted your avatar!",

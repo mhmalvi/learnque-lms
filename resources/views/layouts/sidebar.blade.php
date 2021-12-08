@@ -11,6 +11,8 @@
                 @include('components.student-nav-links')
             @elseif(auth()->user()->user_type == 'teacher')
                 @include('components.teacher-nav-links')
+            @elseif(auth('admin')->check())
+                @include('admin.components.nav-links')
             @endif
 
             {{-- @include('components.teacher-nav-links') --}}

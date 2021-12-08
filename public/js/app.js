@@ -42696,8 +42696,8 @@ function _defineProperty(obj, key, value) { if (key in obj) { Object.definePrope
     var form = (0,vue__WEBPACK_IMPORTED_MODULE_2__.reactive)({
       username: user.username,
       email: user.email,
-      first_name: user.info.first_name,
-      last_name: user.info.last_name
+      first_name: user.info ? user.info.first_name : "",
+      last_name: user.info ? user.info.last_name : ""
     });
     var avatar_component = (0,vue__WEBPACK_IMPORTED_MODULE_2__.ref)(null);
     (0,vue__WEBPACK_IMPORTED_MODULE_2__.onMounted)(function () {

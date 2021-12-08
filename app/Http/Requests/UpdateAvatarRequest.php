@@ -14,7 +14,7 @@ class UpdateAvatarRequest extends AvatarRequest
      */
     public function authorize()
     {
-        return auth()->check();
+        return auth('admin')->check() || auth()->check();
     }
 
     /**
@@ -29,9 +29,8 @@ class UpdateAvatarRequest extends AvatarRequest
         ];
     }
 
-    public function update()
+    public function update($user)
     {
-        $user = auth()->user();
         if ($user->avatar) {
             $this->deletePreviousAvatar();
         }

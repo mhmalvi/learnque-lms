@@ -24,9 +24,8 @@ class DeleteAvatarRequest extends AvatarRequest
         return [];
     }
 
-    public function delete()
+    public function delete($user)
     {
-        $user = auth()->user();
         if ($user->avatar) {
             $this->deletePreviousAvatar();
         }
