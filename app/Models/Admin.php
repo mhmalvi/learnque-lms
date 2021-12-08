@@ -45,4 +45,12 @@ class Admin extends Authenticable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    protected $appends = ['avatar_url'];
+
+    public function getAvatarUrlAttribute()
+    {
+        return $this->avatar ? asset('storage/avatars/' . $this->avatar)
+            : asset('assets/images/user_default.webp');
+    }
 }

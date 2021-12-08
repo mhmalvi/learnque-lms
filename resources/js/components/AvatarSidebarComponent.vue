@@ -18,7 +18,6 @@ import { useStore } from "vuex";
 export default {
   props: ["user_data"],
   setup({ user_data }) {
-    // /assets/images/256_rsz_nicolas-horn-689011-unsplash.jpg
     const data = JSON.parse(user_data);
     const store = useStore();
 
@@ -38,7 +37,6 @@ export default {
       },
       (newVal, oldVal) => {
         if (newVal != user.avatar) {
-          console.log("changing avatar");
           user.avatar = newVal;
         }
       }
