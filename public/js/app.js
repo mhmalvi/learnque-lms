@@ -43778,15 +43778,6 @@ var _hoisted_6 = {
 var _hoisted_7 = {
   "class": "row mt-2"
 };
-
-var _hoisted_8 = /*#__PURE__*/_withScopeId(function () {
-  return /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("h6", {
-    "class": "card-footer mb-0"
-  }, "0 comment", -1
-  /* HOISTED */
-  );
-});
-
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_classroom_post_attachment_component = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("classroom-post-attachment-component");
 
@@ -43810,7 +43801,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     , ["attachment"])]);
   }), 128
   /* KEYED_FRAGMENT */
-  ))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), _hoisted_8]);
+  ))])])) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)])]);
 }
 
 /***/ }),
