@@ -66,20 +66,28 @@
         </div>
       </div>
       <div class="form-group">
-        <label for="custom_color" class="form-label">Select a Color</label>
-        <div>
-          <color-picker />
-        </div>
+        <select class="form-control" v-model="form.color">
+          <option value="" selected>
+            Optionally you can choose an event color ...
+          </option>
+          <option value="#5567ff" :style="['color: #5567ff']">Primary</option>
+          <option value="#868e96" :style="['color: #868e96']">Secondary</option>
+          <option value="#ed0b4c" :style="['color: #ed0b4c']">Accent</option>
+          <option value="#303840" :style="['color: #303840']">Dark</option>
+          <option value="#6610f2" :style="['color: #6610f2']">Indigo</option>
+          <option value="#fd7e14" :style="['color: #fd7e14']">Orange</option>
+          <option value="#20c997" :style="['color: #20c997']">Teal</option>
+        </select>
       </div>
-      <div class="form-group d-flex justify-content-end">
+      <div class="form-group mt-4">
         <button
-          class="btn btn-outline-primary btn-sm"
+          class="btn btn-outline-primary"
           type="submit"
           :disabled="isSubmitting"
         >
           <i class="fa fa-plus mr-2" v-if="!isSubmitting"></i>
           <i class="fas fa-circle-notch fa-spin mr-2" v-else></i>
-          Add
+          Create Event
         </button>
       </div>
     </form>
@@ -106,6 +114,7 @@ export default {
       date: "",
       start_time: "",
       end_time: "",
+      color: "",
     });
     const validation = reactive({
       errors: {},
@@ -162,3 +171,9 @@ export default {
   },
 };
 </script>
+<style>
+.vc-color-wrap.transparent {
+  width: 50px !important;
+  height: 50px !important;
+}
+</style>

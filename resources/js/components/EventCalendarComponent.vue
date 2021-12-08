@@ -59,7 +59,6 @@ export default {
       initialView: "dayGridMonth",
       themeSystem: "bootstrap",
       events: [],
-      eventColor: "#402cdb",
       eventClick: (info) => {
         if (editable) {
           attemptEventDelete(info);
@@ -113,6 +112,9 @@ export default {
         title: data.title,
         start: data.start_date,
         end: data.end_date,
+        textColor: "#fff",
+        backgroundColor: data.color ? data.color : "#303840",
+        borderColor: data.color ? data.color : "#303840",
       };
 
       if (data.start_time) {

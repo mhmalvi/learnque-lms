@@ -41,6 +41,7 @@ class CreateCalendarEventRequest extends FormRequest
             'end_date' => $end_date,
             'start_time' => $this->start_time,
             'end_time' => $this->end_time,
+            'color' => $this->color
         ]);
     }
 }
