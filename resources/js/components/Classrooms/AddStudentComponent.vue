@@ -29,8 +29,8 @@
           :key="index"
           :value="student.username"
         >
-          {{ student.username }} - {{ student.info.first_name }}
-          {{ student.info.last_name }}
+          {{ student.username }} {{ getFullName(student) }} -
+          {{ student.email }}
         </option>
       </datalist>
     </div>
@@ -133,6 +133,17 @@ export default {
       getStudents();
     });
 
+    const getFullName = (student) => {
+      if (student.info) {
+        return student.info.first_name
+          ? student.info.first_name
+          : "" + " " + student.info.last_name
+          ? student.info.last_name
+          : "";
+      }
+      return "";
+    };
+
     return {
       students,
       student_select,
@@ -141,6 +152,7 @@ export default {
       removeStudent,
       save,
       isSubmitting,
+      getFullName,
     };
   },
 };
