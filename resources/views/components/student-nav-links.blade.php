@@ -15,7 +15,7 @@
         </a>
     </li>
 
-    <li class="sidebar-menu-item">
+    {{-- <li class="sidebar-menu-item">
         <a class="sidebar-menu-button"
             href="/courses">
             <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">local_library</span>
@@ -105,6 +105,6 @@
             <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">assignment_turned_in</span>
             <span class="sidebar-menu-text">Skill Result</span>
         </a>
-    </li>
+    </li> --}}
 
 </ul>

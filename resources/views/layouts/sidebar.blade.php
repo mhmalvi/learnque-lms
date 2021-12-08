@@ -28,13 +28,8 @@
                 </a>
                 <ul class="sidebar-submenu collapse sm-indent" id="account_menu">
                     <li class="sidebar-menu-item">
-                        <a class="sidebar-menu-button" href="">
+                        <a class="sidebar-menu-button" href="{{ route('profile.edit') }}">
                             <span class="sidebar-menu-text">Edit Profile</span>
-                        </a>
-                    </li>
-                    <li class="sidebar-menu-item">
-                        <a class="sidebar-menu-button" href="">
-                            <span class="sidebar-menu-text">Activities</span>
                         </a>
                     </li>
                 </ul>
