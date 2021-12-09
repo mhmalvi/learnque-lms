@@ -1,4 +1,24 @@
 <template>
+  <!--
+      How to use this component?
+      1. include this component in a view
+      2. set a label attribute (optional) i.e. label="thumbnail image"
+      3. when this component has a new image selected by user, an event is dispatched.
+         catch that event by @requestForChange
+      4. you can listen to @requestForDelete for handling image delete action
+
+      !!!important!!!
+      to visualize the added image in this component, you MUST use this component's
+      setImage() function. otherwise the added image wont be visible
+      example:
+        <ImagePickerComponent ref="imagepicker" @requestForChange="handleChange" />
+        ...
+        const imagepicker = ref(0)
+        const handleChange = (data) => {
+            // handle the image data as you wish
+            imagepicker.value.setImage(data.image)
+        }
+    -->
   <div>
     <div class="d-flex align-items-center">
       <div class="form-group img-container">
