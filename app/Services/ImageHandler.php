@@ -31,7 +31,7 @@ class ImageHandler
         return $this;
     }
 
-    public function setDimension($height, $width)
+    public function setDimension($width, $height = null)
     {
         $this->height = $height;
         $this->width = $width;
