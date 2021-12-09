@@ -83,7 +83,7 @@
             <button
               type="button"
               class="btn btn-sm btn-outline-secondary mr-1"
-              :disabled="!formIsValid"
+              :disabled="!formIsValid || form.isSubmitting"
             >
               <span class="material-icons mr-2">save</span>
               save as draft
@@ -91,7 +91,7 @@
             <button
               type="submit"
               class="btn btn-sm btn-outline-primary m-1"
-              :disabled="!formIsValid"
+              :disabled="!formIsValid || form.isSubmitting"
             >
               <span class="material-icons mr-2">add_circle_outline</span>
               save &amp; publish
@@ -100,6 +100,7 @@
               type="button"
               class="btn btn-sm btn-outline-light m-1"
               @click.prevent="formReset()"
+              :disabled="form.isSubmitting"
             >
               <span class="material-icons mr-2">clear_all</span>
               clear
@@ -156,6 +157,7 @@ export default {
     };
 
     const handleFormSubmit = () => {
+      form.isSubmitting = true;
       axios
         .post("/admin/news_notices/store", form.data)
         .then((res) => {
@@ -171,6 +173,9 @@ export default {
             title: "Something went wrong!",
             text: err.response.data.message,
           });
+        })
+        .finally(() => {
+          form.isSubmitting = false;
         });
     };
 
