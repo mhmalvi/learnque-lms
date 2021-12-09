@@ -7,6 +7,14 @@
             <div class="page-separator__text">Basic Informations</div>
           </div>
           <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
+          <div class="form-group">
+            <ImagePickerComponent
+              label="you profile picture"
+              ref="avatar_component"
+              @requestForChange="handleProfilePictureUpdate"
+              @requestForDelete="handleProfilePictureDelete"
+            />
+          </div>
         </div>
         <div class="col-lg-8 d-flex align-items-center">
           <div class="flex" style="max-width: 100%">
@@ -71,19 +79,31 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-import { ref, reactive } from "vue";
+import { ref, reactive, onMounted } from "vue";
+import ImagePickerComponent from "../ImagePickerComponent.vue";
+import { useStore } from "vuex";
 
 export default {
   props: ["user_data"],
+  components: { ImagePickerComponent },
   setup(props) {
     const user = JSON.parse(props.user_data);
     const isSubmitting = ref(false);
+    const store = useStore();
 
     const form = reactive({
-      username: user.name,
+      username: user.username,
       email: user.email,
-      first_name: user.info.first_name,
-      last_name: user.info.last_name,
+      first_name: user.info ? user.info.first_name : "",
+      last_name: user.info ? user.info.last_name : "",
+    });
+
+    const avatar_component = ref(null);
+
+    onMounted(() => {
+      if (user.avatar) {
+        avatar_component.value.setImage(user.avatar);
+      }
     });
 
     function onFormSubmitHandlar() {
@@ -111,10 +131,76 @@ export default {
         });
     }
 
+    const handleProfilePictureUpdate = (data) => {
+      Swal.fire({
+        icon: "question",
+        title: "Do you want to update the profile picture?",
+        showCancelButton: true,
+        confirmButtonText: "Yes, update it!",
+      }).then((res) => {
+        if (res.isConfirmed) {
+          avatar_component.value.turnOnUploading();
+          axios
+            .post("/profile/avatar/update", {
+              _method: "PUT",
+              avatar: data.image,
+            })
+            .then((res) => {
+              avatar_component.value.setImage(data.image);
+
+              store.dispatch("newAvatarAdded", res.data.avatar);
+            })
+            .catch((err) => {
+              Swal.fire({
+                icon: "error",
+                title: err.response.data.message,
+              });
+            })
+            .finally(() => {
+              avatar_component.value.turnOffUploading();
+            });
+        }
+      });
+    };
+
+    const handleProfilePictureDelete = () => {
+      Swal.fire({
+        icon: "question",
+        title: "Are you sure you want to delete your profile picture?",
+        showCancelButton: true,
+      }).then((res) => {
+        if (res.isConfirmed) {
+          axios
+            .post("/profile/avatar/delete", {
+              _method: "DELETE",
+            })
+            .then((res) => {
+              Swal.fire({
+                icon: "success",
+                title: res.data.message,
+              });
+              avatar_component.value.setImage(res.data.avatar);
+
+              store.dispatch("newAvatarAdded", res.data.avatar);
+            })
+            .catch((err) => {
+              Swal.fire({
+                icon: "error",
+                title: "Something went wrong!",
+                text: err.response.data.message,
+              });
+            });
+        }
+      });
+    };
+
     return {
       form,
       isSubmitting,
       onFormSubmitHandlar,
+      handleProfilePictureUpdate,
+      avatar_component,
+      handleProfilePictureDelete,
     };
   },
 };

@@ -13,7 +13,7 @@ class UpdateProfileRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        return auth('admin')->check() || auth()->check();
     }
 
     /**
@@ -31,6 +31,13 @@ class UpdateProfileRequest extends FormRequest
 
     public function update($user)
     {
+        if ($user->info == null) {
+            $user->info()->create([
+                'first_name' => $this->first_name,
+                'last_name' =>  $this->last_name,
+            ]);
+            return;
+        }
         $user->info->update([
             'first_name' => $this->first_name,
             'last_name' =>  $this->last_name,

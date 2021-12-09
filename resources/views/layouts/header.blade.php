@@ -7,11 +7,6 @@
 
     <!-- Navbar Brand -->
     <a href="{{route('learnque')}}" class="navbar-brand mr-16pt d-lg-none">
-        <span class="avatar avatar-sm navbar-brand-icon mr-0 mr-lg-8pt">
-            <span class="avatar-title rounded bg-primary">
-                <img src="{{asset('assets/images/256_rsz_nicolas-horn-689011-unsplash.jpg')}}" alt="logo"class="img-fluid" />
-            </span>
-        </span>
         <span class="d-none d-lg-block">Quadque - LMS</span>
     </a>
     <!-- // END Navbar Brand -->
@@ -21,13 +16,16 @@
     <!-- Navbar Menu -->
     <div class="nav navbar-nav flex-nowrap d-flex mr-16pt">
         <div class="nav-item dropdown">
-            <a href="#" class="nav-link d-flex align-items-center dropdown-toggle" data-toggle="dropdown" data-caret="false">
-                <span class="avatar avatar-sm mr-8pt2">
-                    <span class="avatar-title rounded-circle bg-primary"><i class="material-icons">account_box</i></span>
+            <a href="#" class="navbar-brand mr-16pt dropdown-toggle" data-toggle="dropdown" data-caret="false">
+                <span class="avatar avatar-sm navbar-brand-icon mr-0 mr-lg-8pt">
+                    <avatar-header-component avatar_url="{{ auth()->user()->avatar_url }}" />
                 </span>
             </a>
-            <div class="dropdown-menu dropdown-menu-right">
-                <a class="dropdown-item" href="{{ route('profile.edit') }}">Edit Profile</a>
+
+            <div class="dropdown-menu dropdown-menu-right mr-3 mr-lg-4">
+                <a class="dropdown-item" href="{{ route('profile.edit') }}">
+                    Edit Profile
+                </a>
                 <a class="dropdown-item" href="javascript:void(0)" onclick="event.preventDefault(); document.getElementById('logout').submit()">
                     Logout
                 </a>
