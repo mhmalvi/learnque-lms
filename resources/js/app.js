@@ -32,6 +32,8 @@ import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
 import EventCalendarComponent from "./components/EventCalendarComponent.vue";
 
+import CreateNewsNoticeComponent from "./components/NewsNoticeCreateComponent.vue";
+
 /**
  * importing students components
  */
@@ -72,6 +74,8 @@ app.component("student-classroom-view", StudentClassroomView);
 // End of students components
 
 app.component("event-calendar-component", EventCalendarComponent);
+
+app.component("create-news-notice-component", CreateNewsNoticeComponent);
 
 /**
  * Guest

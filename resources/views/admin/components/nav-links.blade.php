@@ -53,3 +53,18 @@
         </li>
     </ul>
 </li>
+
+<li class="sidebar-menu-item">
+    <a class="sidebar-menu-button js-sidebar-collapse" data-toggle="collapse" href="#news_notice_menu">
+        <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">question_answer</span>
+        News & Notice
+        <span class="ml-auto sidebar-menu-toggle-icon"></span>
+    </a>
+    <ul class="sidebar-submenu collapse sm-indent" id="news_notice_menu">
+        <li class="sidebar-menu-item">
+            <a class="sidebar-menu-button" href="{{ route('admin.news_and_notices.create') }}">
+                <span class="sidebar-menu-text">Create news & notice</span>
+            </a>
+        </li>
+    </ul>
+</li>

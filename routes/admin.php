@@ -8,6 +8,7 @@ use App\Http\Controllers\Admin\ClassroomsController;
 use App\Http\Controllers\Admin\CourseController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
+use App\Http\Controllers\Admin\NewsNoticesController;
 use App\Http\Controllers\Admin\StudentsController;
 use App\Http\Controllers\Admin\TeachersController;
 use Illuminate\Support\Facades\Route;
@@ -101,4 +102,12 @@ Route::prefix("teachers")->name('teachers.')->group(function () {
 Route::prefix('calendar-events')->name('calendar_events.')->group(function () {
     Route::post('store', [CalendarEventsController::class, 'store']);
     Route::delete('destroy/{event}', [CalendarEventsController::class, 'destroy']);
+});
+
+/**
+ * Manage news & notice
+ */
+Route::prefix("news_notices")->name('news_and_notices.')->group(function () {
+    Route::get('/', [NewsNoticesController::class, 'index'])->name('index');
+    Route::get('create', [NewsNoticesController::class, 'create'])->name('create');
 });
