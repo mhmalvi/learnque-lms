@@ -41,6 +41,9 @@ class ImageHandler
     public function storeFromImageData()
     {
         $extension = $this->getOriginalFileExtension($this->image);
+        if (!$this->name) {
+            throw new \Exception("ImageHandler::name is required for saving the image!");
+        }
         $filename = "{$this->name}{$extension}";
 
         if (!Storage::exists('public/' . $this->path)) {

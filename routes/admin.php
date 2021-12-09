@@ -111,4 +111,5 @@ Route::prefix('calendar-events')->name('calendar_events.')->group(function () {
 Route::prefix("news_notices")->name('news_and_notices.')->group(function () {
     Route::get('/', [NewsNoticesController::class, 'index'])->name('index');
     Route::get('create', [NewsNoticesController::class, 'create'])->name('create');
+    Route::post('store', [NewsNoticesController::class, 'store']);
 });
