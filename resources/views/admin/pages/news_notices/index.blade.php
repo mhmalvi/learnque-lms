@@ -38,6 +38,7 @@
     <div class="container page__container">
         <div class="row">
             <div class="col-md-12">
+                <news-notice-list-component />
             </div>
         </div>
     </div>

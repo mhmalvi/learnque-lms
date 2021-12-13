@@ -63,7 +63,12 @@
     <ul class="sidebar-submenu collapse sm-indent" id="news_notice_menu">
         <li class="sidebar-menu-item">
             <a class="sidebar-menu-button" href="{{ route('admin.news_and_notices.create') }}">
-                <span class="sidebar-menu-text">Create news & notice</span>
+                <span class="sidebar-menu-text">Create</span>
+            </a>
+        </li>
+        <li class="sidebar-menu-item">
+            <a class="sidebar-menu-button" href="{{ route('admin.news_and_notices.index') }}">
+                <span class="sidebar-menu-text">List</span>
             </a>
         </li>
     </ul>

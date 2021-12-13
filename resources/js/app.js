@@ -32,7 +32,9 @@ import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
 import EventCalendarComponent from "./components/EventCalendarComponent.vue";
 
+import NewNoticeListComponent from "./components/NewsNoticeListComponent.vue";
 import CreateNewsNoticeComponent from "./components/NewsNoticeCreateComponent.vue";
+
 import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
 
 /**
