@@ -110,6 +110,9 @@ Route::prefix('calendar-events')->name('calendar_events.')->group(function () {
  */
 Route::prefix("news_notices")->name('news_and_notices.')->group(function () {
     Route::get('/', [NewsNoticesController::class, 'index'])->name('index');
+    Route::get('all', [NewsNoticesController::class, 'paginatedList']);
     Route::get('create', [NewsNoticesController::class, 'create'])->name('create');
     Route::post('store', [NewsNoticesController::class, 'store']);
+    Route::get('edit/{news_notice:slug}', [NewsNoticesController::class, 'edit']);
+    Route::patch('edit/{news_notice:slug}', [NewsNoticesController::class, 'update']);
 });

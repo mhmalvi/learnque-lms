@@ -1,37 +1,44 @@
 <template>
   <div>
-    <NewsNoticeFormComponent ref="form_component" @formSubmit="handleCreate" />
+    <NewsNoticeFormComponent ref="form_component" @formSubmit="handleUpdate" />
   </div>
 </template>
 
 <script>
-import { ref } from "vue";
-import axios from "axios";
-import Swal from "sweetalert2";
 import NewsNoticeFormComponent from "./NewsNoticeFormComponent.vue";
+import { ref, onMounted } from "vue";
+import Swal from "sweetalert2";
 
 export default {
   components: { NewsNoticeFormComponent },
-  setup() {
+  props: ["data"],
+  setup({ data }) {
     const form_component = ref(0);
+    let news_notice = null;
 
-    const handleCreate = (data) => {
+    onMounted(() => {
+      news_notice = JSON.parse(data);
+
+      form_component.value.setData(news_notice);
+    });
+
+    const handleUpdate = (data) => {
       axios
-        .post("/admin/news_notices/store", data)
+        .post("/admin/news_notices/edit/" + news_notice.slug, {
+          _method: "PATCH",
+          ...data,
+        })
         .then((res) => {
           Swal.fire({
             icon: "success",
             title: res.data.message,
           });
-          form_component.value.formReset();
         })
         .catch((err) => {
           Swal.fire({
             icon: "error",
-            title: "Something went wrong!",
-            text: err.response.data.message,
+            title: err.response.data.message,
           });
-          form_component.value.fail(err.response);
         })
         .finally(() => {
           form_component.value.complete();
@@ -40,7 +47,7 @@ export default {
 
     return {
       form_component,
-      handleCreate,
+      handleUpdate,
     };
   },
 };

@@ -17,8 +17,10 @@ class CreateNewsNoticesTable extends Migration
             $table->id();
 
             $table->string('title');
+            $table->string('slug');
             $table->longText('description')->nullable();
             $table->string('image')->nullable();
+            $table->enum('post_type', ['news', 'notice']);
 
             $table->timestamps();
         });

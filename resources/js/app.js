@@ -32,8 +32,9 @@ import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
 import EventCalendarComponent from "./components/EventCalendarComponent.vue";
 
-import NewNoticeListComponent from "./components/NewsNoticeListComponent.vue";
+import NewsNoticeListComponent from "./components/NewsNoticeListComponent.vue";
 import CreateNewsNoticeComponent from "./components/NewsNoticeCreateComponent.vue";
+import UpdateNewsNoticeComponent from "./components/NewsNoticeUpdateComponent.vue";
 
 import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
 
@@ -81,7 +82,9 @@ app.component("event-calendar-component", EventCalendarComponent);
 app.component("avatar-header-component", AvatarHeaderComponent);
 // ---
 
+app.component("news-notice-list-component", NewsNoticeListComponent);
 app.component("create-news-notice-component", CreateNewsNoticeComponent);
+app.component("edit-news-notice-component", UpdateNewsNoticeComponent);
 
 /**
  * Guest
