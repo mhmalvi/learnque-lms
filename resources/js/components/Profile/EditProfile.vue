@@ -58,6 +58,33 @@
                 v-model="form.last_name"
               />
             </div>
+            <div class="form-group">
+              <label for="contact" class="form-label">Contact</label>
+              <input
+                type="text"
+                class="form-control"
+                id="contact"
+                v-model="form.contact"
+              />
+            </div>
+            <div class="form-group">
+              <label for="address" class="form-label">Address</label>
+              <input
+                type="text"
+                class="form-control"
+                id="address"
+                v-model="form.address"
+              />
+            </div>
+            <div class="form-group">
+              <label for="bio" class="form-label">About You</label>
+              <textarea
+                v-model="form.bio"
+                id="bio"
+                rows="5"
+                class="form-control"
+              ></textarea>
+            </div>
 
             <div class="form-group">
               <button
@@ -94,8 +121,11 @@ export default {
     const form = reactive({
       username: user.username,
       email: user.email,
-      first_name: user.info ? user.info.first_name : "",
-      last_name: user.info ? user.info.last_name : "",
+      first_name: user.info.first_name ?? "",
+      last_name: user.info.last_name ?? "",
+      contact: user.info.contact ?? "",
+      address: user.info.address ?? "",
+      bio: user.info.about ?? "",
     });
 
     const avatar_component = ref(null);

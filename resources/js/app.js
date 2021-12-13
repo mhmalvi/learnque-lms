@@ -23,7 +23,8 @@ import TeachersList from "./components/Users/TeachersList.vue";
 import TeachersEditForm from "./components/Users/TeacherEditForm.vue";
 import CreateClassroom from "./components/Classrooms/CreateClassroom.vue";
 
-import UserEditProfile from "./components/Users/EditProfile.vue";
+//profile
+import UserEditProfile from "./components/Profile/EditProfile.vue";
 
 import ClassroomItemsGridList from "./components/Classrooms/ClassroomItemsGridList.vue";
 import ClassroomView from "./components/Classrooms/ClassroomView.vue";

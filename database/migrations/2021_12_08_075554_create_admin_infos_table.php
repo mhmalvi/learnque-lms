@@ -13,9 +13,8 @@ class CreateAdminInfosTable extends Migration
      */
     public function up()
     {
-        Schema::connection('admin')->create('admin_infos', function (Blueprint $table) {
+        Schema::connection('admin')->create('user_infos', function (Blueprint $table) {
             $table->id();
-
             $table->unsignedBigInteger('user_id');
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade')->onUpdate('cascade');
             $table->string('first_name')->nullable();
@@ -23,7 +22,6 @@ class CreateAdminInfosTable extends Migration
             $table->string('contact')->nullable();
             $table->text('address')->nullable();
             $table->longText('about')->nullable();
-
             $table->timestamps();
         });
     }
@@ -35,6 +33,6 @@ class CreateAdminInfosTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('admin_infos');
+        Schema::dropIfExists('user_infos');
     }
 }

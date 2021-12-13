@@ -16,6 +16,8 @@ class Admin extends Authenticable
 
     protected $table = "users";
 
+    protected $appends = ['avatar_url'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -46,8 +48,6 @@ class Admin extends Authenticable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
-
-    protected $appends = ['avatar_url'];
 
     public function getAvatarUrlAttribute()
     {
