@@ -1,5 +1,6 @@
 <template>
-  <img :src="avatar" alt="logo" class="img-fluid" />
+  <img :src="avatar" alt="logo" class="img-fluid" v-if="avatar" />
+  <img :src="defaultImage" alt="logo" class="img-fluid" v-else />
 </template>
 
 <script>
@@ -9,12 +10,12 @@ import { useStore } from "vuex";
 export default {
   props: ["avatar_url"],
   setup({ avatar_url }) {
-    // /assets/images/256_rsz_nicolas-horn-689011-unsplash.jpg
     const avatar = ref("");
     const store = useStore();
+    const defaultImage = `${window.location.origin}/assets/images/user_default.webp`;
 
     onMounted(() => {
-      avatar.value = avatar_url;
+      avatar.value = avatar_url != "" ? avatar_url : defaultImage;
     });
 
     watch(
@@ -22,14 +23,13 @@ export default {
         return store.getters.getAvatar;
       },
       (newVal, oldVal) => {
-        if (newVal != avatar.value) {
-          avatar.value = newVal;
-        }
+        avatar.value = newVal != null ? newVal : defaultImage;
       }
     );
 
     return {
       avatar,
+      defaultImage,
     };
   },
 };

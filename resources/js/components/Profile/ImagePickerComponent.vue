@@ -1,24 +1,4 @@
 <template>
-  <!--
-      How to use this component?
-      1. include this component in a view
-      2. set a label attribute (optional) i.e. label="thumbnail image"
-      3. when this component has a new image selected by user, an event is dispatched.
-         catch that event by @requestForChange
-      4. you can listen to @requestForDelete for handling image delete action
-
-      !!!important!!!
-      to visualize the added image in this component, you MUST use this component's
-      setImage() function. otherwise the added image wont be visible
-      example:
-        <ImagePickerComponent ref="imagepicker" @requestForChange="handleChange" />
-        ...
-        const imagepicker = ref(0)
-        const handleChange = (data) => {
-            // handle the image data as you wish
-            imagepicker.value.setImage(data.image)
-        }
-    -->
   <div>
     <div class="d-flex align-items-center">
       <div class="form-group img-container">
@@ -26,18 +6,26 @@
           >Click here to upload {{ state.label_text }}</label
         >
         <label for="" class="img-container-lbl" v-else> Uploading... </label>
-        <div class="row w-100" v-if="state.image_dataUrl">
-          <div class="col-12 img-wrapper">
-            <a
-              href="javascript:void(0)"
-              @click.prevent="handleImageDelete()"
-              class="text-danger d-block img-remove"
-            >
-              <i class="fas fa-times"></i>
-            </a>
-            <img :src="state.image_dataUrl" class="img-fluid" />
-          </div>
+
+        <div class="col-12 img-wrapper" v-if="state.image_dataUrl.length > 0">
+          <a
+            href="javascript:void(0)"
+            @click.prevent="handleImageDelete()"
+            class="text-danger d-block img-remove"
+          >
+            <i class="fas fa-times"></i>
+          </a>
+          <img
+            :src="state.image_dataUrl"
+            class="img-thumbnail rounded-circle"
+          />
         </div>
+        <img
+          :src="state.defaultImage"
+          alt=""
+          class="img-thumbnail rounded-circle"
+          v-else
+        />
         <input
           type="file"
           id="image_picker"
@@ -54,20 +42,18 @@
 
 <script>
 import { reactive, ref } from "vue";
-import ImageHandler from "../modules/ImageHandler";
+import ImageHandler from "../../modules/ImageHandler";
 
 export default {
   props: ["label"],
   setup({ label }, context) {
     const isUploading = ref(false);
     const state = reactive({
-      label_text: "image",
+      label_text: label ?? "image",
       image_dataUrl: "",
       errors: [],
-      previous_image_dataUrl: "",
+      defaultImage: `${window.location.origin}/assets/images/user_default.webp`,
     });
-
-    if (label) state.label_text = label;
 
     const handleImageChange = (e) => {
       state.errors = [];
@@ -119,3 +105,29 @@ export default {
   },
 };
 </script>
+<!--
+=======================================================================================
+How to use this component?
+
+  1. include this component in a vue template
+  2. when this component has a new image selected by user, an event is dispatched. 
+     catch that event by @requestForChange
+  3. you can listen to @requestForDelete for handling image delete action
+
+*Note
+  to visualize the added image in this component, you MUST use this component's
+  setImage() function. otherwise the added image wont be visible
+
+  example:
+    <ImagePickerComponent ref="imagepicker" @requestForChange="handleChange" />
+
+    const imagepicker = ref(0);
+
+    const handleChange = (data) => {
+        // handle the image data as you wish
+        imagepicker.value.setImage(data.image)
+    }
+
+*Props: [label]
+=======================================================================================
+-->

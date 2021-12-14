@@ -54,7 +54,7 @@ class User extends Authenticatable
 
     public function getAvatarUrlAttribute()
     {
-        return $this->avatar ? asset('storage/avatars/' . $this->avatar)
-            : asset('assets/images/user_default.webp');
+        return !is_null($this->avatar) ? asset('storage/avatars/' . $this->avatar)
+            : null;
     }
 }

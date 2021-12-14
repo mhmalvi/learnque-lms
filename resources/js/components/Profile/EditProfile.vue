@@ -107,7 +107,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import { ref, reactive, onMounted } from "vue";
-import ImagePickerComponent from "../ImagePickerComponent.vue";
+import ImagePickerComponent from "./ImagePickerComponent.vue";
 import { useStore } from "vuex";
 
 export default {
@@ -117,6 +117,7 @@ export default {
     const user = JSON.parse(props.user_data);
     const isSubmitting = ref(false);
     const store = useStore();
+    const avatar_component = ref(null);
 
     const form = reactive({
       username: user.username,
@@ -128,15 +129,13 @@ export default {
       bio: user.info.about ?? "",
     });
 
-    const avatar_component = ref(null);
-
     onMounted(() => {
       if (user.avatar) {
         avatar_component.value.setImage(user.avatar);
       }
     });
 
-    function onFormSubmitHandlar() {
+    const onFormSubmitHandlar = () => {
       isSubmitting.value = true;
 
       axios
@@ -159,7 +158,7 @@ export default {
         .finally(() => {
           isSubmitting.value = false;
         });
-    }
+    };
 
     const handleProfilePictureUpdate = (data) => {
       Swal.fire({
@@ -176,8 +175,7 @@ export default {
               avatar: data.image,
             })
             .then((res) => {
-              avatar_component.value.setImage(data.image);
-
+              avatar_component.value.setImage(res.data.avatar);
               store.dispatch("newAvatarAdded", res.data.avatar);
             })
             .catch((err) => {
@@ -209,8 +207,7 @@ export default {
                 icon: "success",
                 title: res.data.message,
               });
-              avatar_component.value.setImage(res.data.avatar);
-
+              avatar_component.value.deleteImage();
               store.dispatch("newAvatarAdded", res.data.avatar);
             })
             .catch((err) => {
