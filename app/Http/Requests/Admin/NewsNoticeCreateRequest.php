@@ -27,6 +27,7 @@ class NewsNoticeCreateRequest extends NewsNoticeRequest
     {
         return [
             'title' => "required",
+            'slug' => 'unique:news_notices',
             'post_type' => 'required',
         ];
     }
@@ -34,9 +35,8 @@ class NewsNoticeCreateRequest extends NewsNoticeRequest
     public function save()
     {
         $image_name = null;
-        $slug = $this->filled('slug') ? $this->slug : Str::slug($this->title);
         if ($this->image) {
-            $image_name = $slug;
+            $image_name = $this->slug;
 
             $image_handler = new ImageHandler();
             $image_handler->setName($image_name)
@@ -47,10 +47,11 @@ class NewsNoticeCreateRequest extends NewsNoticeRequest
         }
         return NewsNotice::create([
             'title' => $this->title,
-            'slug' => $slug,
+            'slug' => $this->slug,
             'description' => $this->description,
             'image' => $image_name,
             'post_type' => $this->post_type,
+            'is_published' => $this->is_published
         ]);
     }
 }

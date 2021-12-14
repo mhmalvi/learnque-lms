@@ -115,4 +115,5 @@ Route::prefix("news_notices")->name('news_and_notices.')->group(function () {
     Route::post('store', [NewsNoticesController::class, 'store']);
     Route::get('edit/{news_notice:slug}', [NewsNoticesController::class, 'edit']);
     Route::patch('edit/{news_notice:slug}', [NewsNoticesController::class, 'update']);
+    Route::delete('destroy/{news_notice}', [NewsNoticesController::class, 'destroy']);
 });

@@ -1,5 +1,18 @@
 <template>
-  <form @submit.prevent="handleFormSubmit">
+  <form @submit.prevent="handlePublishSubmit">
+    <div
+      class="row mb-2"
+      v-if="
+        validation.message.length > 0 &&
+        (validation.errors == null || validation.errors.length == 0)
+      "
+    >
+      <div class="offset-lg-4 col-lg-8 d-flex align-items-center">
+        <div class="flex" style="max-width: 100%">
+          <div class="alert alert-danger">{{ validation.message }}</div>
+        </div>
+      </div>
+    </div>
     <div class="row mb-32pt">
       <div class="col-lg-4">
         <div class="page-separator">
@@ -20,6 +33,16 @@
               placeholder="Enter title.."
               v-model="form.data.title"
             />
+            <p
+              class="text-danger"
+              v-if="
+                validation.errors &&
+                validation.errors.title &&
+                validation.errors.title.length > 0
+              "
+            >
+              {{ validation.errors.title[0] }}
+            </p>
           </div>
           <div class="form-group">
             <label for="slug" class="form-label">Slug</label>
@@ -30,6 +53,16 @@
               :placeholder="generated_slug"
               v-model="form.data.slug"
             />
+            <p
+              class="text-danger"
+              v-if="
+                validation.errors &&
+                validation.errors.slug &&
+                validation.errors.slug.length > 0
+              "
+            >
+              {{ validation.errors.slug[0] }}
+            </p>
           </div>
           <div class="form-group">
             <label class="form-label" for="description"
@@ -91,6 +124,7 @@
         <div class="mt-5">
           <button
             type="button"
+            @click="handleDraftSubmit"
             class="btn btn-sm btn-outline-secondary mr-1"
             :disabled="!formIsValid || form.isSubmitting"
           >
@@ -121,12 +155,13 @@
 </template>
 
 <script>
-import StringHandler from "../modules/StringHandler";
 import { reactive, ref, computed, watch, onMounted } from "vue";
 import ImagePickerComponent from "./ImagePickerComponent.vue";
 
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
+import ScrollHandler from "../modules/ScrollHandler";
+import StringHandler from "../modules/StringHandler";
 
 export default {
   components: {
@@ -141,8 +176,13 @@ export default {
         description: "",
         image: "",
         post_type: null,
+        is_published: false,
       },
       isSubmitting: false,
+    });
+    const validation = reactive({
+      errors: [],
+      message: "",
     });
     const generated_slug = ref("");
     const image_picker = ref(0);
@@ -171,14 +211,10 @@ export default {
     };
 
     const formIsValid = computed(() => {
-      console.log("checking...", form, description_editor.value);
       return (
         form.data.title.length > 0 &&
-        form.data.description.length > 0 &&
-        form.data.description.length > 0 &&
-        form.data.image.length > 0 &&
         form.data.post_type &&
-        description_editor.value.getText().trim().length > 0
+        form.data.post_type.length > 0
       );
     });
 
@@ -187,7 +223,6 @@ export default {
     };
 
     const setData = async (data) => {
-      console.log("asd");
       form.data = data;
       form.data.image = data.image_url;
 
@@ -197,10 +232,30 @@ export default {
 
     const handleFormSubmit = () => {
       form.isSubmitting = true;
+      if (form.data.slug.length == 0) {
+        form.data.slug = generated_slug.value;
+      }
+      validation.errors = [];
+      validation.message = "";
       emit("formSubmit", form.data);
     };
 
-    const fail = (error) => {};
+    const handlePublishSubmit = () => {
+      form.data.is_published = true;
+      handleFormSubmit();
+    };
+
+    const handleDraftSubmit = () => {
+      form.data.is_published = false;
+      handleFormSubmit();
+    };
+
+    const fail = (error) => {
+      validation.errors = error.data.errors;
+      validation.message = error.data.message;
+
+      ScrollHandler.smoothScrollTop();
+    };
 
     const complete = () => {
       form.isSubmitting = false;
@@ -208,6 +263,7 @@ export default {
 
     const formReset = () => {
       form.data.title = "";
+      form.data.slug = "";
       form.data.description = "";
       form.data.image = "";
       form.data.post_type = "";
@@ -222,13 +278,15 @@ export default {
       description_editor,
       formIsValid,
       generated_slug,
+      validation,
       handleImageChange,
       handleImageDelete,
-      handleFormSubmit,
       formReset,
       fail,
       complete,
       setData,
+      handleDraftSubmit,
+      handlePublishSubmit,
     };
   },
 };

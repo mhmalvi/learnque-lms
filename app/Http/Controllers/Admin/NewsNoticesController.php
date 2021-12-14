@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\NewsNoticeCreateRequest;
+use App\Http\Requests\Admin\NewsNoticeDeleteRequest;
 use App\Http\Requests\Admin\NewsNoticeUpdateRequest;
 use App\Http\Resources\NewsNoticesCollection;
 use App\Models\NewsNotice;
@@ -19,9 +20,13 @@ class NewsNoticesController extends Controller
     public function paginatedList()
     {
         try {
-            return new NewsNoticesCollection(
-                NewsNotice::paginate(request('items'))
-            );
+            $items = request('items') ?? 5;
+            $data = NewsNotice::where('title', 'LIKE', '%' . request('search') . '%');
+            if (request()->filled('post_type')) {
+                $data = $data->where('post_type', request('post_type'));
+            }
+            $data = $data->paginate($items);
+            return new NewsNoticesCollection($data);
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => "Something went wrong!"
@@ -65,6 +70,21 @@ class NewsNoticesController extends Controller
         } catch (\Throwable $e) {
             return response()->json([
                 'message' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function destroy(NewsNoticeDeleteRequest $request, NewsNotice $newsNotice)
+    {
+        try {
+            $request->delete($newsNotice);
+
+            return response()->json([
+                'message' => "Successfully deleted the news/notice",
+            ], 202);
+        } catch (\Throwable $e) {
+            return response()->json([
+                'message' => "Something went wrong while deleting the news/notice.",
             ], 500);
         }
     }

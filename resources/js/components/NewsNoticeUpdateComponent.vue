@@ -18,7 +18,6 @@ export default {
 
     onMounted(() => {
       news_notice = JSON.parse(data);
-
       form_component.value.setData(news_notice);
     });
 

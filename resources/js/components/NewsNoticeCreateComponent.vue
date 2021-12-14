@@ -24,14 +24,14 @@ export default {
             title: res.data.message,
           });
           form_component.value.formReset();
-        })
-        .catch((err) => {
-          Swal.fire({
-            icon: "error",
-            title: "Something went wrong!",
-            text: err.response.data.message,
+          scrollTo({
+            top: 0,
+            behavior: "smooth",
           });
-          form_component.value.fail(err.response);
+        })
+        .catch(({ response }) => {
+          console.log(response);
+          form_component.value.fail(response);
         })
         .finally(() => {
           form_component.value.complete();

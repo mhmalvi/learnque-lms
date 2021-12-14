@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\NewsNotice;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Storage;
 
 class NewsNoticeDeleteRequest extends FormRequest
 {
@@ -13,7 +15,7 @@ class NewsNoticeDeleteRequest extends FormRequest
      */
     public function authorize()
     {
-        return false;
+        return auth('admin')->check();
     }
 
     /**
@@ -23,8 +25,14 @@ class NewsNoticeDeleteRequest extends FormRequest
      */
     public function rules()
     {
-        return [
-            //
-        ];
+        return [];
+    }
+
+    public function delete(NewsNotice $news_notice)
+    {
+        if ($news_notice->image) {
+            Storage::delete('public/news_notices/' . $news_notice->image);
+        }
+        $news_notice->delete();
     }
 }
