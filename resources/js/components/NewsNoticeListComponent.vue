@@ -27,6 +27,11 @@
               placeholder="Search by title..."
               v-model="filtering.search"
             />
+            <div class="input-group-prepend" v-if="filtering.search.length > 0">
+              <button class="btn btn-flush p-2" @click="filtering.search = ''">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
