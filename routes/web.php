@@ -43,11 +43,17 @@ require __DIR__ . '/auth.php';
 
 
 Route::middleware('auth:web,admin')->group(function () {
+    Route::view('dashboard', 'pages.dashboard')->name('dashboard');
+
     /**
      * User profile routes
      */
-    Route::get('profile', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::post('profile', [ProfileController::class, 'update']);
+    Route::prefix('profile')->name('profile.')->group(function () {
+        Route::get('/', [ProfileController::class, 'edit'])->name('edit');
+        Route::post('/', [ProfileController::class, 'update']);
+        Route::put('avatar/update', [ProfileController::class, 'avatarUpdate']);
+        Route::delete('avatar/delete', [ProfileController::class, 'avatarDelete']);
+    });
 
     Route::prefix('classrooms')->name('classrooms.')->group(function () {
         Route::get('/', [ClassroomsController::class, 'index'])->name('index');

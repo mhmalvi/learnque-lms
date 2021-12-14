@@ -27,13 +27,13 @@
 
     <!-- Drawer Layout -->
     <div class="mdk-drawer-layout js-mdk-drawer-layout" data-push data-responsive-width="992px">
-        <div class="mdk-drawer-layout__content page-content">
+        <div class="mdk-drawer-layout__content page-content" id="app">
 
             @include('layouts.header')
 
             @include('components.breadcrumb')
 
-            <div class="container page__container" id="app">
+            <div class="container page__container">
                 @yield('content')
             </div>
 

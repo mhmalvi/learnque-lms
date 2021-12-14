@@ -1,7 +1,7 @@
 <ul class="sidebar-menu">
     <li class="sidebar-menu-item">
         <a class="sidebar-menu-button"
-            href="/dashboard">
+            href="{{ route('dashboard') }}">
             <span class="material-icons sidebar-menu-icon sidebar-menu-icon--left">home</span>
             <span class="sidebar-menu-text">Dashboard</span>
         </a>

@@ -23,7 +23,8 @@ import TeachersList from "./components/Users/TeachersList.vue";
 import TeachersEditForm from "./components/Users/TeacherEditForm.vue";
 import CreateClassroom from "./components/Classrooms/CreateClassroom.vue";
 
-import UserEditProfile from "./components/Users/EditProfile.vue";
+//profile
+import UserEditProfile from "./components/Profile/EditProfile.vue";
 
 import ClassroomItemsGridList from "./components/Classrooms/ClassroomItemsGridList.vue";
 import ClassroomView from "./components/Classrooms/ClassroomView.vue";
@@ -31,6 +32,8 @@ import ClassroomView from "./components/Classrooms/ClassroomView.vue";
 import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
 import EventCalendarComponent from "./components/EventCalendarComponent.vue";
+
+import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
 
 /**
  * importing students components
@@ -71,7 +74,10 @@ app.component("student-classroom-list", ClassroomList);
 app.component("student-classroom-view", StudentClassroomView);
 // End of students components
 
+// for both admin, students and teachers
 app.component("event-calendar-component", EventCalendarComponent);
+app.component("avatar-header-component", AvatarHeaderComponent);
+// ---
 
 /**
  * Guest

@@ -16,6 +16,8 @@ class Admin extends Authenticable
 
     protected $table = "users";
 
+    protected $appends = ['avatar_url'];
+
     /**
      * The attributes that are mass assignable.
      *
@@ -25,6 +27,7 @@ class Admin extends Authenticable
         'name',
         'email',
         'password',
+        'avatar',
     ];
 
     /**
@@ -45,4 +48,15 @@ class Admin extends Authenticable
     protected $casts = [
         'email_verified_at' => 'datetime',
     ];
+
+    public function getAvatarUrlAttribute()
+    {
+        return !is_null($this->avatar) ? asset('storage/avatars/' . $this->avatar)
+            : null;
+    }
+
+    public function info()
+    {
+        return $this->hasOne(AdminInfo::class, 'user_id');
+    }
 }

@@ -26,4 +26,4 @@ services:
             --collation-server=utf8mb4_unicode_ci" # makes learn_que and quadmin database
 
         ports:
-            - 3306:3306
+            - 9082:3306
