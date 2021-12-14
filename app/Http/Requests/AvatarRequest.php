@@ -19,6 +19,6 @@ class AvatarRequest extends FormRequest
 
     protected function deletePreviousAvatar()
     {
-        Storage::delete('avatars/' . auth()->user()->avatar);
+        Storage::delete('public/avatars/' . auth()->user()->avatar);
     }
 }

@@ -35,7 +35,6 @@ class UserUpdateRequest extends FormRequest
     {
         $user->name = $this->username;
         $user->email = $this->email;
-
         $user->save();
     }
 }
