@@ -156,12 +156,11 @@
 
 <script>
 import { reactive, ref, computed, watch, onMounted } from "vue";
-import ImagePickerComponent from "./ImagePickerComponent.vue";
-
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
-import ScrollHandler from "../modules/ScrollHandler";
-import StringHandler from "../modules/StringHandler";
+import ScrollHandler from "../../modules/ScrollHandler";
+import StringHandler from "../../modules/StringHandler";
+import ImagePickerComponent from "../ImagePickerComponent.vue";
 
 export default {
   components: {

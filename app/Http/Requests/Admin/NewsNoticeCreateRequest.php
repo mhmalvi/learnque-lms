@@ -3,8 +3,6 @@
 namespace App\Http\Requests\Admin;
 
 use App\Models\NewsNotice;
-use Illuminate\Support\Str;
-use App\Services\ImageHandler;
 
 class NewsNoticeCreateRequest extends NewsNoticeRequest
 {
@@ -34,22 +32,11 @@ class NewsNoticeCreateRequest extends NewsNoticeRequest
 
     public function save()
     {
-        $image_name = null;
-        if ($this->image) {
-            $image_name = $this->slug;
-
-            $image_handler = new ImageHandler();
-            $image_handler->setName($image_name)
-                ->setImage($this->image)
-                ->setDimension(800)
-                ->setPath('news_notices');
-            $image_name = $image_handler->storeFromImageData();
-        }
         return NewsNotice::create([
             'title' => $this->title,
             'slug' => $this->slug,
             'description' => $this->description,
-            'image' => $image_name,
+            'image' => $this->filled('image') ? $this->saveImage() : null,
             'post_type' => $this->post_type,
             'is_published' => $this->is_published
         ]);

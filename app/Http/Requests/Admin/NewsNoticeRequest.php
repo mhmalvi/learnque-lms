@@ -2,17 +2,22 @@
 
 namespace App\Http\Requests\Admin;
 
+use Illuminate\Support\Str;
+use App\Services\ImageHandler;
+
 use Illuminate\Foundation\Http\FormRequest;
 
 class NewsNoticeRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    protected function saveImage()
     {
-        return false;
+        $image_name = $this->slug;
+        $image_handler = new ImageHandler();
+        $image_handler->setName($image_name)
+            ->setImage($this->image)
+            ->setDimension(822, 480)
+            ->setPath('news_notices');
+
+        return $image_handler->storeFromImageData();
     }
 }

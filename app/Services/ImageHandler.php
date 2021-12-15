@@ -10,8 +10,8 @@ class ImageHandler
     private $image,
         $name,
         $path,
-        $height = null,
-        $width = 600;
+        $width = 600,
+        $height = null;
 
     public function setImage($image)
     {
@@ -33,9 +33,23 @@ class ImageHandler
 
     public function setDimension($width, $height = null)
     {
-        $this->height = $height;
         $this->width = $width;
+        $this->height = $height;
         return $this;
+    }
+
+    /**
+     * retrive file extension from base64 string
+     */
+    private function getOriginalFileExtension($file)
+    {
+        $encodedImgString = explode(',', $file, 2)[1];
+        $decodedImgString = base64_decode($encodedImgString);
+        $info = getimagesizefromstring($decodedImgString);
+
+        $ext = image_type_to_extension($info[2]);
+
+        return $ext;
     }
 
     public function storeFromImageData()
@@ -55,19 +69,5 @@ class ImageHandler
             ->save(storage_path('app/public/' . $this->path . '/' . $filename));
 
         return $filename;
-    }
-
-    /**
-     * retrive file extension from base64 string
-     */
-    private function getOriginalFileExtension($file)
-    {
-        $encodedImgString = explode(',', $file, 2)[1];
-        $decodedImgString = base64_decode($encodedImgString);
-        $info = getimagesizefromstring($decodedImgString);
-
-        $ext = image_type_to_extension($info[2]);
-
-        return $ext;
     }
 }

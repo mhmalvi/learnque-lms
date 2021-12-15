@@ -8,10 +8,18 @@ use App\Http\Requests\Admin\NewsNoticeDeleteRequest;
 use App\Http\Requests\Admin\NewsNoticeUpdateRequest;
 use App\Http\Resources\NewsNoticesCollection;
 use App\Models\NewsNotice;
-use Illuminate\Http\Request;
 
 class NewsNoticesController extends Controller
 {
+    private $error;
+
+    public function __construct()
+    {
+        $this->error = "Something went wrong! This is probably the server is busy now.";
+    }
+    /**
+     * 
+     */
     public function index()
     {
         return view('admin.pages.news_notices.index');
@@ -27,18 +35,24 @@ class NewsNoticesController extends Controller
             }
             $data = $data->paginate($items);
             return new NewsNoticesCollection($data);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $th) {
             return response()->json([
-                'message' => "Something went wrong!"
+                'message' => $this->error
             ], 500);
         }
     }
 
+    /**
+     * 
+     */
     public function create()
     {
         return view('admin.pages.news_notices.create');
     }
 
+    /**
+     * 
+     */
     public function store(NewsNoticeCreateRequest $request)
     {
         try {
@@ -47,18 +61,24 @@ class NewsNoticesController extends Controller
             return response()->json([
                 'message' => 'Successfully create the news/notice',
             ], 201);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $th) {
             return response()->json([
-                'message' => $e->getMessage()
+                'message' => $this->error
             ], 500);
         }
     }
 
+    /**
+     * 
+     */
     public function edit(NewsNotice $news_notice)
     {
         return view('admin.pages.news_notices.edit', compact('news_notice'));
     }
 
+    /**
+     * 
+     */
     public function update(NewsNotice $news_notice, NewsNoticeUpdateRequest $request)
     {
         try {
@@ -67,13 +87,16 @@ class NewsNoticesController extends Controller
             return response()->json([
                 'message' => "Successfully updated the news/notice",
             ], 200);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $th) {
             return response()->json([
-                'message' => $e->getMessage(),
+                'message' => $this->error
             ], 500);
         }
     }
 
+    /**
+     * 
+     */
     public function destroy(NewsNoticeDeleteRequest $request, NewsNotice $newsNotice)
     {
         try {
@@ -82,9 +105,9 @@ class NewsNoticesController extends Controller
             return response()->json([
                 'message' => "Successfully deleted the news/notice",
             ], 202);
-        } catch (\Throwable $e) {
+        } catch (\Throwable $th) {
             return response()->json([
-                'message' => "Something went wrong while deleting the news/notice.",
+                'message' => $this->error,
             ], 500);
         }
     }

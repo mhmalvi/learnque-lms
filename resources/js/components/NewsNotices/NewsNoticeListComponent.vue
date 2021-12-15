@@ -44,7 +44,6 @@
               <th>#</th>
               <th width="120px">Image</th>
               <th>Title</th>
-              <th>Description</th>
               <th class="text-center">Post Type</th>
             </tr>
           </thead>
@@ -96,7 +95,6 @@
                   >
                 </div>
               </td>
-              <td v-html="news_notice.description"></td>
               <td class="text-center">
                 <span
                   class="badge badge-primary badge-pill"
