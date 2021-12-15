@@ -25,7 +25,7 @@ class CourseCreateRequest extends CourseRequest
     public function rules()
     {
         return [
-            'code' => "required",
+            'code' => "required|unique:courses",
             'title' => "required",
         ];
     }

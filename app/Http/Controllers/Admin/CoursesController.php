@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\CourseCreateRequest;
+use App\Http\Resources\CoursesCollection;
 use App\Models\Course;
+use App\Actions\CourseCreateAction;
+use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CoursesController extends Controller
@@ -15,7 +19,31 @@ class CoursesController extends Controller
      */
     public function index()
     {
-        //
+        return view('admin.pages.courses.index');
+    }
+
+    public function getPaginatedList()
+    {
+        return new CoursesCollection(
+            Course::latest()->paginate(request('items'))
+        );
+    }
+
+    public function getRawList()
+    {
+        return new CoursesCollection(
+            Course::all()
+        );
+    }
+
+    /**
+     * Show the form for creating a new resource.
+     *
+     * @return \Illuminate\Http\Response
+     */
+    public function create()
+    {
+        return view('admin.pages.courses.create');
     }
 
     /**
@@ -24,30 +52,49 @@ class CoursesController extends Controller
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\Response
      */
-    public function store(Request $request)
+    public function store(CourseCreateRequest $request)
     {
-        //
+        try {
+            $request->save();
+
+            return response()->json([
+                'message' => "Successfully created the course!",
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json(['message' => $th->getMessage()], 503);
+        }
     }
 
     /**
      * Display the specified resource.
      *
-     * @param  \App\Models\Course  $course
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function show(Course $course)
+    public function show($id)
     {
         //
+    }
+
+    /**
+     * Show the form for editing the specified resource.
+     *
+     * @param  Course $course
+     * @return \Illuminate\Http\Response
+     */
+    public function edit(Course $course)
+    {
+        return view('admin.pages.courses.edit', compact('course'));
     }
 
     /**
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  \App\Models\Course  $course
+     * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, Course $course)
+    public function update(Request $request, $id)
     {
         //
     }
@@ -55,11 +102,15 @@ class CoursesController extends Controller
     /**
      * Remove the specified resource from storage.
      *
-     * @param  \App\Models\Course  $course
+     * @param  Course $course
      * @return \Illuminate\Http\Response
      */
     public function destroy(Course $course)
     {
-        //
+        $course->delete();
+
+        return response()->json([
+            'message' => "You have successfully deleted the server!",
+        ], 200);
     }
 }

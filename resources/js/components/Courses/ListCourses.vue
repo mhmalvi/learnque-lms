@@ -2,10 +2,9 @@
   <div class="py-5">
     <div class="card table-responsive">
       <table class="table">
-        <thead class="text-center bg-light">
+        <thead class="bg-light">
           <tr>
             <th>#</th>
-            <th>Thumbnail</th>
             <th>Course Title</th>
             <th>Category</th>
             <th>Status</th>
@@ -30,15 +29,23 @@
           <tr v-for="(course, index) in courses" v-bind:key="index">
             <td>{{ index + 1 }}</td>
             <td>
-              <img class="rounded" src="https://via.placeholder.com/50" />
-            </td>
-            <td>
-              {{ course.title }}
-              <div class="pt-1">
-                <a class="btn text-primary pl-0">Edit</a>
-                <a class="btn text-primary pl-0" @click="deleteCourse(course)"
-                  >Delete</a
-                >
+              <div class="row mx-1">
+                <div>
+                  <img class="rounded" src="https://via.placeholder.com/50" />
+                </div>
+                <div class="ml-3">
+                  {{ course.title }}
+                  <div class="pt-1">
+                    <a :href="getEditLink(course)" class="btn text-primary pl-0"
+                      >Edit</a
+                    >
+                    <a
+                      class="btn text-primary pl-0"
+                      @click="deleteCourse(course)"
+                      >Delete</a
+                    >
+                  </div>
+                </div>
               </div>
             </td>
             <td>{{ course.category.title }}</td>
@@ -117,10 +124,15 @@ export default {
       });
     };
 
+    const getEditLink = (course) => {
+      return "/admin/courses/edit/" + course.code;
+    };
+
     return {
       courses,
       isLoading,
       deleteCourse,
+      getEditLink,
     };
   },
 };
