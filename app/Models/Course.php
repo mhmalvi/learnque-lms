@@ -24,7 +24,7 @@ class Course extends Model
     public function getThumbnailUrlAttribute()
     {
         return ($this->thumbnail) ? asset('storage/courses/thumbnails/' . $this->thumbnail)
-            : '';
+            : 'https://via.placeholder.com/50';
     }
 
     public function getImageUrlAttribute()

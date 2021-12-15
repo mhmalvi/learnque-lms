@@ -64,6 +64,7 @@ Route::prefix("courses")->name('courses.')->group(function () {
     Route::get('raw', [CoursesController::class, 'getRawList']);
     Route::get('create', [CoursesController::class, 'create'])->name('create');
     Route::get('edit/{course:code}', [CoursesController::class, 'edit']);
+    Route::patch('edit/{course}', [CoursesController::class, 'update']);
     Route::delete('{course:uuid}', [CoursesController::class, 'destroy']);
 });
 

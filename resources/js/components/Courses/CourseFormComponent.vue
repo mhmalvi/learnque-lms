@@ -1,6 +1,6 @@
 <template>
   <div>
-    <form @submit.prevent="onFormSubmitHandlar()">
+    <form @submit.prevent="onSaveAndPublish()">
       <div
         class="row mb-4"
         v-if="
@@ -151,7 +151,8 @@
               save &amp; publish
             </button>
             <button
-              type="reset"
+              type="button"
+              @click="resetForm"
               class="btn btn-sm btn-outline-light m-1"
               :disable="isLoading"
             >
@@ -196,6 +197,7 @@ export default {
     });
 
     const formData = reactive({
+      id: null,
       code: "",
       title: "",
       category: "",
@@ -210,9 +212,10 @@ export default {
     });
 
     const setData = (course) => {
+      formData.id = course.id;
       formData.code = course.code;
       formData.title = course.title;
-      formData.category = course.category;
+      formData.category = course.category ?? "";
       formData.description = course.description;
       formData.thumbnail = course.image_url;
       myEditor.value.setHTML(course.description);
@@ -247,6 +250,11 @@ export default {
       onFormSubmitHandlar();
     };
 
+    const onSaveAndPublish = () => {
+      formData.draft = false;
+      onFormSubmitHandlar();
+    };
+
     const onFormSubmitHandlar = () => {
       start();
       isLoading.value = true;
@@ -256,9 +264,11 @@ export default {
       emit("formSubmit", formData);
     };
 
-    const success = () => {
+    const success = (reset = true) => {
       stop();
-      resetForm();
+      if (reset) {
+        resetForm();
+      }
     };
 
     const fail = (error) => {
@@ -283,6 +293,8 @@ export default {
       setData,
       onFormSubmitHandlar,
       onSaveAsDraft,
+      onSaveAndPublish,
+      resetForm,
       success,
       fail,
       completed,

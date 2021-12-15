@@ -1,12 +1,13 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use Illuminate\Foundation\Http\FormRequest;
 use Intervention\Image\Facades\Image;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use App\Models\Category;
+use App\Models\Course;
 
 class CourseRequest extends FormRequest
 {
@@ -65,5 +66,11 @@ class CourseRequest extends FormRequest
             ->save(storage_path('app/public/courses/thumbnails/' . $filename));
 
         return $filename;
+    }
+
+    protected function deleteImages(Course $course)
+    {
+        Storage::delete('public/course/' . $course->thumbnail);
+        Storage::delete('public/course/thumbnails/' . $course->thumbnail);
     }
 }

@@ -30,11 +30,14 @@
             <td>{{ index + 1 }}</td>
             <td>
               <div class="row mx-1">
-                <div>
-                  <img class="rounded" src="https://via.placeholder.com/50" />
+                <div class="d-flex align-items-center">
+                  <img class="rounded" :src="course.thumbnail" width="50" />
                 </div>
                 <div class="ml-3">
                   {{ course.title }}
+                  <small v-if="!course.publish" class="text-muted">
+                    &mdash; Draft
+                  </small>
                   <div class="pt-1">
                     <a :href="getEditLink(course)" class="btn text-primary pl-0"
                       >Edit</a

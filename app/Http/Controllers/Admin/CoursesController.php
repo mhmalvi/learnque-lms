@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\CourseCreateRequest;
+use App\Http\Requests\Admin\CourseCreateRequest;
+use App\Http\Requests\Admin\CourseUpdateRequest;
 use App\Http\Resources\CoursesCollection;
 use App\Models\Course;
-use App\Actions\CourseCreateAction;
-use App\Models\Category;
 use Illuminate\Http\Request;
 
 class CoursesController extends Controller
@@ -91,12 +90,25 @@ class CoursesController extends Controller
      * Update the specified resource in storage.
      *
      * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  Course $course
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CourseUpdateRequest $request, Course $course)
     {
-        //
+        try {
+            $old_code = $course->code;
+            $course = $request->update($course);
+
+            return response()->json([
+                'message' => "Successfully updated the course!",
+                'redirect_back' => $old_code == $course->code ? false : true,
+                'index_page' => route('admin.courses.index'),
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => $th->getMessage(),
+            ], 500);
+        }
     }
 
     /**
