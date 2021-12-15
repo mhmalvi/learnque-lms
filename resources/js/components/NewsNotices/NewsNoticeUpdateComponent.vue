@@ -23,7 +23,7 @@ export default {
 
     const handleUpdate = (data) => {
       axios
-        .post("/admin/news_notices/edit/" + news_notice.slug, {
+        .post("/admin/news_notices/edit/" + news_notice.id, {
           _method: "PATCH",
           ...data,
         })
@@ -32,12 +32,12 @@ export default {
             icon: "success",
             title: res.data.message,
           });
+          if (res.data.redirect_back) {
+            location.replace(res.data.index_page);
+          }
         })
         .catch((err) => {
-          Swal.fire({
-            icon: "error",
-            title: err.response.data.message,
-          });
+          form_component.value.fail(err.response);
         })
         .finally(() => {
           form_component.value.complete();

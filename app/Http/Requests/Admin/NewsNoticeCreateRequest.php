@@ -25,7 +25,7 @@ class NewsNoticeCreateRequest extends NewsNoticeRequest
     {
         return [
             'title' => "required",
-            'slug' => 'unique:news_notices',
+            'slug' => 'required|unique:news_notices',
             'post_type' => 'required',
         ];
     }

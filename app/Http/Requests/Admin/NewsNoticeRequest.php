@@ -6,9 +6,15 @@ use Illuminate\Support\Str;
 use App\Services\ImageHandler;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Storage;
 
 class NewsNoticeRequest extends FormRequest
 {
+    protected function deleteExistingImage($image_name)
+    {
+        Storage::delete('public/news_notices/' . $image_name);
+    }
+
     protected function saveImage()
     {
         $image_name = $this->slug;

@@ -11,14 +11,8 @@ use App\Models\NewsNotice;
 
 class NewsNoticesController extends Controller
 {
-    private $error;
-
-    public function __construct()
-    {
-        $this->error = "Something went wrong! This is probably the server is busy now.";
-    }
     /**
-     * 
+     *
      */
     public function index()
     {
@@ -43,7 +37,7 @@ class NewsNoticesController extends Controller
     }
 
     /**
-     * 
+     *
      */
     public function create()
     {
@@ -51,7 +45,7 @@ class NewsNoticesController extends Controller
     }
 
     /**
-     * 
+     *
      */
     public function store(NewsNoticeCreateRequest $request)
     {
@@ -69,7 +63,7 @@ class NewsNoticesController extends Controller
     }
 
     /**
-     * 
+     *
      */
     public function edit(NewsNotice $news_notice)
     {
@@ -77,25 +71,28 @@ class NewsNoticesController extends Controller
     }
 
     /**
-     * 
+     *
      */
     public function update(NewsNotice $news_notice, NewsNoticeUpdateRequest $request)
     {
         try {
-            $request->update($news_notice);
+            $old_slug = $news_notice->slug;
+            $new_data = $request->update($news_notice);
 
             return response()->json([
                 'message' => "Successfully updated the news/notice",
+                'redirect_back' => ($new_data->slug == $old_slug) ? false : true,
+                'index_page' => route('admin.news_and_notices.index'),
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => $this->error
+                'message' => $th->getMessage(),
             ], 500);
         }
     }
 
     /**
-     * 
+     *
      */
     public function destroy(NewsNoticeDeleteRequest $request, NewsNotice $newsNotice)
     {
