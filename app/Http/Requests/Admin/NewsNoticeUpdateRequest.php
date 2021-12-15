@@ -54,6 +54,7 @@ class NewsNoticeUpdateRequest extends NewsNoticeRequest
         }
 
         $news_notice->post_type = $this->post_type;
+        $news_notice->is_published = $this->is_published;
         $news_notice->save();
         return $news_notice;
     }

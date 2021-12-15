@@ -27,6 +27,10 @@ class NewsNoticesController extends Controller
             if (request()->filled('post_type')) {
                 $data = $data->where('post_type', request('post_type'));
             }
+            if (request()->filled('post_status')) {
+                $status = request('post_status') == 'published';
+                $data = $data->where('is_published', $status);
+            }
             $data = $data->paginate($items);
             return new NewsNoticesCollection($data);
         } catch (\Throwable $th) {

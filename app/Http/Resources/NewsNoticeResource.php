@@ -21,6 +21,7 @@ class NewsNoticeResource extends JsonResource
             'description' => $this->description,
             'image' => $this->image_url,
             'post_type' => $this->post_type,
+            'is_published' => $this->is_published,
         ];
     }
 }

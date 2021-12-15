@@ -1,7 +1,7 @@
 <template>
   <div class="mb-5">
     <div class="row mb-2">
-      <div class="col-12 col-sm-6 col-md-6 col-lg-4">
+      <div class="col-sm-12 col-md-6 col-lg-5">
         <div class="row">
           <div class="input-group">
             <select class="form-control" v-model="filtering.items">
@@ -11,14 +11,22 @@
               <option value="50">50</option>
             </select>
             <select class="form-control" v-model="filtering.post_type">
-              <option value="">All</option>
+              <option value="">All (Type)</option>
               <option value="news">News</option>
               <option value="notice">Notice</option>
+            </select>
+            <select class="form-control" v-model="filtering.post_status">
+              <option value="">All (Status)</option>
+              <option value="published">Published</option>
+              <option value="unpublished">Unpublished</option>
             </select>
           </div>
         </div>
       </div>
-      <div class="col-12 col-sm-6 col-md-6 col-lg-4 offset-lg-4">
+
+      <div
+        class="col-sm-12 col-md-5 col-lg-4 offset-md-1 offset-lg-3 mt-2 mt-md-0"
+      >
         <div class="row">
           <div class="input-group">
             <input
@@ -81,6 +89,9 @@
               </td>
               <td>
                 {{ news_notice.title }}
+                <small class="text-muted">
+                  {{ news_notice.is_published ? "" : " &mdash; Draft" }}
+                </small>
                 <div>
                   <a
                     :href="getEditLink(news_notice)"
@@ -154,6 +165,7 @@ export default {
     const filtering = reactive({
       items: 5,
       post_type: "",
+      post_status: "",
       search: "",
     });
     const blankTableHeight = ref("400");
