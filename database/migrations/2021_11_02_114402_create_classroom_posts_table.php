@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class CreateClassroomPostsTable extends Migration
@@ -16,10 +17,7 @@ class CreateClassroomPostsTable extends Migration
         Schema::create('classroom_posts', function (Blueprint $table) {
             $table->id();
 
-            $table->foreignId('user_id')
-                ->constrained()
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->unsignedBigInteger('user_id');
             $table->foreignId('classroom_id')
                 ->constrained()
                 ->onUpdate('cascade')
