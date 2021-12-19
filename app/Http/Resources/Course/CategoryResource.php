@@ -20,6 +20,7 @@ class CategoryResource extends JsonResource
             'slug' => $this->slug,
             'description' => $this->description,
             'thumbnail' => $this->thumbnail,
+            'thumbnail_url' => $this->thumbnail_url,
             'created_at' => $this->created_at
         ];
     }

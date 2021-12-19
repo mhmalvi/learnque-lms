@@ -11,6 +11,7 @@ import AdminLogin from "./components/Auth/Admin/LoginComponent.vue";
 // Import the components here
 import CreateCategories from "./components/Categories/CreateCategories.vue";
 import ListCategories from "./components/Categories/ListCategories.vue";
+import EditCategory from "./components/Categories/EditCategory.vue";
 
 import CourseList from "./components/Courses/ListCourses.vue";
 import CreateCourses from "./components/Courses/CreateCourses.vue";
@@ -52,6 +53,7 @@ axios.defaults.baseURL = document.head.querySelector(
 // Admin components
 app.component("create-categories", CreateCategories);
 app.component("list-categories", ListCategories);
+app.component("edit-category", EditCategory);
 
 app.component("course-list", CourseList);
 app.component("create-courses", CreateCourses);

@@ -27,9 +27,9 @@
         </tbody>
         <tbody v-else>
           <tr v-for="(category, index) in categories" v-bind:key="index">
-            <td>{{ ++index }}</td>
+            <td>{{ index + 1 }}</td>
             <td>
-              <img class="rounded" src="https://via.placeholder.com/50" />
+              <img class="rounded" :src="category.thumbnail_url" width="50" />
             </td>
             <td>
               {{ category.title }}
@@ -38,7 +38,7 @@
                 <a
                   href="javascript:void(0)"
                   class="text-primary mr-2"
-                  @click="deleteCategory(category)"
+                  @click="deleteCategory(category, index)"
                   >Delete</a
                 >
               </div>
@@ -55,7 +55,7 @@
 <script>
 import axios from "axios";
 import Swal from "sweetalert2";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 import { useStore } from "vuex";
 
 export default {
@@ -67,7 +67,7 @@ export default {
 
     const store = useStore();
 
-    function deleteCategory(category) {
+    const deleteCategory = (category, index) => {
       Swal.fire({
         icon: "warning",
         title: "Are you sure you want to delete this category?",
@@ -83,9 +83,11 @@ export default {
             .then((res) => {
               Swal.fire({
                 icon: "success",
-                title: res.data.mesage,
+                title: res.data.message,
                 timer: 1000,
               });
+
+              categories.value.splice(index, 1);
             })
             .catch((err) => {
               Swal.fire({
@@ -97,10 +99,10 @@ export default {
             });
         }
       });
-    }
+    };
 
     // fires on mount
-    (() => {
+    onMounted(() => {
       axios
         .get("admin/categories/list", {
           params: {
@@ -111,7 +113,7 @@ export default {
         .then((res) => {
           categories.value = res.data.data;
         });
-    })();
+    });
 
     // watch for new category creation, and then add it to list
     store.watch(
@@ -126,12 +128,17 @@ export default {
       }
     );
 
+    const getEditLink = (category) => {
+      return "/admin/categories/";
+    };
+
     return {
       isLoading,
       itemsPerPage,
       search,
       categories,
       deleteCategory,
+      getEditLink,
     };
   },
 };

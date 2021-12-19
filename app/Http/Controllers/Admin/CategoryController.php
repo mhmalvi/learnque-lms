@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Course\CategoryCreateRequest;
 use App\Http\Resources\Course\CategoriesCollection;
+use App\Http\Resources\Course\CategoryResource;
 use Illuminate\Http\Request;
 use App\Models\Category;
 
@@ -17,7 +18,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return view('admin.pages.categories');
+        return view('admin.pages.categories.index');
     }
 
 
@@ -57,10 +58,11 @@ class CategoryController extends Controller
      */
     public function store(CategoryCreateRequest $request)
     {
-        $request->save();
+        $category = $request->save();
 
         return response()->json([
-            'message' => "Successfully created the course category!"
+            'message' => "Successfully created the course category!",
+            'category' => new CategoryResource($category),
         ], 200);
     }
 
@@ -78,12 +80,12 @@ class CategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  Category $category
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Category $category)
     {
-        //
+        return view('admin.pages.categories.edit', compact('category'));
     }
 
     /**
