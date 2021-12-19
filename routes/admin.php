@@ -53,7 +53,8 @@ Route::prefix('categories')->name('categories.')->group(function () {
     Route::get('all', [CategoryController::class, 'getRawList'])->name('all');
     Route::get('/', [CategoryController::class, 'index'])->name('index');
     Route::post('/', [CategoryController::class, 'store'])->name('store');
-    Route::get('edit/{category:slug}', [CategoryController::class, 'edit']);
+    Route::get('edit/{category:slug}', [CategoryController::class, 'edit'])->name('edit');
+    Route::patch('edit/{category:slug}', [CategoryController::class, 'update']);
     Route::delete('{category:uuid}', [CategoryController::class, 'destroy']);
 });
 

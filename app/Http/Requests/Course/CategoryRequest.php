@@ -4,6 +4,7 @@ namespace App\Http\Requests\Course;
 
 use App\Services\ImageHandler;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Facades\Storage;
 
 class CategoryRequest extends FormRequest
 {
@@ -15,5 +16,10 @@ class CategoryRequest extends FormRequest
             ->setPath('categories')
             ->setDimension(800, 550)
             ->storeFromImageData();
+    }
+
+    public function deleteThumbnail($image_name)
+    {
+        Storage::delete('public/categories/' . $image_name);
     }
 }

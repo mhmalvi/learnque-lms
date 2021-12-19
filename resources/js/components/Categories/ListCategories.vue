@@ -34,7 +34,9 @@
             <td>
               {{ category.title }}
               <div class="pt-1">
-                <a href="javascript:void(0)" class="text-primary mr-2">Edit</a>
+                <a :href="getEditLink(category)" class="text-primary mr-2"
+                  >Edit</a
+                >
                 <a
                   href="javascript:void(0)"
                   class="text-primary mr-2"
@@ -129,7 +131,7 @@ export default {
     );
 
     const getEditLink = (category) => {
-      return "/admin/categories/";
+      return "/admin/categories/edit/" + category.slug;
     };
 
     return {
