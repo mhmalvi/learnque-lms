@@ -14,7 +14,7 @@ class CategoryRequest extends FormRequest
         return $image_handler->setImage($this->thumbnail)
             ->setName($name)
             ->setPath('categories')
-            ->setDimension(800, 550)
+            ->setDimension(80, 80)
             ->storeFromImageData();
     }
 
