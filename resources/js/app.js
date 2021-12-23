@@ -2,6 +2,7 @@ require("./bootstrap");
 import { createApp } from "vue";
 import store from "./store";
 import axios from "axios";
+
 import { createRouter, createWebHistory } from "vue-router";
 
 import CopyWrite from "./components/CopyWrite.vue";
@@ -32,6 +33,10 @@ import ClassroomView from "./components/Classrooms/ClassroomView.vue";
 import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
 import EventCalendarComponent from "./components/EventCalendarComponent.vue";
+
+import NewsNoticeListComponent from "./components/NewsNotices/NewsNoticeListComponent.vue";
+import CreateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeCreateComponent.vue";
+import UpdateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeUpdateComponent.vue";
 
 import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
 
@@ -78,6 +83,10 @@ app.component("student-classroom-view", StudentClassroomView);
 app.component("event-calendar-component", EventCalendarComponent);
 app.component("avatar-header-component", AvatarHeaderComponent);
 // ---
+
+app.component("news-notice-list-component", NewsNoticeListComponent);
+app.component("create-news-notice-component", CreateNewsNoticeComponent);
+app.component("edit-news-notice-component", UpdateNewsNoticeComponent);
 
 /**
  * Guest
