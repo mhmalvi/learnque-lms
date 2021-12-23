@@ -21,6 +21,8 @@ class CourseResource extends JsonResource
             'title' => $this->title,
             'slug' => $this->slug,
             'category' => $this->category ? new CategoryResource($this->category) : '',
+            'thumbnail' => $this->thumbnail_url,
+            'image' => $this->image_url,
             'publish' => $this->publish,
             'publish_status' => $this->publish ? "Published" : "Draft",
             'created_at' => $this->created_at->format('d M, Y'),

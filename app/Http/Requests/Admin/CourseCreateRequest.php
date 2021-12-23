@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Admin;
 
 use App\Models\Course;
 use Illuminate\Support\Str;
@@ -14,7 +14,7 @@ class CourseCreateRequest extends CourseRequest
      */
     public function authorize()
     {
-        return true;
+        return auth('admin')->check();
     }
 
     /**
@@ -25,7 +25,7 @@ class CourseCreateRequest extends CourseRequest
     public function rules()
     {
         return [
-            'code' => "required",
+            'code' => "required|unique:courses",
             'title' => "required",
         ];
     }

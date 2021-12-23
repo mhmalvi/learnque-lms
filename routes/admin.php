@@ -5,7 +5,7 @@ use App\Http\Controllers\Admin\CategoryController;
 use App\Http\Controllers\Admin\ClassroomMembersController;
 use App\Http\Controllers\Admin\ClassroomPostsController;
 use App\Http\Controllers\Admin\ClassroomsController;
-use App\Http\Controllers\Admin\CourseController;
+use App\Http\Controllers\Admin\CoursesController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
 use App\Http\Controllers\Admin\NewsNoticesController;
@@ -61,12 +61,14 @@ Route::prefix('categories')->name('categories.')->group(function () {
 
 // Course routes
 Route::prefix("courses")->name('courses.')->group(function () {
-    Route::get('/', [CourseController::class, 'index'])->name('index');
-    Route::post('/', [CourseController::class, 'store']);
-    Route::get('all', [CourseController::class, 'getPaginatedList']);
-    Route::get('raw', [CourseController::class, 'getRawList']);
-    Route::get('create', [CourseController::class, 'create'])->name('create');
-    Route::delete('{course:uuid}', [CourseController::class, 'destroy']);
+    Route::get('/', [CoursesController::class, 'index'])->name('index');
+    Route::post('/', [CoursesController::class, 'store']);
+    Route::get('all', [CoursesController::class, 'getPaginatedList']);
+    Route::get('raw', [CoursesController::class, 'getRawList']);
+    Route::get('create', [CoursesController::class, 'create'])->name('create');
+    Route::get('edit/{course:code}', [CoursesController::class, 'edit']);
+    Route::patch('edit/{course}', [CoursesController::class, 'update']);
+    Route::delete('{course:uuid}', [CoursesController::class, 'destroy']);
 });
 
 // Enrol User routes

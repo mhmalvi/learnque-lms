@@ -16,6 +16,7 @@ import EditCategory from "./components/Categories/EditCategory.vue";
 
 import CourseList from "./components/Courses/ListCourses.vue";
 import CreateCourses from "./components/Courses/CreateCourses.vue";
+import UpdateCourse from "./components/Courses/UpdateCourse.vue";
 
 import EnrollUserForm from "./components/Users/EnrollUserForm.vue";
 import StudentsList from "./components/Users/StudentsList.vue";
@@ -62,6 +63,7 @@ app.component("edit-category", EditCategory);
 
 app.component("course-list", CourseList);
 app.component("create-courses", CreateCourses);
+app.component("update-course", UpdateCourse);
 
 app.component("enrole-user-form", EnrollUserForm);
 app.component("students-list", StudentsList);
