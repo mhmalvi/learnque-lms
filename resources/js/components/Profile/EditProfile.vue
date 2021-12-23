@@ -107,7 +107,7 @@
 import axios from "axios";
 import Swal from "sweetalert2";
 import { ref, reactive, onMounted } from "vue";
-import ImagePickerComponent from "./ImagePickerComponent.vue";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 import { useStore } from "vuex";
 
 export default {
