@@ -1,6 +1,9 @@
 <template>
   <div>
-    <form action="">
+    <div class="alert alert-success" v-if="message.success">
+      {{ message.success }}
+    </div>
+    <form @submit.prevent="submit">
       <div class="form-group">
         <label for="title">Title</label>
         <input
@@ -9,9 +12,9 @@
           id="title"
           v-model="form.title"
         />
-        <p v-if="message.errors.title" class="text-danger">
+        <small v-if="message.errors.title" class="text-danger">
           {{ message.errors.title[0] }}
-        </p>
+        </small>
       </div>
 
       <div class="form-group">
@@ -52,18 +55,12 @@
       <div class="form-group">
         <button
           class="btn btn-sm btn-outline-primary font-weight-light px-3"
-          @click.prevent="submit"
           :disabled="!formIsValid"
         >
           <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
           <i class="fas fa-plus-circle" v-else></i>
           <span class="ml-2">Save</span>
         </button>
-      </div>
-      <div class="form-group">
-        <div class="alert alert-success" v-if="message.success">
-          {{ message.success }}
-        </div>
       </div>
     </form>
   </div>
@@ -118,9 +115,11 @@ export default {
         .post("admin/categories", form)
         .then((res) => {
           store.commit("courseCategories/addNewCategory", {
-            title: form.title,
-            slug: form.slug,
-            description: form.description,
+            uuid: res.data.category.uuid,
+            title: res.data.category.title,
+            slug: res.data.category.slug,
+            description: res.data.category.description,
+            thumbnail_url: res.data.category.thumbnail_url,
           });
 
           message.success = res.data.message;
@@ -139,6 +138,8 @@ export default {
       form.title = "";
       form.slug = "";
       form.description = "";
+
+      form.thumbnail = "";
     };
 
     return {

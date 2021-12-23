@@ -25,17 +25,25 @@ class CategoryCreateRequest extends CategoryRequest
     public function rules()
     {
         return [
-            'title' => 'required',
+            'title' => 'required|unique:categories',
         ];
     }
 
     public function save()
     {
-        Category::create([
+        $slug = $this->filled('slug') ? $this->slug : Str::slug($this->title);
+
+        $image_name = null;
+        if ($this->filled('thumbnail')) {
+            $image_name = $this->storeThumbnail($slug);
+        }
+
+        return Category::create([
             'uuid' => Str::uuid(),
             'title' => $this->title,
-            'slug' => $this->filled('slug') ? $this->slug : Str::slug($this->slug),
+            'slug' => $slug,
             'description' => $this->filled('description') ? $this->description : '',
+            'thumbnail' => $image_name,
         ]);
     }
 }

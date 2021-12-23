@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Course\CategoryCreateRequest;
+use App\Http\Requests\Course\CategoryUpdateRequest;
 use App\Http\Resources\Course\CategoriesCollection;
+use App\Http\Resources\Course\CategoryResource;
 use Illuminate\Http\Request;
 use App\Models\Category;
 
@@ -17,7 +19,7 @@ class CategoryController extends Controller
      */
     public function index()
     {
-        return view('admin.pages.categories');
+        return view('admin.pages.categories.index');
     }
 
 
@@ -57,10 +59,11 @@ class CategoryController extends Controller
      */
     public function store(CategoryCreateRequest $request)
     {
-        $request->save();
+        $category = $request->save();
 
         return response()->json([
-            'message' => "Successfully created the course category!"
+            'message' => "Successfully created the course category!",
+            'category' => new CategoryResource($category),
         ], 200);
     }
 
@@ -78,24 +81,37 @@ class CategoryController extends Controller
     /**
      * Show the form for editing the specified resource.
      *
-     * @param  int  $id
+     * @param  Category $category
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Category $category)
     {
-        //
+        return view('admin.pages.categories.edit', compact('category'));
     }
 
     /**
      * Update the specified resource in storage.
      *
-     * @param  \Illuminate\Http\Request  $request
-     * @param  int  $id
+     * @param  CategoryUpdateRequest  $request
+     * @param  Category $category
      * @return \Illuminate\Http\Response
      */
-    public function update(Request $request, $id)
+    public function update(CategoryUpdateRequest $request, Category $category)
     {
-        //
+        try {
+            $old_slug = $category->slug;
+            $category = $request->update($category);
+
+            return response()->json([
+                'message' => "Successfully updated the category",
+                'redirect_back' => $category->slug != $old_slug,
+                'this_page' => route('admin.categories.edit', ['category' => $category->slug]),
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => $th->getMessage(),
+            ], 500);
+        }
     }
 
     /**
