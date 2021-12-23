@@ -27,8 +27,7 @@
           :key="index"
           :value="teacher.username"
         >
-          {{ teacher.username }} - {{ teacher.info.first_name }}
-          {{ teacher.info.last_name }}
+          {{ teacher.username }} - {{ teacher.email }}
         </option>
       </select>
     </div>
