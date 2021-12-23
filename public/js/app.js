@@ -48648,7 +48648,7 @@ var _hoisted_15 = {
   "class": "ml-2"
 };
 var _hoisted_16 = {
-  "class": "pt-1"
+  "class": "pt-3 action-links"
 };
 var _hoisted_17 = ["href"];
 var _hoisted_18 = ["onClick"];
@@ -48667,11 +48667,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     /* TEXT */
     ), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_16, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
       href: '/admin/students/edit/' + student.username,
-      "class": "btn text-primary pl-0"
+      "class": "text-primary"
     }, "Edit", 8
     /* PROPS */
     , _hoisted_17), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-      "class": "btn text-primary pl-0",
+      href: "javascript:void(0)",
+      "class": "text-primary",
       onClick: (0,vue__WEBPACK_IMPORTED_MODULE_0__.withModifiers)(function ($event) {
         return $setup.handleUserDelete(student);
       }, ["prevent"])
