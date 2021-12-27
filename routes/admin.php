@@ -41,6 +41,9 @@ Route::prefix('classroom')->name('classroom.')->group(function () {
 //Live Class
 Route::prefix('liveclass')->name('liveclass.')->group(function () {
     Route::get('/', [LiveClassesController::class, 'index'])->name('index');
+    Route::get('list', [LiveClassesController::class, 'paginatedList'])->name('list');
+    Route::get('create', [LiveClassesController::class, 'create'])->name('create');
+    Route::post('store', [LiveClassesController::class, 'store'])->name('store');
 });
 
 // Category routes

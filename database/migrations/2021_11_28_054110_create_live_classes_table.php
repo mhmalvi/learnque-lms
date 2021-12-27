@@ -15,6 +15,14 @@ class CreateLiveClassesTable extends Migration
     {
         Schema::create('live_classes', function (Blueprint $table) {
             $table->id();
+
+            $table->bigInteger("user_id")->comment("connected with admin's database's users table");
+            $table->string("topic");
+            $table->integer("type")->default(2);
+            $table->dateTime("start_time");
+            $table->integer("duration")->comment("in minutes");
+            $table->string("password");
+
             $table->timestamps();
         });
     }
