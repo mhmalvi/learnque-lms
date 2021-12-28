@@ -44183,15 +44183,6 @@ var _hoisted_11 = {
   "class": "form-group"
 };
 var _hoisted_12 = ["disabled"];
-
-var _hoisted_13 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", {
-  "class": "form-group text-center"
-}, [/*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("a", {
-  href: ""
-}, "Forgot password?"), /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createTextVNode)(), /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("br")], -1
-/* HOISTED */
-);
-
 function render(_ctx, _cache, $props, $setup, $data, $options) {
   var _component_alert_danger = (0,vue__WEBPACK_IMPORTED_MODULE_0__.resolveComponent)("alert-danger");
 
@@ -44276,7 +44267,7 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
     disabled: !$setup.isValid
   }, " Login ", 10
   /* CLASS, PROPS */
-  , _hoisted_12)]), _hoisted_13], 32
+  , _hoisted_12)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)(" <div class=\"form-group text-center\">\r\n        <a href=\"\">Forgot password?</a> <br />\r\n      </div> ")], 32
   /* HYDRATE_EVENTS */
   )]);
 }
