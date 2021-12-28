@@ -1,11 +1,69 @@
 <template>
-  <div></div>
+  <div class="col-md-3">
+    <div class="card card-sm card--elevated p-relative card-group-row__card">
+      <a
+        href="#"
+        class="card-img-top js-image"
+        data-position="center"
+        data-height="150"
+        data-domfactory-upgraded="image"
+        style="
+          display: block;
+          position: relative;
+          overflow: hidden;
+          background-image: url('/assets/images/paths/sketch_430x168.png');
+          background-size: cover;
+          background-position: center center;
+          height: 140px;
+        "
+      >
+      </a>
+
+      <div class="card-body flex">
+        <div class="d-flex">
+          <div class="flex">
+            <a class="card-title" href="#">
+              {{ live_class.topic }}
+            </a>
+            <small class="text-50 font-weight-bold mb-4pt"></small>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer">
+        <div class="row justify-content-between">
+          <div class="col-auto d-flex align-items-center">
+            <span class="material-icons icon-16pt text-50 mr-4pt"
+              >date_range</span
+            >
+            <p class="flex text-50 lh-1 mb-0">
+              <small>{{ live_class.start_time }}</small>
+            </p>
+          </div>
+          <div class="col-auto d-flex align-items-center">
+            <span class="material-icons icon-16pt text-50 mr-4pt">timer</span>
+            <p class="flex text-50 lh-1 mb-0">
+              <small>{{ live_class.duration }}</small>
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </template>
 
 <script>
+import { onMounted } from "vue";
+
 export default {
-  setup() {
-    return {};
+  props: ["live_class"],
+  setup({ live_class }) {
+    onMounted(() => {
+      console.log(live_class);
+    });
+
+    return {
+      live_class,
+    };
   },
 };
 </script>

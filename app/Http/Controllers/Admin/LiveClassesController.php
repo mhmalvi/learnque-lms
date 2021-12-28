@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LiveClassCreateRequest;
 use App\Http\Resources\LiveClassesCollection;
-use App\Models\LiveClass;
+use App\Services\LiveClassService;
+use App\Zoom\Zoom;
 use Illuminate\Http\Request;
 
 class LiveClassesController extends Controller
@@ -24,9 +26,12 @@ class LiveClassesController extends Controller
     {
         try {
             $perPage = request('perPage') ?? 5;
-            return new LiveClassesCollection(
-                LiveClass::paginate($perPage)
-            );
+            $pageNumber = request('pageNumber') ?? 1;
+
+            $service = new LiveClassService();
+            $meetings = $service->getPaginatedList($perPage, $pageNumber);
+
+            return response()->json($meetings);
         } catch (\Throwable $th) {
             return response()->json([
                 'message' => "Something went wrong!",
@@ -41,5 +46,24 @@ class LiveClassesController extends Controller
     public function create()
     {
         return view('admin.pages.liveclasses.create');
+    }
+
+    /**
+     * save a meeting
+     */
+    public function store(LiveClassCreateRequest $request)
+    {
+        try {
+            $request->save();
+
+            return response()->json([
+                'message' => "Successfully saved the meeting",
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => "Something went wrong!",
+                'error' => $th->getMessage(),
+            ], 500);
+        }
     }
 }

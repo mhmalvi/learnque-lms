@@ -14,6 +14,15 @@ class LiveClassResource extends JsonResource
      */
     public function toArray($request)
     {
-        return parent::toArray($request);
+        $start_time = new \DateTime($this->start_time);
+        return [
+            'id' => $this->id,
+            'topic' => $this->topic,
+            'uuid' => $this->uuid,
+            'host_id' => $this->host_id,
+            'start_time' => $start_time->format("d M, Y"),
+            'duration' => $this->duration . " minutes",
+            'join_url' => $this->join_url,
+        ];
     }
 }
