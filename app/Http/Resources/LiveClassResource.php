@@ -20,7 +20,7 @@ class LiveClassResource extends JsonResource
             'topic' => $this->topic,
             'uuid' => $this->uuid,
             'host_id' => $this->host_id,
-            'start_time' => $start_time->format("d M, Y"),
+            'start_time' => $start_time->format("h:i a d M, Y") . " UCT",
             'duration' => $this->duration . " minutes",
             'join_url' => $this->join_url,
         ];
