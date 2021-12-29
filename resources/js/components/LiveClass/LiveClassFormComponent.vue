@@ -71,7 +71,7 @@
     </div>
 
     <div class="form-group">
-      <button class="btn btn-primary">
+      <button class="btn btn-primary" :disabled="state.isSubmitting">
         <i class="fas fa-circle-notch fa-spin" v-if="state.isSubmitting"></i>
         <i class="fas fa-plus-circle" v-else></i>
         <span class="ml-2"> Save </span>
@@ -108,6 +108,8 @@ export default {
       if (reset) {
         formReset();
       }
+      validation.errors = [];
+      validation.message = "";
     };
     const fail = (error) => {
       validation.errors = error.errors;

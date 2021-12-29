@@ -23358,6 +23358,9 @@ __webpack_require__.r(__webpack_exports__);
       if (reset) {
         formReset();
       }
+
+      validation.errors = [];
+      validation.message = "";
     };
 
     var fail = function fail(error) {
@@ -26409,9 +26412,7 @@ var _hoisted_14 = {
 var _hoisted_15 = {
   "class": "form-group"
 };
-var _hoisted_16 = {
-  "class": "btn btn-primary"
-};
+var _hoisted_16 = ["disabled"];
 var _hoisted_17 = {
   key: 0,
   "class": "fas fa-circle-notch fa-spin"
@@ -26477,7 +26478,12 @@ function render(_ctx, _cache, $props, $setup, $data, $options) {
   /* NEED_PATCH */
   ), [[vue__WEBPACK_IMPORTED_MODULE_0__.vModelText, $setup.state.form.password]]), $setup.validation.errors && $setup.validation.errors.password ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("small", _hoisted_14, (0,vue__WEBPACK_IMPORTED_MODULE_0__.toDisplayString)($setup.validation.errors.password[0]), 1
   /* TEXT */
-  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", _hoisted_16, [$setup.state.isSubmitting ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_17)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_18)), _hoisted_19])])], 32
+  )) : (0,vue__WEBPACK_IMPORTED_MODULE_0__.createCommentVNode)("v-if", true)]), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("div", _hoisted_15, [(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementVNode)("button", {
+    "class": "btn btn-primary",
+    disabled: $setup.state.isSubmitting
+  }, [$setup.state.isSubmitting ? ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_17)) : ((0,vue__WEBPACK_IMPORTED_MODULE_0__.openBlock)(), (0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementBlock)("i", _hoisted_18)), _hoisted_19], 8
+  /* PROPS */
+  , _hoisted_16)])], 32
   /* HYDRATE_EVENTS */
   );
 }
