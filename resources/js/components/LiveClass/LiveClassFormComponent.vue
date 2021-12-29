@@ -81,10 +81,11 @@
 </template>
 
 <script>
-import { reactive } from "vue";
+import { reactive, onMounted } from "vue";
 
 export default {
-  setup(_, { emit }) {
+  props: ["data"],
+  setup({ data }, { emit }) {
     const state = reactive({
       form: {
         topic: "",
@@ -97,6 +98,15 @@ export default {
     const validation = reactive({
       errors: [],
       message: "",
+    });
+
+    onMounted(() => {
+      if (data) {
+        state.form.topic = data.topic;
+        state.form.start_time = "";
+        state.form.duration = data.duration_minutes;
+        state.form.password = data.password;
+      }
     });
 
     const handleFormSubmit = () => {

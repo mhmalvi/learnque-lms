@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Http\Resources\LiveClassesCollection;
+use App\Http\Resources\LiveClassResource;
 use App\Zoom\Zoom;
 
 class LiveClassService
@@ -15,8 +16,7 @@ class LiveClassService
     {
         $zoom = new Zoom();
         $meeting = $zoom->get($meeting_id);
-
-        dd($meeting);
+        return new LiveClassResource($meeting);
     }
 
     /**

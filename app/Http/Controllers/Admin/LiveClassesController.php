@@ -72,7 +72,9 @@ class LiveClassesController extends Controller
      */
     public function edit($liveclass_id, LiveClassService $service)
     {
-        $service->get($liveclass_id);
+        $meeting = $service->get($liveclass_id);
+
+        return view('admin.pages.liveclasses.edit', compact('meeting'));
     }
 
     /**

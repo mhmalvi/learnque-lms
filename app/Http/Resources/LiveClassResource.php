@@ -21,8 +21,11 @@ class LiveClassResource extends JsonResource
             'uuid' => $this->uuid,
             'host_id' => $this->host_id,
             'start_time' => $start_time->format("h:i a d M, Y") . " UCT",
+            'start_time_datetime' => $start_time->format("Y-m-d H:i:s"),
             'duration' => $this->duration . " minutes",
+            'duration_minutes' => $this->duration,
             'join_url' => $this->join_url,
+            'password' => $this->password ?? null,
         ];
     }
 }
