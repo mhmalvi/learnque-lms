@@ -7,6 +7,23 @@ use App\Zoom\Zoom;
 
 class LiveClassService
 {
+    /**
+     * Get a meeting's information
+     * @param int meeting_id
+     */
+    public function get($meeting_id)
+    {
+        $zoom = new Zoom();
+        $meeting = $zoom->get($meeting_id);
+
+        dd($meeting);
+    }
+
+    /**
+     * Get a paginated list of meetings
+     * @param int $per_page
+     * @param int $page_number
+     */
     public function getPaginatedList($per_page, $page_number)
     {
         $zoom = new Zoom();
@@ -23,5 +40,15 @@ class LiveClassService
         ];
 
         return $data;
+    }
+
+    /**
+     * Delete a meeting
+     * @param int $meeting_id
+     */
+    public function delete($meeting_id)
+    {
+        $zoom = new Zoom();
+        return $zoom->destroy($meeting_id);
     }
 }

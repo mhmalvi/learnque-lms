@@ -7,6 +7,11 @@ use App\Http\Requests\LiveClassRequest;
 interface ZoomInterface
 {
     /**
+     * get details of a meeting
+     */
+    public function get($id);
+
+    /**
      * get the list of meetings
      *
      */

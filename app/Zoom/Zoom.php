@@ -11,6 +11,22 @@ class Zoom implements ZoomInterface
     use ZoomTrait;
 
     /**
+     * get details of a meeting
+     */
+    public function get($id)
+    {
+        $client = new Client(['base_uri' => $this->base_url]);
+
+        $response = $client->request('GET', '/v2/meetings/' . $id, [
+            'headers' => [
+                'Authorization' => "Bearer " . $this->getAccessToken(),
+            ],
+        ]);
+
+        return json_decode($response->getBody());
+    }
+
+    /**
      * Get the list of created meeting
      *
      */
@@ -141,6 +157,6 @@ class Zoom implements ZoomInterface
                 "Authorization" => "Bearer " . $this->getAccessToken()
             ]
         ]);
-        return $response;
+        return $response->getBody();
     }
 }

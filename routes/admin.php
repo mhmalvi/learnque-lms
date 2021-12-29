@@ -44,6 +44,8 @@ Route::prefix('liveclass')->name('liveclass.')->group(function () {
     Route::get('list', [LiveClassesController::class, 'paginatedList'])->name('list');
     Route::get('create', [LiveClassesController::class, 'create'])->name('create');
     Route::post('store', [LiveClassesController::class, 'store'])->name('store');
+    Route::get('edit/{liveclass_id}', [LiveClassesController::class, 'edit'])->name('edit');
+    Route::delete('delete/{liveclass_id}', [LiveClassesController::class, 'destroy'])->name('delete');
 });
 
 // Category routes

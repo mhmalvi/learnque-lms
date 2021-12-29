@@ -20,13 +20,22 @@
       </a>
 
       <div class="card-body flex">
-        <div class="d-flex">
-          <div class="flex">
-            <a class="card-title" href="#">
-              {{ live_class.topic }}
+        <div class="d-flex justify-content-between">
+          <a class="card-title" href="#">
+            {{ live_class.topic }}
+          </a>
+          <small class="text-50 font-weight-bold mb-4pt">
+            <a :href="getEditLink(live_class)" class="link-success mr-2">
+              <i class="fas fa-edit"></i>
             </a>
-            <small class="text-50 font-weight-bold mb-4pt"></small>
-          </div>
+            <a
+              href="javascript:void(0)"
+              @click.prevent="attemptDelete(live_class)"
+              class="link-danger"
+            >
+              <i class="fas fa-trash"></i>
+            </a>
+          </small>
         </div>
       </div>
       <div class="card-footer">
@@ -53,16 +62,56 @@
 
 <script>
 import { onMounted } from "vue";
+import Swal from "sweetalert2";
 
 export default {
   props: ["live_class"],
-  setup({ live_class }) {
+  setup({ live_class }, { emit }) {
     onMounted(() => {
       console.log(live_class);
     });
 
+    const getEditLink = (data) => {
+      return "/admin/liveclass/edit/" + data.id;
+    };
+
+    const attemptDelete = (data) => {
+      Swal.fire({
+        icon: "question",
+        title: "Are you sure you want to delete this live class?",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel it",
+        confirmButtonText: "Yes, delete it!",
+      }).then((res) => {
+        if (res.isConfirmed) {
+          deleteLiveClass(data);
+        }
+      });
+    };
+
+    const deleteLiveClass = (data) => {
+      axios
+        .delete("/admin/liveclass/delete/" + data.id)
+        .then((res) => {
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+          });
+
+          emit("onDelete");
+        })
+        .catch((err) => {
+          Swal.fire({
+            icon: "error",
+            title: err.response.data.message,
+          });
+        });
+    };
+
     return {
       live_class,
+      getEditLink,
+      attemptDelete,
     };
   },
 };

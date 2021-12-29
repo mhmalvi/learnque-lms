@@ -17,6 +17,7 @@
       v-for="(liveClass, index) in state.liveClasses"
       :key="index"
       :live_class="liveClass"
+      @onDelete="refreshList()"
     />
 
     <nav
@@ -138,9 +139,14 @@ export default {
       getLiveClasses();
     };
 
+    const refreshList = () => {
+      getLiveClasses();
+    };
+
     return {
       state,
       getPage,
+      refreshList,
     };
   },
 };

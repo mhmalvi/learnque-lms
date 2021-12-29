@@ -66,4 +66,31 @@ class LiveClassesController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * show edit page for meeting
+     */
+    public function edit($liveclass_id, LiveClassService $service)
+    {
+        $service->get($liveclass_id);
+    }
+
+    /**
+     * delete a meeting
+     */
+    public function destroy($liveclass_id, LiveClassService $service)
+    {
+        try {
+            $service->delete($liveclass_id);
+
+            return response()->json([
+                'message' => "Successfully deleted the live class",
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => "Something went wrong!",
+                'error' => $th->getMessage(),
+            ], 500);
+        }
+    }
 }
