@@ -42377,7 +42377,7 @@ __webpack_require__.r(__webpack_exports__);
       label_text: label !== null && label !== void 0 ? label : "image",
       image_dataUrl: "",
       errors: [],
-      defaultImage: "".concat(window.location.origin, "/assets/images/user_default.webp"),
+      defaultImage: "".concat(window.location.origin, "/images/default_image.webp"),
       shape: ""
     });
 

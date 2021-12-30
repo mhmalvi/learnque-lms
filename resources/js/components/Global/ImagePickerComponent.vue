@@ -54,7 +54,7 @@ export default {
       label_text: label ?? "image",
       image_dataUrl: "",
       errors: [],
-      defaultImage: `${window.location.origin}/assets/images/user_default.webp`,
+      defaultImage: `${window.location.origin}/images/default_image.webp`,
       shape: "",
     });
 
