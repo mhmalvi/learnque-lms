@@ -15,7 +15,7 @@ class ClassroomPostsController extends Controller
     public function getPaginatedList(Classroom $classroom)
     {
         return new ClassroomPostsCollection(
-            $classroom->posts()->latest()->paginate(request('items'))
+            $classroom->load('posts.author')->posts()->latest()->paginate(request('items'))
         );
     }
 

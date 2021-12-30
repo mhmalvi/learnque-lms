@@ -2,7 +2,7 @@
   <div class="card post">
     <div class="card-body">
       <h4 class="card-title">
-        {{ post.user.username }}
+        {{ post.author.username }}
       </h4>
       <p class="card-subtitle text-muted mb-2">{{ post.created_at }}</p>
       <div class="card-text post-description" v-html="post.description"></div>

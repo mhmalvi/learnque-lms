@@ -11,9 +11,9 @@ class ClassroomPost extends Model
 
     protected $guarded = ['id'];
 
-    public function user()
+    public function author()
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(Admin::class, 'user_id', 'id');
     }
 
     public function attachments()
