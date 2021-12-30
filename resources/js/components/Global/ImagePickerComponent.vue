@@ -17,13 +17,15 @@
           </a>
           <img
             :src="state.image_dataUrl"
-            class="img-thumbnail rounded-circle"
+            class="img-thumbnail"
+            :class="{ 'rounded-circle': state.shape == 'circular' }"
           />
         </div>
         <img
           :src="state.defaultImage"
           alt=""
-          class="img-thumbnail rounded-circle"
+          class="img-thumbnail"
+          :class="{ 'rounded-circle': state.shape == 'circular' }"
           v-else
         />
         <input
@@ -45,15 +47,20 @@ import { reactive, ref } from "vue";
 import ImageHandler from "../../modules/ImageHandler";
 
 export default {
-  props: ["label"],
-  setup({ label }, context) {
+  props: ["label", "circular"],
+  setup({ label, circular }, context) {
     const isUploading = ref(false);
     const state = reactive({
       label_text: label ?? "image",
       image_dataUrl: "",
       errors: [],
       defaultImage: `${window.location.origin}/assets/images/user_default.webp`,
+      shape: "",
     });
+
+    if (circular !== undefined) {
+      state.shape = "circular";
+    }
 
     const handleImageChange = (e) => {
       state.errors = [];
@@ -110,7 +117,7 @@ export default {
 How to use this component?
 
   1. include this component in a vue template
-  2. when this component has a new image selected by user, an event is dispatched. 
+  2. when this component has a new image selected by user, an event is dispatched.
      catch that event by @requestForChange
   3. you can listen to @requestForDelete for handling image delete action
 
