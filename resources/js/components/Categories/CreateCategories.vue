@@ -34,22 +34,11 @@
       </div>
 
       <div class="d-flex align-items-center">
-        <div class="form-group img-container">
-          <label for="thumbnail" class="img-container-lbl"
-            >Click here to Upload Thumbnail</label
-          >
-          <div class="row w-100" v-if="form.thumbnail">
-            <div class="col-12 img-wrapper">
-              <img :src="form.thumbnail" class="img-fluid" />
-            </div>
-          </div>
-          <input
-            type="file"
-            id="thumbnail"
-            class="form-control d-none"
-            @change="onThumbnailUpload"
-          />
-        </div>
+        <ImagePickerComponent
+          ref="image_picker"
+          @requestForDelete="handleImageDelete"
+          @requestForChange="handleImageChange"
+        />
       </div>
 
       <div class="form-group">
@@ -71,10 +60,15 @@ import { ref, reactive, computed } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import Validators from "../../modules/Validators";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 
 export default {
+  components: {
+    ImagePickerComponent,
+  },
   setup() {
     const isSubmitting = ref(false);
+    const image_picker = ref(0);
 
     const form = reactive({
       title: "",
@@ -90,20 +84,6 @@ export default {
     });
 
     const store = useStore();
-
-    const onThumbnailUpload = (event) => {
-      const { fileType } = Validators();
-      let file = event.target.files[0];
-      if (fileType(file.name)) {
-        let reader = new FileReader();
-        reader.onload = (e) => {
-          form.thumbnail = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // this.errors.push(`${file.name} is not a valid file type!`);
-      }
-    };
 
     const formIsValid = computed(() => {
       return form.title;
@@ -140,15 +120,28 @@ export default {
       form.description = "";
 
       form.thumbnail = "";
+
+      image_picker.value.deleteImage();
+    };
+
+    const handleImageChange = (data) => {
+      image_picker.value.setImage(data.image);
+      form.thumbnail = data.image;
+    };
+
+    const handleImageDelete = () => {
+      image_picker.value.deleteImage();
     };
 
     return {
       isSubmitting,
       form,
-      submit,
+      image_picker,
       message,
-      onThumbnailUpload,
       formIsValid,
+      submit,
+      handleImageChange,
+      handleImageDelete,
     };
   },
 };
