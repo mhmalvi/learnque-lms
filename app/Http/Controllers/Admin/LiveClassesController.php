@@ -28,9 +28,10 @@ class LiveClassesController extends Controller
         try {
             $perPage = request('perPage') ?? 5;
             $pageNumber = request('pageNumber') ?? 1;
+            $timezone_offset = request('timezone') ?? 0;
 
             $service = new LiveClassService();
-            $meetings = $service->getPaginatedList($perPage, $pageNumber);
+            $meetings = $service->getPaginatedList($perPage, $pageNumber, $timezone_offset);
 
             return response()->json($meetings);
         } catch (\Throwable $th) {

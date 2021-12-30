@@ -61,16 +61,11 @@
 </template>
 
 <script>
-import { onMounted } from "vue";
 import Swal from "sweetalert2";
 
 export default {
   props: ["live_class"],
   setup({ live_class }, { emit }) {
-    onMounted(() => {
-      console.log(live_class);
-    });
-
     const getEditLink = (data) => {
       return "/admin/liveclass/edit/" + data.id;
     };

@@ -104,19 +104,10 @@ export default {
     onMounted(() => {
       if (data) {
         state.form.topic = data.topic;
-        state.form.start_time = data.start_time_datetime;
         state.form.duration = data.duration_minutes;
         state.form.password = data.password;
 
-        let date = new Date(state.form.start_time);
-        // getting timezone offset in minutes
-        let tz = new Date().getTimezoneOffset();
-        // convert timezone into milliseconds
-        let hours_in_milliseconds = parseInt(tz) * 60 * 1000;
-        // adding the offset(in milliseconds) to start time(milliseconds)
-        let new_time = parseInt(date.getTime()) + -hours_in_milliseconds; // somehow the minus saves the day
-
-        state.form.start_time = new Date(new_time);
+        state.form.start_time = new Date(data.start_time_timestamp);
       }
     });
 

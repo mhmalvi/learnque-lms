@@ -23351,18 +23351,9 @@ __webpack_require__.r(__webpack_exports__);
     (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
       if (data) {
         state.form.topic = data.topic;
-        state.form.start_time = data.start_time_datetime;
         state.form.duration = data.duration_minutes;
         state.form.password = data.password;
-        var date = new Date(state.form.start_time); // getting timezone offset in minutes
-
-        var tz = new Date().getTimezoneOffset(); // convert timezone into milliseconds
-
-        var hours_in_milliseconds = parseInt(tz) * 60 * 1000; // adding the offset(in milliseconds) to start time(milliseconds)
-
-        var new_time = parseInt(date.getTime()) + -hours_in_milliseconds; // somehow the minus saves the day
-
-        state.form.start_time = new Date(new_time);
+        state.form.start_time = new Date(data.start_time_timestamp);
       }
     });
 
@@ -23434,26 +23425,21 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony export */ __webpack_require__.d(__webpack_exports__, {
 /* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
 /* harmony export */ });
-/* harmony import */ var vue__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! vue */ "./node_modules/vue/dist/vue.esm-bundler.js");
-/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
-/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_1__);
-
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
+/* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_0__);
 
 /* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = ({
   props: ["live_class"],
   setup: function setup(_ref, _ref2) {
     var live_class = _ref.live_class;
     var emit = _ref2.emit;
-    (0,vue__WEBPACK_IMPORTED_MODULE_0__.onMounted)(function () {
-      console.log(live_class);
-    });
 
     var getEditLink = function getEditLink(data) {
       return "/admin/liveclass/edit/" + data.id;
     };
 
     var attemptDelete = function attemptDelete(data) {
-      sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
+      sweetalert2__WEBPACK_IMPORTED_MODULE_0___default().fire({
         icon: "question",
         title: "Are you sure you want to delete this live class?",
         showCancelButton: true,
@@ -23468,13 +23454,13 @@ __webpack_require__.r(__webpack_exports__);
 
     var deleteLiveClass = function deleteLiveClass(data) {
       axios["delete"]("/admin/liveclass/delete/" + data.id).then(function (res) {
-        sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
+        sweetalert2__WEBPACK_IMPORTED_MODULE_0___default().fire({
           icon: "success",
           title: res.data.message
         });
         emit("onDelete");
       })["catch"](function (err) {
-        sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
+        sweetalert2__WEBPACK_IMPORTED_MODULE_0___default().fire({
           icon: "error",
           title: err.response.data.message
         });
@@ -23508,6 +23494,12 @@ __webpack_require__.r(__webpack_exports__);
 /* harmony import */ var axios__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(axios__WEBPACK_IMPORTED_MODULE_2__);
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(/*! sweetalert2 */ "./node_modules/sweetalert2/dist/sweetalert2.all.js");
 /* harmony import */ var sweetalert2__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(sweetalert2__WEBPACK_IMPORTED_MODULE_3__);
+function ownKeys(object, enumerableOnly) { var keys = Object.keys(object); if (Object.getOwnPropertySymbols) { var symbols = Object.getOwnPropertySymbols(object); if (enumerableOnly) { symbols = symbols.filter(function (sym) { return Object.getOwnPropertyDescriptor(object, sym).enumerable; }); } keys.push.apply(keys, symbols); } return keys; }
+
+function _objectSpread(target) { for (var i = 1; i < arguments.length; i++) { var source = arguments[i] != null ? arguments[i] : {}; if (i % 2) { ownKeys(Object(source), true).forEach(function (key) { _defineProperty(target, key, source[key]); }); } else if (Object.getOwnPropertyDescriptors) { Object.defineProperties(target, Object.getOwnPropertyDescriptors(source)); } else { ownKeys(Object(source)).forEach(function (key) { Object.defineProperty(target, key, Object.getOwnPropertyDescriptor(source, key)); }); } } return target; }
+
+function _defineProperty(obj, key, value) { if (key in obj) { Object.defineProperty(obj, key, { value: value, enumerable: true, configurable: true, writable: true }); } else { obj[key] = value; } return obj; }
+
 
 
 
@@ -23540,8 +23532,11 @@ __webpack_require__.r(__webpack_exports__);
 
     var getLiveClasses = function getLiveClasses() {
       state.isLoading = true;
+      var timezone_offset = parseInt(new Date().getTimezoneOffset()) * 60;
       axios__WEBPACK_IMPORTED_MODULE_2___default().get(state.action_link, {
-        params: state.pagination.options
+        params: _objectSpread(_objectSpread({}, state.pagination.options), {}, {
+          timezoneOffset: timezone_offset
+        })
       }).then(function (res) {
         state.liveClasses = res.data.data;
         state.pagination.meta.pageCount = res.data.page_count;

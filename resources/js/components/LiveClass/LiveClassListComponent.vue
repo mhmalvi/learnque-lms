@@ -110,9 +110,14 @@ export default {
 
     const getLiveClasses = () => {
       state.isLoading = true;
+      let timezone_offset = parseInt(new Date().getTimezoneOffset()) * 60;
+
       axios
         .get(state.action_link, {
-          params: state.pagination.options,
+          params: {
+            ...state.pagination.options,
+            timezoneOffset: timezone_offset,
+          },
         })
         .then((res) => {
           state.liveClasses = res.data.data;
