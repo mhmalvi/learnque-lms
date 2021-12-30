@@ -35,12 +35,11 @@ trait ZoomTrait
     }
 
 
-    protected function getZoomDateTimeFormat(string $dateTime)
+    protected function getZoomDateTimeFormat($dateTime)
     {
         try {
-            $dateTime = new \DateTime($dateTime);
-            $date = $dateTime->format('Y-m-d');
-            $time = $dateTime->format('H:i:s');
+            $date = date('Y-m-d', $dateTime);
+            $time = date('H:i:s', $dateTime);
 
             return "{$date}T{$time}";
         } catch (\Exception $e) {

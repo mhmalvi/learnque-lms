@@ -2,7 +2,8 @@
 
 namespace App\Zoom;
 
-use App\Http\Requests\LiveClassRequest;
+use App\Http\Requests\LiveClassCreateRequest;
+use App\Http\Requests\LiveClassUpdateRequest;
 
 interface ZoomInterface
 {
@@ -34,14 +35,14 @@ interface ZoomInterface
      * Create a new zoom meeting
      *
      */
-    public function create(LiveClassRequest $request);
+    public function create(LiveClassCreateRequest $request);
 
 
     /**
      * Update an existing meeting
      *
      */
-    public function update($meeting_id);
+    public function update($meeting_id, LiveClassUpdateRequest $request);
 
 
     /**

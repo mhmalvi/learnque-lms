@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\LiveClassCreateRequest;
+use App\Http\Requests\LiveClassUpdateRequest;
 use App\Http\Resources\LiveClassesCollection;
 use App\Services\LiveClassService;
 use App\Zoom\Zoom;
@@ -72,9 +73,32 @@ class LiveClassesController extends Controller
      */
     public function edit($liveclass_id, LiveClassService $service)
     {
-        $meeting = $service->get($liveclass_id);
+        try {
+            $meeting = $service->get($liveclass_id);
 
-        return view('admin.pages.liveclasses.edit', compact('meeting'));
+            return view('admin.pages.liveclasses.edit', compact('meeting'));
+        } catch (\Throwable $th) {
+            abort(404);
+        }
+    }
+
+    /**
+     * update a live class meeting
+     */
+    public function update($liveclass_id, LiveClassUpdateRequest $request)
+    {
+        try {
+            $request->update($liveclass_id);
+
+            return response()->json([
+                'message' => "Successfully updated the meeting",
+            ], 201);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => "Something went wrong!",
+                'error' => $th->getMessage(),
+            ], 500);
+        }
     }
 
     /**

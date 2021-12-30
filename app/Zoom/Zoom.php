@@ -3,6 +3,7 @@
 namespace App\Zoom;
 
 use App\Http\Requests\LiveClassRequest;
+use App\Http\Requests\LiveClassUpdateRequest;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 
@@ -103,7 +104,7 @@ class Zoom implements ZoomInterface
             'json' => [
                 "topic" => $request->topic,
                 "type" => 2,
-                "start_time" => $this->getZoomDateTimeFormat($request->start_time),
+                "start_time" => $this->getZoomDateTimeFormat($request->start_time_timestamp),
                 "duration" => $request->duration, // 30 mins
                 "password" => $request->password,
             ],
@@ -117,7 +118,7 @@ class Zoom implements ZoomInterface
      * Update an existing zoom meeting
      *
      */
-    public function update($meeting_id)
+    public function update($meeting_id, LiveClassUpdateRequest $request)
     {
         $client = new Client([
             // Base URI is used with relative requests
@@ -129,11 +130,11 @@ class Zoom implements ZoomInterface
                 "Authorization" => "Bearer " . $this->getAccessToken()
             ],
             'json' => [
-                "topic" => "Let's Learn Laravel",
+                "topic" => $request->topic,
                 "type" => 2,
-                "start_time" => "2021-07-20T10:30:00",
-                "duration" => "45", // 45 mins
-                "password" => "123456"
+                "start_time" => $this->getZoomDateTimeFormat($request->start_time_timestamp),
+                "duration" => $request->duration, // 45 mins
+                "password" => $request->password,
             ],
         ]);
 

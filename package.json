@@ -25,6 +25,7 @@
         "laravel-mix": "^6.0.39",
         "sweetalert2": "^11.1.9",
         "vue": "^3.2.20",
+        "vue3-date-time-picker": "^2.4.4",
         "vuex": "^4.0.2"
     }
 }

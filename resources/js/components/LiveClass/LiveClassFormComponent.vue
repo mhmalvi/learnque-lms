@@ -18,12 +18,7 @@
 
     <div class="form-group">
       <label for="start_time" class="form-label">Start time</label>
-      <input
-        type="datetime-local"
-        name="start_time"
-        class="form-control"
-        v-model="state.form.start_time"
-      />
+      <Datepicker v-model="state.form.start_time" />
       <small
         class="text-danger"
         v-if="validation.errors && validation.errors.start_time"
@@ -82,14 +77,20 @@
 
 <script>
 import { reactive, onMounted } from "vue";
+import Datepicker from "vue3-date-time-picker";
+import "vue3-date-time-picker/dist/main.css";
 
 export default {
   props: ["data"],
+  components: {
+    Datepicker,
+  },
   setup({ data }, { emit }) {
     const state = reactive({
       form: {
         topic: "",
         start_time: "",
+        start_time_timestamp: null,
         duration: 3,
         password: "",
       },
@@ -103,13 +104,33 @@ export default {
     onMounted(() => {
       if (data) {
         state.form.topic = data.topic;
-        state.form.start_time = "";
+        state.form.start_time = data.start_time_datetime;
         state.form.duration = data.duration_minutes;
         state.form.password = data.password;
+
+        let date = new Date(state.form.start_time);
+        // getting timezone offset in minutes
+        let tz = new Date().getTimezoneOffset();
+        // convert timezone into milliseconds
+        let hours_in_milliseconds = parseInt(tz) * 60 * 1000;
+        // adding the offset(in milliseconds) to start time(milliseconds)
+        let new_time = parseInt(date.getTime()) + -hours_in_milliseconds; // somehow the minus saves the day
+
+        state.form.start_time = new Date(new_time);
       }
     });
 
     const handleFormSubmit = () => {
+      let date = new Date(state.form.start_time);
+      // getting timezone offset in minutes
+      let tz = new Date().getTimezoneOffset();
+      // convert timezone into seconds
+      let hours_in_s = parseInt(tz) * 60;
+      // converting start time from milliseconds to seconds and then substracting it
+      // by offset(in seconds)
+      state.form.start_time_timestamp =
+        parseInt(date.getTime() / 1000) - hours_in_s;
+
       state.isSubmitting = true;
       emit("formSubmit", state.form);
     };
@@ -122,6 +143,9 @@ export default {
       validation.message = "";
     };
     const fail = (error) => {
+      if (error.errors.start_time_timestamp) {
+        error.errors.start_time = error.errors.start_time_timestamp;
+      }
       validation.errors = error.errors;
       validation.message = error.message;
     };
