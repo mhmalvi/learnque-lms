@@ -55,29 +55,18 @@
               ></textarea>
             </div>
 
-            <div class="d-flex align-items-center">
-              <div class="form-group img-container">
-                <label for="thumbnail" class="img-container-lbl"
-                  >Click here to Upload Thumbnail</label
-                >
-                <div class="row w-100" v-if="form.thumbnail">
-                  <div class="col-12 img-wrapper">
-                    <img :src="form.thumbnail" class="img-fluid image-50" />
-                  </div>
-                </div>
-                <input
-                  type="file"
-                  id="thumbnail"
-                  class="form-control d-none"
-                  @change="onThumbnailUpload"
-                />
-              </div>
+            <div class="d-flex justify-content-center">
+              <ImagePickerComponent
+                ref="image_picker"
+                @requestForChange="handleImageChange"
+                @requestForDelete="handleImageDelete"
+              />
             </div>
 
             <div class="form-group">
               <button
                 class="btn btn-sm btn-outline-primary font-weight-light px-3"
-                :disabled="!formIsValid"
+                :disabled="!formIsValid || isSubmitting"
               >
                 <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
                 <i class="fas fa-plus-circle" v-else></i>
@@ -95,13 +84,17 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import Validators from "../../modules/Validators";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 
 export default {
   props: ["data"],
+  components: {
+    ImagePickerComponent,
+  },
   setup({ data }) {
     const category = data ? JSON.parse(data) : "";
     const isSubmitting = ref(false);
+    const image_picker = ref(0);
 
     const formIsValid = computed(
       () => {
@@ -123,6 +116,10 @@ export default {
     const validation = reactive({
       errors: [],
       message: "",
+    });
+
+    onMounted(() => {
+      image_picker.value.setImage(form.thumbnail);
     });
 
     const submit = () => {
@@ -148,27 +145,24 @@ export default {
         });
     };
 
-    const onThumbnailUpload = (event) => {
-      const { fileType } = Validators();
-      let file = event.target.files[0];
-      if (fileType(file.name)) {
-        let reader = new FileReader();
-        reader.onload = (e) => {
-          form.thumbnail = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // this.errors.push(`${file.name} is not a valid file type!`);
-      }
+    const handleImageChange = (data) => {
+      image_picker.value.setImage(data.image);
+      form.thumbnail = data.image;
+    };
+
+    const handleImageDelete = () => {
+      image_picker.value.deleteImage();
     };
 
     return {
       isSubmitting,
+      image_picker,
       form,
       validation,
       formIsValid,
       submit,
-      onThumbnailUpload,
+      handleImageChange,
+      handleImageDelete,
     };
   },
 };
