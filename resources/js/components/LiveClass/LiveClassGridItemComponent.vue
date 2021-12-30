@@ -2,7 +2,8 @@
   <div class="col-md-3">
     <div class="card card-sm card--elevated p-relative card-group-row__card">
       <a
-        href="#"
+        :href="getZoomLink(live_class)"
+        target="_blank"
         class="card-img-top js-image"
         data-position="center"
         data-height="150"
@@ -16,22 +17,28 @@
           background-position: center center;
           height: 140px;
         "
+        title="Click to enter the live class"
       >
       </a>
 
       <div class="card-body flex">
         <div class="d-flex justify-content-between">
-          <a class="card-title" href="#">
+          <a class="card-title" :href="getZoomLink(live_class)" target="_blank">
             {{ live_class.topic }}
           </a>
           <small class="text-50 font-weight-bold mb-4pt">
-            <a :href="getEditLink(live_class)" class="link-success mr-2">
+            <a
+              :href="getEditLink(live_class)"
+              class="link-success mr-2"
+              title="Edit this live class"
+            >
               <i class="fas fa-edit"></i>
             </a>
             <a
               href="javascript:void(0)"
               @click.prevent="attemptDelete(live_class)"
               class="link-danger"
+              title="Delete this live class"
             >
               <i class="fas fa-trash"></i>
             </a>
@@ -44,13 +51,16 @@
             <span class="material-icons icon-16pt text-50 mr-4pt"
               >date_range</span
             >
-            <p class="flex text-50 lh-1 mb-0">
+            <p
+              class="flex text-50 lh-1 mb-0"
+              :title="live_class.start_time + ' - ' + getTimezoneName()"
+            >
               <small>{{ live_class.start_time }}</small>
             </p>
           </div>
           <div class="col-auto d-flex align-items-center">
             <span class="material-icons icon-16pt text-50 mr-4pt">timer</span>
-            <p class="flex text-50 lh-1 mb-0">
+            <p class="flex text-50 lh-1 mb-0" title="Live class duration">
               <small>{{ live_class.duration }}</small>
             </p>
           </div>
@@ -103,10 +113,20 @@ export default {
         });
     };
 
+    const getZoomLink = (live_class) => {
+      return live_class.join_url;
+    };
+
+    const getTimezoneName = () => {
+      return Intl.DateTimeFormat().resolvedOptions().timeZone;
+    };
+
     return {
       live_class,
       getEditLink,
       attemptDelete,
+      getZoomLink,
+      getTimezoneName,
     };
   },
 };
