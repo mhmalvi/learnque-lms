@@ -44,7 +44,7 @@
       <div class="form-group">
         <button
           class="btn btn-sm btn-outline-primary font-weight-light px-3"
-          :disabled="!formIsValid"
+          :disabled="!formIsValid || isSubmitting"
         >
           <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
           <i class="fas fa-plus-circle" v-else></i>
