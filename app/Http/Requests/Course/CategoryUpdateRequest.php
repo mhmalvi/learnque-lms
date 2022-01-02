@@ -14,6 +14,8 @@ class CategoryUpdateRequest extends CategoryRequest
      */
     public function rules()
     {
+        // slug the slug again, because user can input any kind of text in slug
+        $this->slug = Str::slug($this->slug);
         return [
             'title' => 'required',
             'slug' => 'required|unique:categories,slug,' . $this->id,
@@ -22,8 +24,6 @@ class CategoryUpdateRequest extends CategoryRequest
 
     public function update(Category $category)
     {
-        $this->slug = $this->slug ?? Str::slug($this->title);
-
         $category->title = $this->title;
         $category->slug = $this->slug;
         $category->description = $this->description;

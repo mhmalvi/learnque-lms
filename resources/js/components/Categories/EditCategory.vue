@@ -38,6 +38,13 @@
 
             <div class="form-group">
               <label>Slug</label>
+              <button
+                class="btn btn-link btn-sm float-right"
+                @click="generateSlug()"
+                type="button"
+              >
+                Generate slug
+              </button>
               <input type="text" class="form-control" v-model="form.slug" />
               <small v-if="validation.errors.slug" class="text-danger">
                 {{ validation.errors.slug[0] }}
@@ -55,29 +62,18 @@
               ></textarea>
             </div>
 
-            <div class="d-flex align-items-center">
-              <div class="form-group img-container">
-                <label for="thumbnail" class="img-container-lbl"
-                  >Click here to Upload Thumbnail</label
-                >
-                <div class="row w-100" v-if="form.thumbnail">
-                  <div class="col-12 img-wrapper">
-                    <img :src="form.thumbnail" class="img-fluid image-50" />
-                  </div>
-                </div>
-                <input
-                  type="file"
-                  id="thumbnail"
-                  class="form-control d-none"
-                  @change="onThumbnailUpload"
-                />
-              </div>
+            <div class="d-flex justify-content-center">
+              <ImagePickerComponent
+                ref="image_picker"
+                @requestForChange="imageChange"
+                @requestForDelete="imageDelete"
+              />
             </div>
 
             <div class="form-group">
               <button
                 class="btn btn-sm btn-outline-primary font-weight-light px-3"
-                :disabled="!formIsValid"
+                :disabled="!formIsValid || isSubmitting"
               >
                 <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
                 <i class="fas fa-plus-circle" v-else></i>
@@ -95,17 +91,27 @@
 import { ref, reactive, computed, onMounted } from "vue";
 import axios from "axios";
 import Swal from "sweetalert2";
-import Validators from "../../modules/Validators";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
+import StringHandler from "../../modules/StringHandler";
 
 export default {
   props: ["data"],
+  components: {
+    ImagePickerComponent,
+  },
   setup({ data }) {
     const category = data ? JSON.parse(data) : "";
     const isSubmitting = ref(false);
+    const image_picker = ref(0);
 
     const formIsValid = computed(
       () => {
-        return form.title && form.title.length > 0;
+        return (
+          form.title &&
+          form.title.length > 0 &&
+          form.slug &&
+          form.slug.length > 0
+        );
       },
       {
         deep: true,
@@ -125,7 +131,13 @@ export default {
       message: "",
     });
 
+    onMounted(() => {
+      form.thumbnail = category.thumbnail_url;
+      image_picker.value.setImage(category.thumbnail_url);
+    });
+
     const submit = () => {
+      isSubmitting.value = true;
       axios
         .post("/admin/categories/edit/" + category.slug, {
           _method: "PATCH",
@@ -145,21 +157,23 @@ export default {
         .catch((err) => {
           validation.errors = err.response.data.errors;
           validation.message = err.response.data.message;
+        })
+        .finally(() => {
+          isSubmitting.value = false;
         });
     };
 
-    const onThumbnailUpload = (event) => {
-      const { fileType } = Validators();
-      let file = event.target.files[0];
-      if (fileType(file.name)) {
-        let reader = new FileReader();
-        reader.onload = (e) => {
-          form.thumbnail = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // this.errors.push(`${file.name} is not a valid file type!`);
-      }
+    const imageChange = ({ image }) => {
+      form.thumbnail = image;
+      image_picker.value.setImage(image);
+    };
+    const imageDelete = () => {
+      form.thumbnail = "";
+      image_picker.value.deleteImage();
+    };
+
+    const generateSlug = () => {
+      form.slug = StringHandler.slug(form.title);
     };
 
     return {
@@ -167,8 +181,11 @@ export default {
       form,
       validation,
       formIsValid,
+      image_picker,
       submit,
-      onThumbnailUpload,
+      imageChange,
+      imageDelete,
+      generateSlug,
     };
   },
 };
