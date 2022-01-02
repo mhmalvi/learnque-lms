@@ -11,8 +11,25 @@ class Course extends Model
 
     protected $guarded = [];
 
+    protected $appends = [
+        'thumbnail_url',
+        'image_url',
+    ];
+
     public function category()
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function getThumbnailUrlAttribute()
+    {
+        return ($this->thumbnail) ? asset('storage/courses/thumbnails/' . $this->thumbnail)
+            : 'https://via.placeholder.com/50';
+    }
+
+    public function getImageUrlAttribute()
+    {
+        return $this->thumbnail ? asset('storage/courses/' . $this->thumbnail)
+            : '';
     }
 }

@@ -10,7 +10,7 @@
 <link type="text/css" href="{{asset('assets/vendor/perfect-scrollbar.css')}}" rel="stylesheet">
 
 <!-- Material Design Icons -->
-<link type="text/css" href="{{asset('assets/css/material-icons.css')}}" rel="stylesheet">
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
 
 <!-- Font Awesome Icons -->
 <link type="text/css" href="{{asset('assets/css/fontawesome.css')}}" rel="stylesheet">
@@ -20,6 +20,7 @@
 
 <!-- App CSS -->
 <link type="text/css" href="{{asset('assets/css/app.css')}}" rel="stylesheet">
+<link type="text/css" href="{{asset('css/app.css')}}" rel="stylesheet">
 
 {{-- custom --}}
 <link type="text/css" href="{{asset('assets/css/custom.css')}}" rel="stylesheet">

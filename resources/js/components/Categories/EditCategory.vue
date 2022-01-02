@@ -62,7 +62,7 @@
                 >
                 <div class="row w-100" v-if="form.thumbnail">
                   <div class="col-12 img-wrapper">
-                    <img :src="form.thumbnail" class="img-fluid" />
+                    <img :src="form.thumbnail" class="img-fluid image-50" />
                   </div>
                 </div>
                 <input

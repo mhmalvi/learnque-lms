@@ -18,7 +18,6 @@
         </div>
       </div>
     </div>
-    <h6 class="card-footer mb-0">0 comment</h6>
   </div>
 </template>
 

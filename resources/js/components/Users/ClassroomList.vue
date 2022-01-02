@@ -18,6 +18,7 @@
       <nav
         class="col-12 d-flex justify-content-center"
         aria-label="Page navigation example"
+        v-if="classrooms.length > itemsPerPage"
       >
         <ul class="pagination">
           <li
@@ -86,6 +87,7 @@ export default {
       classrooms,
       isLoading,
       links,
+      itemsPerPage,
       getLink,
     };
   },

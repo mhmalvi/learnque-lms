@@ -2,10 +2,9 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
-class CreateClassroomPostsTable extends Migration
+class CreateNewsNoticesTable extends Migration
 {
     /**
      * Run the migrations.
@@ -14,15 +13,15 @@ class CreateClassroomPostsTable extends Migration
      */
     public function up()
     {
-        Schema::create('classroom_posts', function (Blueprint $table) {
+        Schema::create('news_notices', function (Blueprint $table) {
             $table->id();
 
-            $table->unsignedBigInteger('user_id');
-            $table->foreignId('classroom_id')
-                ->constrained()
-                ->onUpdate('cascade')
-                ->onDelete('cascade');
+            $table->string('title');
+            $table->string('slug');
             $table->longText('description')->nullable();
+            $table->string('image')->nullable();
+            $table->enum('post_type', ['news', 'notice']);
+            $table->boolean('is_published')->default(false);
 
             $table->timestamps();
         });
@@ -35,6 +34,6 @@ class CreateClassroomPostsTable extends Migration
      */
     public function down()
     {
-        Schema::dropIfExists('classroom_posts');
+        Schema::dropIfExists('news_notices');
     }
 }

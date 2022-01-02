@@ -2,6 +2,7 @@ require("./bootstrap");
 import { createApp } from "vue";
 import store from "./store";
 import axios from "axios";
+
 import { createRouter, createWebHistory } from "vue-router";
 
 import CopyWrite from "./components/CopyWrite.vue";
@@ -15,6 +16,7 @@ import EditCategory from "./components/Categories/EditCategory.vue";
 
 import CourseList from "./components/Courses/ListCourses.vue";
 import CreateCourses from "./components/Courses/CreateCourses.vue";
+import UpdateCourse from "./components/Courses/UpdateCourse.vue";
 
 import EnrollUserForm from "./components/Users/EnrollUserForm.vue";
 import StudentsList from "./components/Users/StudentsList.vue";
@@ -33,6 +35,10 @@ import ClassroomView from "./components/Classrooms/ClassroomView.vue";
 import HomeCourseListComponent from "./components/Home/CourseListComponent.vue";
 
 import EventCalendarComponent from "./components/EventCalendarComponent.vue";
+
+import NewsNoticeListComponent from "./components/NewsNotices/NewsNoticeListComponent.vue";
+import CreateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeCreateComponent.vue";
+import UpdateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeUpdateComponent.vue";
 
 import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
 
@@ -57,6 +63,7 @@ app.component("edit-category", EditCategory);
 
 app.component("course-list", CourseList);
 app.component("create-courses", CreateCourses);
+app.component("update-course", UpdateCourse);
 
 app.component("enrole-user-form", EnrollUserForm);
 app.component("students-list", StudentsList);
@@ -80,6 +87,10 @@ app.component("student-classroom-view", StudentClassroomView);
 app.component("event-calendar-component", EventCalendarComponent);
 app.component("avatar-header-component", AvatarHeaderComponent);
 // ---
+
+app.component("news-notice-list-component", NewsNoticeListComponent);
+app.component("create-news-notice-component", CreateNewsNoticeComponent);
+app.component("edit-news-notice-component", UpdateNewsNoticeComponent);
 
 /**
  * Guest

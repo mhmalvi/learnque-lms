@@ -75,9 +75,9 @@
           Login
         </button>
       </div>
-      <div class="form-group text-center">
+      <!-- <div class="form-group text-center">
         <a href="">Forgot password?</a> <br />
-      </div>
+      </div> -->
     </form>
   </div>
 </template>

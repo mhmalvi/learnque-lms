@@ -12,7 +12,17 @@
         <div class="col-auto">
             <ol class="breadcrumb p-0 m-0">
                 <li class="breadcrumb-item">
-                    <a href="">Home</a>
+                    @php
+                        if(auth('admin')->check())
+                        {
+                            $home = route('admin.dashboard');
+                        }
+                        else
+                        {
+                            $home = route('dashboard');
+                        }
+                    @endphp
+                    <a href="{{ $home }}">Home</a>
                 </li>
                 @if (request()->segment(1))
                     <li class="breadcrumb-item">

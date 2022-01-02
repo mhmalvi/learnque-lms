@@ -10,8 +10,8 @@ class ImageHandler
     private $image,
         $name,
         $path,
-        $height = null,
-        $width = 600;
+        $width = 600,
+        $height = null;
 
     public function setImage($image)
     {
@@ -33,25 +33,9 @@ class ImageHandler
 
     public function setDimension($width, $height = null)
     {
-        $this->height = $height;
         $this->width = $width;
+        $this->height = $height;
         return $this;
-    }
-
-    public function storeFromImageData()
-    {
-        $extension = $this->getOriginalFileExtension($this->image);
-        $filename = "{$this->name}{$extension}";
-
-        if (!Storage::exists('public/' . $this->path)) {
-            Storage::makeDirectory('public/' . $this->path);
-        }
-
-        Image::make($this->image)
-            ->fit($this->width, $this->height)
-            ->save(storage_path('app/public/' . $this->path . '/' . $filename));
-
-        return $filename;
     }
 
     /**
@@ -66,5 +50,24 @@ class ImageHandler
         $ext = image_type_to_extension($info[2]);
 
         return $ext;
+    }
+
+    public function storeFromImageData()
+    {
+        $extension = $this->getOriginalFileExtension($this->image);
+        if (!$this->name) {
+            throw new \Exception("ImageHandler::name is required for saving the image!");
+        }
+        $filename = "{$this->name}{$extension}";
+
+        if (!Storage::exists('public/' . $this->path)) {
+            Storage::makeDirectory('public/' . $this->path);
+        }
+
+        Image::make($this->image)
+            ->fit($this->width, $this->height)
+            ->save(storage_path('app/public/' . $this->path . '/' . $filename));
+
+        return $filename;
     }
 }
