@@ -12,12 +12,30 @@
       </a>
 
       <div class="card-body flex">
-        <div class="d-flex">
-          <div class="flex">
+        <div class="">
+          <div class="d-flex justify-content-between">
             <a class="card-title" :href="getClassroomLink()">
               {{ classroom.title }}
             </a>
-            <small class="text-50 font-weight-bold mb-4pt"></small>
+            <small class="text-50 font-weight-bold mb-4pt">
+              <a
+                href="javascript:void(0)"
+                @click.prevent="attemptDelete(classroom)"
+                class="link-danger"
+                title="Delete this class"
+                v-if="!isDeleting"
+              >
+                <i class="fas fa-trash"></i>
+              </a>
+              <a
+                href="javascript:void(0)"
+                class="link-danger"
+                title="Delete this class"
+                v-else
+              >
+                <i class="fas fa-circle-notch fa-spin"></i>
+              </a>
+            </small>
           </div>
         </div>
       </div>
@@ -43,12 +61,14 @@
 
 <script>
 import { ref, onMounted } from "vue";
+import Swal from "sweetalert2";
 
 export default {
   props: ["classroom"],
-  setup(props) {
+  setup(props, { emit }) {
     const classroom = props.classroom;
     const background_image = ref("");
+    const isDeleting = ref(false);
 
     onMounted(() => {
       console.log(classroom);
@@ -58,17 +78,56 @@ export default {
         background_image.value =
           location.origin + "/assets/images/paths/sketch_430x168.png";
       }
-      console.log("bg", background_image.value);
     });
 
     const getClassroomLink = () => {
       return "/admin/classrooms/" + classroom.unique_id + "/posts";
     };
 
+    const attemptDelete = (classroom) => {
+      Swal.fire({
+        icon: "question",
+        title: "Are you sure you want to delete this classroom?",
+        showCancelButton: true,
+        cancelButtonText: "No, cancel it!",
+        confirmButtonText: "Yes, delete it!",
+      }).then((res) => {
+        if (res.isConfirmed) {
+          deleteClassroom(classroom);
+        }
+      });
+    };
+
+    const deleteClassroom = (classroom) => {
+      isDeleting.value = true;
+      axios
+        .delete("/admin/classrooms/" + classroom.unique_id)
+        .then((res) => {
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+          });
+          emit("classroomDelete");
+        })
+        .catch((err) => {
+          if (!err.response.data.errors) {
+            Swal.fire({
+              icon: "error",
+              title: err.response.data.message,
+            });
+          }
+        })
+        .then(() => {
+          isDeleting.value = false;
+        });
+    };
+
     return {
       classroom,
       background_image,
+      isDeleting,
       getClassroomLink,
+      attemptDelete,
     };
   },
 };
