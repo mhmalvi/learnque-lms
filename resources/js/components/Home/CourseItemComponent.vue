@@ -12,11 +12,16 @@
     >
       <a
         :href="'/course/' + course.uuid"
-        class="card-img-top js-image"
+        class="card-img-top js-image course-item-image-wrapper"
         data-position=""
         data-height="140"
+        :style="{ backgroundImage: 'url(' + getImageUrl(course) + ')' }"
       >
-        <img src="/assets/images/paths/sketch_430x168.png" alt="course" />
+        <img
+          class="course-item-image"
+          :src="getImageUrl(course)"
+          alt="course"
+        />
         <span class="overlay__content">
           <span class="overlay__action d-flex flex-column text-center">
             <i class="material-icons icon-32pt">play_circle_outline</i>
@@ -150,13 +155,36 @@
   </div>
 </template>
 
-.<script>
+<script>
 export default {
   props: ["course"],
   setup({ course }) {
+    const getImageUrl = (course) => {
+      if (course.image) {
+        return course.image;
+      }
+      return location.origin + "/assets/images/paths/sketch_430x168.png";
+    };
+    console.log(course);
     return {
       course,
+      getImageUrl,
     };
   },
 };
 </script>
+
+<style scoped>
+.course-item-image-wrapper {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center center;
+  height: 140px;
+}
+
+.course-item-image {
+  visibility: hidden;
+}
+</style>
