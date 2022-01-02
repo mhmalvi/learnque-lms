@@ -40694,7 +40694,7 @@ __webpack_require__.r(__webpack_exports__);
       return form.title;
     });
 
-    function submit() {
+    var submit = function submit() {
       isSubmitting.value = true;
       axios__WEBPACK_IMPORTED_MODULE_1___default().post("admin/categories", form).then(function (res) {
         store.commit("courseCategories/addNewCategory", {
@@ -40715,7 +40715,7 @@ __webpack_require__.r(__webpack_exports__);
       })["finally"](function () {
         isSubmitting.value = false;
       });
-    }
+    };
 
     var reset = function reset() {
       form.title = "";
@@ -40881,15 +40881,13 @@ __webpack_require__.r(__webpack_exports__);
           }).then(function (res) {
             sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
               icon: "success",
-              title: res.data.message,
-              timer: 1000
+              title: res.data.message
             });
             categories.value.splice(index, 1);
           })["catch"](function (err) {
             sweetalert2__WEBPACK_IMPORTED_MODULE_1___default().fire({
               icon: "error",
-              title: "Something went wrong!",
-              timer: 3000
+              title: "Something went wrong!"
             });
             console.log(err);
           });

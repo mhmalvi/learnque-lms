@@ -122,7 +122,7 @@ export default {
       return form.title;
     });
 
-    function submit() {
+    const submit = () => {
       isSubmitting.value = true;
       axios
         .post("admin/categories", form)
@@ -149,7 +149,7 @@ export default {
         .finally(() => {
           isSubmitting.value = false;
         });
-    }
+    };
 
     const reset = () => {
       form.title = "";

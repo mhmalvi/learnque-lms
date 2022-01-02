@@ -86,7 +86,6 @@ export default {
               Swal.fire({
                 icon: "success",
                 title: res.data.message,
-                timer: 1000,
               });
 
               categories.value.splice(index, 1);
@@ -95,7 +94,6 @@ export default {
               Swal.fire({
                 icon: "error",
                 title: "Something went wrong!",
-                timer: 3000,
               });
               console.log(err);
             });
