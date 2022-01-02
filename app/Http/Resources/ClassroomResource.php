@@ -23,7 +23,7 @@ class ClassroomResource extends JsonResource
             'students_count' => $this->members->filter(function ($member) {
                 return $member->user->user_type == 'student';
             })->count(),
-            'cover_photo' => $this->cover_photo,
+            'cover_photo' => $this->cover_photo ? asset('storage/classrooms/' . $this->cover_photo) : null,
         ];
     }
 }
