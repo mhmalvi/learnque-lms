@@ -14,25 +14,26 @@ class CategoryCreateRequest extends CategoryRequest
      */
     public function rules()
     {
+        // slug the slug again, because user can input any kind of text in slug
+        $this->slug = Str::slug($this->slug);
         return [
-            'title' => 'required|unique:categories',
+            'title' => 'required',
+            'slug' => 'required|unique:categories',
         ];
     }
 
     public function save()
     {
-        $slug = $this->filled('slug') ? $this->slug : Str::slug($this->title);
-
         $image_name = null;
         if ($this->filled('thumbnail')) {
-            $image_name = $this->storeThumbnail($slug);
+            $image_name = $this->storeThumbnail($this->slug);
         }
 
         return Category::create([
             'uuid' => Str::uuid(),
             'title' => $this->title,
-            'slug' => $slug,
-            'description' => $this->filled('description') ? $this->description : '',
+            'slug' => $this->slug,
+            'description' => $this->filled('description') ? $this->description : null,
             'thumbnail' => $image_name,
         ]);
     }

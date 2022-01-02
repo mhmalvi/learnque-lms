@@ -20,6 +20,9 @@
       <div class="form-group">
         <label>Slug</label>
         <input type="text" class="form-control" v-model="form.slug" />
+        <small v-if="message.errors.slug" class="text-danger">
+          {{ message.errors.slug[0] }}
+        </small>
       </div>
 
       <div class="form-group">
@@ -67,10 +70,13 @@
 </template>
 
 <script>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import Validators from "../../modules/Validators";
+import StringHandler from "../../modules/StringHandler";
+import Swal from "sweetalert2";
+import ScrollHandler from "../../modules/ScrollHandler";
 
 export default {
   setup() {
@@ -88,6 +94,13 @@ export default {
       errors: {},
       success: "",
     });
+
+    watch(
+      () => form.title,
+      (newVal, oldVal) => {
+        form.slug = StringHandler.slug(newVal);
+      }
+    );
 
     const store = useStore();
 
@@ -122,7 +135,11 @@ export default {
             thumbnail_url: res.data.category.thumbnail_url,
           });
 
-          message.success = res.data.message;
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+          });
+          ScrollHandler.smoothScrollTop();
 
           reset();
         })
