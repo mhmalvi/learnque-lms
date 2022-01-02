@@ -37,28 +37,18 @@
       </div>
 
       <div class="d-flex align-items-center">
-        <div class="form-group img-container">
-          <label for="thumbnail" class="img-container-lbl"
-            >Click here to Upload Thumbnail</label
-          >
-          <div class="row w-100" v-if="form.thumbnail">
-            <div class="col-12 img-wrapper">
-              <img :src="form.thumbnail" class="img-fluid" />
-            </div>
-          </div>
-          <input
-            type="file"
-            id="thumbnail"
-            class="form-control d-none"
-            @change="onThumbnailUpload"
-          />
-        </div>
+        <ImagePickerComponent
+          ref="image_picker"
+          label="category"
+          @requestForChange="thumbnailChange"
+          @requestForDelete="thumbnailDelete"
+        />
       </div>
 
       <div class="form-group">
         <button
           class="btn btn-sm btn-outline-primary font-weight-light px-3"
-          :disabled="!formIsValid"
+          :disabled="!formIsValid || isSubmitting"
         >
           <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
           <i class="fas fa-plus-circle" v-else></i>
@@ -77,10 +67,15 @@ import Validators from "../../modules/Validators";
 import StringHandler from "../../modules/StringHandler";
 import Swal from "sweetalert2";
 import ScrollHandler from "../../modules/ScrollHandler";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 
 export default {
+  components: {
+    ImagePickerComponent,
+  },
   setup() {
     const isSubmitting = ref(false);
+    const image_picker = ref(0);
 
     const form = reactive({
       title: "",
@@ -157,15 +152,29 @@ export default {
       form.description = "";
 
       form.thumbnail = "";
+
+      image_picker.value.deleteImage();
+    };
+
+    const thumbnailChange = ({ image }) => {
+      form.thumbnail = image;
+      image_picker.value.setImage(image);
+    };
+    const thumbnailDelete = () => {
+      form.thumbnail = "";
+      image_picker.value.deleteImage();
     };
 
     return {
       isSubmitting,
       form,
-      submit,
+      image_picker,
       message,
-      onThumbnailUpload,
       formIsValid,
+      thumbnailChange,
+      thumbnailDelete,
+      onThumbnailUpload,
+      submit,
     };
   },
 };
