@@ -55,7 +55,8 @@ export default {
       if (classroom.cover_photo) {
         background_image.value = classroom.cover_photo;
       } else {
-        background_image.value = "/assets/images/paths/sketch_430x168.png";
+        background_image.value =
+          location.origin + "/assets/images/paths/sketch_430x168.png";
       }
       console.log("bg", background_image.value);
     });
