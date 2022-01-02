@@ -173,6 +173,7 @@ import Validators from "../../modules/Validators";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import IsLoading from "../../modules/IsLoading";
+import Swal from "sweetalert2";
 
 export default {
   components: { QuillEditor },
@@ -198,6 +199,7 @@ export default {
 
     const formData = reactive({
       id: null,
+      uuid: "",
       code: "",
       title: "",
       category: "",
@@ -213,6 +215,7 @@ export default {
 
     const setData = (course) => {
       formData.id = course.id;
+      formData.uuid = course.uuid;
       formData.code = course.code;
       formData.title = course.title;
       formData.category = course.category ?? "";
@@ -223,6 +226,7 @@ export default {
 
     const resetForm = () => {
       isValid.value = false;
+      formData.uuid = "";
       formData.code = "";
       formData.title = "";
       formData.category = "uncategorized";
@@ -276,6 +280,13 @@ export default {
 
       validation.errors = error.data.errors;
       validation.message = error.data.message;
+
+      if (!validation.errors) {
+        Swal.fire({
+          icon: "error",
+          title: validation.message,
+        });
+      }
     };
 
     const completed = () => {

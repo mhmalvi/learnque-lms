@@ -15,7 +15,7 @@
     <div class="container page__container p-5">
         <div class="row">
             <div class="col-md-12">
-                <update-course data="{{ $course }}" />
+                <update-course data="{{ json_encode($course) }}" />
             </div>
         </div>
     </div>

@@ -25,8 +25,9 @@ class CourseUpdateRequest extends CourseRequest
      */
     public function rules()
     {
+        $course = Course::where('uuid', $this->uuid)->firstOrFail();
         return [
-            'code' => "required|unique:courses,code," . $this->id,
+            'code' => "required|unique:courses,code," . $course->id,
             'title' => "required",
         ];
     }
