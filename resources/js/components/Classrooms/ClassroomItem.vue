@@ -3,19 +3,11 @@
     <div class="card card-sm card--elevated p-relative card-group-row__card">
       <a
         :href="getClassroomLink()"
-        class="card-img-top js-image"
+        class="card-img-top js-image classroom-item"
         data-position="center"
         data-height="150"
         data-domfactory-upgraded="image"
-        style="
-          display: block;
-          position: relative;
-          overflow: hidden;
-          background-image: url('/assets/images/paths/sketch_430x168.png');
-          background-size: cover;
-          background-position: center center;
-          height: 140px;
-        "
+        :style="{ 'background-image': 'url(' + background_image + ')' }"
       >
       </a>
 
@@ -50,10 +42,23 @@
 </template>
 
 <script>
+import { ref, onMounted } from "vue";
+
 export default {
   props: ["classroom"],
   setup(props) {
     const classroom = props.classroom;
+    const background_image = ref("");
+
+    onMounted(() => {
+      console.log(classroom);
+      if (classroom.cover_photo) {
+        background_image.value = classroom.cover_photo;
+      } else {
+        background_image.value = "/assets/images/paths/sketch_430x168.png";
+      }
+      console.log("bg", background_image.value);
+    });
 
     const getClassroomLink = () => {
       return "/admin/classrooms/" + classroom.unique_id + "/posts";
@@ -61,8 +66,20 @@ export default {
 
     return {
       classroom,
+      background_image,
       getClassroomLink,
     };
   },
 };
 </script>
+
+<style scoped>
+.classroom-item {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center center;
+  height: 140px;
+}
+</style>
