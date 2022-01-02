@@ -8,6 +8,16 @@ use Illuminate\Support\Facades\Storage;
 
 class CategoryRequest extends FormRequest
 {
+    /**
+     * Determine if the user is authorized to make this request.
+     *
+     * @return bool
+     */
+    public function authorize()
+    {
+        return auth('admin')->check();
+    }
+
     public function storeThumbnail($name)
     {
         $image_handler = new ImageHandler();

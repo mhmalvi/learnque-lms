@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Course\CategoryCreateRequest;
+use App\Http\Requests\Course\CategoryDeleteRequest;
 use App\Http\Requests\Course\CategoryUpdateRequest;
 use App\Http\Resources\Course\CategoriesCollection;
 use App\Http\Resources\Course\CategoryResource;
@@ -120,12 +121,19 @@ class CategoryController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function destroy(Category $category)
+    public function destroy(CategoryDeleteRequest $request, Category $category)
     {
-        $category->delete();
+        try {
+            $request->delete($category);
 
-        return response()->json([
-            'message' => "Successfully deleted the course category!"
-        ], 200);
+            return response()->json([
+                'message' => "Successfully deleted the course category!"
+            ], 200);
+        } catch (\Throwable $th) {
+            return response()->json([
+                'message' => "Something went wrong!",
+                'error' => $th->getMessage(),
+            ], 500);
+        }
     }
 }
