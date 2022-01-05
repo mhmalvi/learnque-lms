@@ -36,7 +36,7 @@
         ></textarea>
       </div>
 
-      <div class="d-flex align-items-center">
+      <div class="row d-flex justify-content-center">
         <ImagePickerComponent
           ref="image_picker"
           label="category"

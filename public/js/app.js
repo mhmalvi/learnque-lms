@@ -44409,7 +44409,7 @@ var _hoisted_9 = /*#__PURE__*/(0,vue__WEBPACK_IMPORTED_MODULE_0__.createElementV
 );
 
 var _hoisted_10 = {
-  "class": "d-flex align-items-center"
+  "class": "row d-flex justify-content-center"
 };
 var _hoisted_11 = {
   "class": "form-group"
