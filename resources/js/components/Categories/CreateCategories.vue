@@ -36,12 +36,11 @@
         ></textarea>
       </div>
 
-      <div class="row d-flex justify-content-center">
+      <div class="d-flex align-items-center">
         <ImagePickerComponent
           ref="image_picker"
-          label="category"
-          @requestForChange="thumbnailChange"
-          @requestForDelete="thumbnailDelete"
+          @requestForDelete="handleImageDelete"
+          @requestForChange="handleImageChange"
         />
       </div>
 
@@ -64,9 +63,6 @@ import { ref, reactive, computed, watch } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import Validators from "../../modules/Validators";
-import StringHandler from "../../modules/StringHandler";
-import Swal from "sweetalert2";
-import ScrollHandler from "../../modules/ScrollHandler";
 import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 
 export default {
@@ -98,20 +94,6 @@ export default {
     );
 
     const store = useStore();
-
-    const onThumbnailUpload = (event) => {
-      const { fileType } = Validators();
-      let file = event.target.files[0];
-      if (fileType(file.name)) {
-        let reader = new FileReader();
-        reader.onload = (e) => {
-          form.thumbnail = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // this.errors.push(`${file.name} is not a valid file type!`);
-      }
-    };
 
     const formIsValid = computed(() => {
       return form.title;
@@ -156,12 +138,12 @@ export default {
       image_picker.value.deleteImage();
     };
 
-    const thumbnailChange = ({ image }) => {
-      form.thumbnail = image;
-      image_picker.value.setImage(image);
+    const handleImageChange = (data) => {
+      image_picker.value.setImage(data.image);
+      form.thumbnail = data.image;
     };
-    const thumbnailDelete = () => {
-      form.thumbnail = "";
+
+    const handleImageDelete = () => {
       image_picker.value.deleteImage();
     };
 
@@ -171,10 +153,9 @@ export default {
       image_picker,
       message,
       formIsValid,
-      thumbnailChange,
-      thumbnailDelete,
-      onThumbnailUpload,
       submit,
+      handleImageChange,
+      handleImageDelete,
     };
   },
 };

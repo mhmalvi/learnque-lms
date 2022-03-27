@@ -65,8 +65,8 @@
             <div class="d-flex justify-content-center">
               <ImagePickerComponent
                 ref="image_picker"
-                @requestForChange="imageChange"
-                @requestForDelete="imageDelete"
+                @requestForChange="handleImageChange"
+                @requestForDelete="handleImageDelete"
               />
             </div>
 
@@ -132,8 +132,7 @@ export default {
     });
 
     onMounted(() => {
-      form.thumbnail = category.thumbnail_url;
-      image_picker.value.setImage(category.thumbnail_url);
+      image_picker.value.setImage(form.thumbnail);
     });
 
     const submit = () => {
@@ -163,29 +162,25 @@ export default {
         });
     };
 
-    const imageChange = ({ image }) => {
-      form.thumbnail = image;
-      image_picker.value.setImage(image);
-    };
-    const imageDelete = () => {
-      form.thumbnail = "";
-      image_picker.value.deleteImage();
+    const handleImageChange = (data) => {
+      image_picker.value.setImage(data.image);
+      form.thumbnail = data.image;
     };
 
-    const generateSlug = () => {
-      form.slug = StringHandler.slug(form.title);
+    const handleImageDelete = () => {
+      image_picker.value.deleteImage();
     };
 
     return {
       isSubmitting,
+      image_picker,
       form,
       validation,
       formIsValid,
       image_picker,
       submit,
-      imageChange,
-      imageDelete,
-      generateSlug,
+      handleImageChange,
+      handleImageDelete,
     };
   },
 };

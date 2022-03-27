@@ -11,6 +11,7 @@
             <ImagePickerComponent
               label="you profile picture"
               ref="avatar_component"
+              circular
               @requestForChange="handleProfilePictureUpdate"
               @requestForDelete="handleProfilePictureDelete"
             />
