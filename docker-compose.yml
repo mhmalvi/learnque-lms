@@ -13,15 +13,15 @@ services:
         # links:
         #     - db
 
-    # db:
-    #     image: mysql:latest
-    #     environment:
-    #         MYSQL_ROOT_PASSWORD: password
-    #         MYSQL_USERNAME: cynax
-    #         MYSQL_PASSWORD: password
-    #     entrypoint:
-    #         sh -c "echo 'CREATE DATABASE IF NOT EXISTS learn_que; CREATE DATABASE IF NOT EXISTS quadmin;' > /docker-entrypoint-initdb.d/init.sql; /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
-    #         # makes learn_que and quadmin database
-
-    #     ports:
-    #         - 9043:3306
+    db:
+        image: mysql:latest
+        environment:
+            MYSQL_ROOT_PASSWORD: password
+            MYSQL_USERNAME: cynax
+            MYSQL_PASSWORD: password
+            MYSQL_PORT: 8912
+        entrypoint:
+            sh -c "echo 'CREATE DATABASE IF NOT EXISTS learn_que; CREATE DATABASE IF NOT EXISTS quadmin;' > /docker-entrypoint-initdb.d/init.sql; /usr/local/bin/docker-entrypoint.sh --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci"
+            # makes learn_que and quadmin database
+        ports:
+            - 8912:8912

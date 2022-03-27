@@ -2,13 +2,21 @@
 
 namespace App\Zoom;
 
+use App\Http\Requests\LiveClassCreateRequest;
+use App\Http\Requests\LiveClassUpdateRequest;
+
 interface ZoomInterface
 {
     /**
-     * get the list of meetings
-     * 
+     * get details of a meeting
      */
-    public function meetings();
+    public function get($id);
+
+    /**
+     * get the list of meetings
+     *
+     */
+    public function meetings($per_page = 30, $page_number = "");
 
 
     /**
@@ -19,27 +27,27 @@ interface ZoomInterface
 
     /**
      * Get meeting participants
-     * 
+     *
      */
     public function getParticipants($meeting_id);
 
     /**
      * Create a new zoom meeting
-     * 
+     *
      */
-    public function create($request);
+    public function create(LiveClassCreateRequest $request);
 
 
     /**
      * Update an existing meeting
-     * 
+     *
      */
-    public function update($meeting_id);
+    public function update($meeting_id, LiveClassUpdateRequest $request);
 
 
     /**
      * Delete a meeting
-     * 
+     *
      */
     public function destroy($meeting_id);
 }

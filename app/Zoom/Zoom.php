@@ -2,6 +2,8 @@
 
 namespace App\Zoom;
 
+use App\Http\Requests\LiveClassRequest;
+use App\Http\Requests\LiveClassUpdateRequest;
 use GuzzleHttp\Client;
 use Illuminate\Support\Str;
 
@@ -10,16 +12,36 @@ class Zoom implements ZoomInterface
     use ZoomTrait;
 
     /**
-     * Get the list of created meeting
-     * 
+     * get details of a meeting
      */
-    public function meetings()
+    public function get($id)
+    {
+        $client = new Client(['base_uri' => $this->base_url]);
+
+        $response = $client->request('GET', '/v2/meetings/' . $id, [
+            'headers' => [
+                'Authorization' => "Bearer " . $this->getAccessToken(),
+            ],
+        ]);
+
+        return json_decode($response->getBody());
+    }
+
+    /**
+     * Get the list of created meeting
+     *
+     */
+    public function meetings($per_page = 30, $page_number = '')
     {
         $client = new Client(['base_uri' => $this->base_url]);
 
         $response = $client->request('GET', '/v2/users/me/meetings', [
             "headers" => [
                 "Authorization" => "Bearer " . $this->getAccessToken()
+            ],
+            "query" => [
+                "page_size" => $per_page,
+                "page_number" => $page_number,
             ]
         ]);
 
@@ -29,7 +51,7 @@ class Zoom implements ZoomInterface
 
     /**
      * Get the meetings by our appication users
-     * 
+     *
      * @param object $meetings
      */
     public function meetingsListByHost(object $meetings)
@@ -56,7 +78,7 @@ class Zoom implements ZoomInterface
 
     /**
      * Get past meeting participants
-     * 
+     *
      * This is a paid feature
      */
     public function getParticipants($meeting_id)
@@ -66,9 +88,9 @@ class Zoom implements ZoomInterface
 
     /**
      * Create a zoom meeting
-     * 
+     *
      */
-    public function create($request)
+    public function create(LiveClassRequest $request)
     {
         $client = new Client([
             // Base URI is used with relative requests
@@ -82,9 +104,9 @@ class Zoom implements ZoomInterface
             'json' => [
                 "topic" => $request->topic,
                 "type" => 2,
-                "start_time" => $this->getZoomDateTimeFormat($request->datetime),
-                "duration" => "30", // 30 mins
-                "password" => Str::random(8)
+                "start_time" => $this->getZoomDateTimeFormat($request->start_time_timestamp),
+                "duration" => $request->duration, // 30 mins
+                "password" => $request->password,
             ],
         ]);
 
@@ -94,9 +116,9 @@ class Zoom implements ZoomInterface
 
     /**
      * Update an existing zoom meeting
-     * 
+     *
      */
-    public function update($meeting_id)
+    public function update($meeting_id, LiveClassUpdateRequest $request)
     {
         $client = new Client([
             // Base URI is used with relative requests
@@ -108,11 +130,11 @@ class Zoom implements ZoomInterface
                 "Authorization" => "Bearer " . $this->getAccessToken()
             ],
             'json' => [
-                "topic" => "Let's Learn Laravel",
+                "topic" => $request->topic,
                 "type" => 2,
-                "start_time" => "2021-07-20T10:30:00",
-                "duration" => "45", // 45 mins
-                "password" => "123456"
+                "start_time" => $this->getZoomDateTimeFormat($request->start_time_timestamp),
+                "duration" => $request->duration, // 45 mins
+                "password" => $request->password,
             ],
         ]);
 
@@ -122,7 +144,7 @@ class Zoom implements ZoomInterface
 
     /**
      * Destroy an existing meeting
-     * 
+     *
      */
     public function destroy($meeting_id)
     {
@@ -136,6 +158,6 @@ class Zoom implements ZoomInterface
                 "Authorization" => "Bearer " . $this->getAccessToken()
             ]
         ]);
-        return $response;
+        return $response->getBody();
     }
 }
