@@ -47,6 +47,8 @@ Route::prefix('classrooms')->name('classroom.')->group(function () {
 
     Route::patch('{classroom:unique_id}/students/update', [ClassroomsController::class, 'updateStudents']);
     Route::patch('{classroom:unique_id}/teachers/update', [ClassroomsController::class, 'updateTeachers']);
+
+    Route::delete('{classroom:unique_id}', [ClassroomsController::class, 'destroy']);
 });
 
 //Live Class

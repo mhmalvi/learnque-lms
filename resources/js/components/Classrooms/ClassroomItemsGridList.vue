@@ -15,6 +15,7 @@
       v-for="(classroom, index) in classrooms"
       v-bind:key="index"
       :classroom="classroom"
+      @classroomDelete="handleClassroomDelete"
     />
 
     <nav
@@ -80,12 +81,17 @@ export default {
       getClassrooms(action_link);
     });
 
+    const handleClassroomDelete = () => {
+      getClassrooms(action_link);
+    };
+
     return {
       classrooms,
       isLoading,
       links,
       itemsPerPage,
       getLink,
+      handleClassroomDelete,
     };
   },
 };

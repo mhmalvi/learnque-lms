@@ -4,6 +4,7 @@ namespace App\Http\Requests;
 
 use App\Models\Course;
 use App\Models\Classroom;
+use App\Services\ImageHandler;
 use Illuminate\Support\Str;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -16,7 +17,7 @@ class CreateClassroomRequest extends FormRequest
      */
     public function authorize()
     {
-        return true;
+        return auth('admin')->check();
     }
 
     /**
@@ -36,13 +37,26 @@ class CreateClassroomRequest extends FormRequest
     public function save()
     {
         $course = Course::where('uuid', $this->course)->first();
+        $slug = Str::slug($this->title);
+        $cover_photo_filename = null;
 
-        Classroom::create([
+        if ($this->filled('cover_photo')) {
+            $image_handler = new ImageHandler();
+            $cover_photo_filename = time() . '_' . $slug;
+            $cover_photo_filename = $image_handler->setDimension(800, 600)
+                ->setImage($this->cover_photo)
+                ->setName($cover_photo_filename)
+                ->setPath('classrooms')
+                ->storeFromImageData();
+        }
+
+        return Classroom::create([
             'unique_id' => Str::random(8),
             'title' => $this->title,
-            'slug' => Str::slug($this->title),
+            'slug' => $slug,
             'section' => $this->section,
             'course_id' => $course->id,
+            'cover_photo' => $cover_photo_filename,
         ]);
     }
 }

@@ -20,7 +20,7 @@ class ClassroomPostResource extends JsonResource
         return [
             'id' => $this->id,
             'user_id' => $this->user_id,
-            'user' => new UserResource($this->user),
+            'author' => new UserResource($this->author),
             'classroom_id' => $classroom->unique_id,
             'description' => $this->description,
             'attachments' => $this->attachments,
