@@ -1,5 +1,13 @@
 <template>
   <div>
+    <div class="col-lg-8 offset-lg-4">
+      <div class="alert alert-success" v-if="success_message">
+        {{ success_message }}
+      </div>
+      <div class="alert alert-danger" v-if="errors.message">
+        {{ errors.message }}
+      </div>
+    </div>
     <div class="row mb-32pt">
       <div class="col-lg-4">
         <div class="page-separator">
@@ -59,12 +67,6 @@
 
     <div class="row mb-32pt">
       <div class="col-md-8 offset-md-4">
-        <div class="alert alert-success" v-if="success_message">
-          {{ success_message }}
-        </div>
-        <div class="alert alert-danger" v-if="errors.message">
-          {{ errors.message }}
-        </div>
         <button
           type="submit"
           class="btn btn-primary"
