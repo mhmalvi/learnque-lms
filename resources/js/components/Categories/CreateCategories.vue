@@ -20,6 +20,9 @@
       <div class="form-group">
         <label>Slug</label>
         <input type="text" class="form-control" v-model="form.slug" />
+        <small v-if="message.errors.slug" class="text-danger">
+          {{ message.errors.slug[0] }}
+        </small>
       </div>
 
       <div class="form-group">
@@ -33,29 +36,19 @@
         ></textarea>
       </div>
 
-      <div class="d-flex align-items-center">
-        <div class="form-group img-container">
-          <label for="thumbnail" class="img-container-lbl"
-            >Click here to Upload Thumbnail</label
-          >
-          <div class="row w-100" v-if="form.thumbnail">
-            <div class="col-12 img-wrapper">
-              <img :src="form.thumbnail" class="img-fluid" />
-            </div>
-          </div>
-          <input
-            type="file"
-            id="thumbnail"
-            class="form-control d-none"
-            @change="onThumbnailUpload"
-          />
-        </div>
+      <div class="row d-flex justify-content-center">
+        <ImagePickerComponent
+          ref="image_picker"
+          label="category"
+          @requestForChange="thumbnailChange"
+          @requestForDelete="thumbnailDelete"
+        />
       </div>
 
       <div class="form-group">
         <button
           class="btn btn-sm btn-outline-primary font-weight-light px-3"
-          :disabled="!formIsValid"
+          :disabled="!formIsValid || isSubmitting"
         >
           <i class="fas fa-circle-notch fa-spin" v-if="isSubmitting"></i>
           <i class="fas fa-plus-circle" v-else></i>
@@ -67,14 +60,22 @@
 </template>
 
 <script>
-import { ref, reactive, computed } from "vue";
+import { ref, reactive, computed, watch } from "vue";
 import axios from "axios";
 import { useStore } from "vuex";
 import Validators from "../../modules/Validators";
+import StringHandler from "../../modules/StringHandler";
+import Swal from "sweetalert2";
+import ScrollHandler from "../../modules/ScrollHandler";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 
 export default {
+  components: {
+    ImagePickerComponent,
+  },
   setup() {
     const isSubmitting = ref(false);
+    const image_picker = ref(0);
 
     const form = reactive({
       title: "",
@@ -88,6 +89,13 @@ export default {
       errors: {},
       success: "",
     });
+
+    watch(
+      () => form.title,
+      (newVal, oldVal) => {
+        form.slug = StringHandler.slug(newVal);
+      }
+    );
 
     const store = useStore();
 
@@ -109,7 +117,7 @@ export default {
       return form.title;
     });
 
-    function submit() {
+    const submit = () => {
       isSubmitting.value = true;
       axios
         .post("admin/categories", form)
@@ -122,7 +130,11 @@ export default {
             thumbnail_url: res.data.category.thumbnail_url,
           });
 
-          message.success = res.data.message;
+          Swal.fire({
+            icon: "success",
+            title: res.data.message,
+          });
+          ScrollHandler.smoothScrollTop();
 
           reset();
         })
@@ -132,7 +144,7 @@ export default {
         .finally(() => {
           isSubmitting.value = false;
         });
-    }
+    };
 
     const reset = () => {
       form.title = "";
@@ -140,15 +152,29 @@ export default {
       form.description = "";
 
       form.thumbnail = "";
+
+      image_picker.value.deleteImage();
+    };
+
+    const thumbnailChange = ({ image }) => {
+      form.thumbnail = image;
+      image_picker.value.setImage(image);
+    };
+    const thumbnailDelete = () => {
+      form.thumbnail = "";
+      image_picker.value.deleteImage();
     };
 
     return {
       isSubmitting,
       form,
-      submit,
+      image_picker,
       message,
-      onThumbnailUpload,
       formIsValid,
+      thumbnailChange,
+      thumbnailDelete,
+      onThumbnailUpload,
+      submit,
     };
   },
 };

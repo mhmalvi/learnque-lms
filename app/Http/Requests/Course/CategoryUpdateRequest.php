@@ -8,22 +8,14 @@ use Illuminate\Support\Str;
 class CategoryUpdateRequest extends CategoryRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
-    {
-        return auth('admin')->check();
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
      */
     public function rules()
     {
+        // slug the slug again, because user can input any kind of text in slug
+        $this->slug = Str::slug($this->slug);
         return [
             'title' => 'required',
             'slug' => 'required|unique:categories,slug,' . $this->id,
@@ -32,8 +24,6 @@ class CategoryUpdateRequest extends CategoryRequest
 
     public function update(Category $category)
     {
-        $this->slug = $this->slug ?? Str::slug($this->title);
-
         $category->title = $this->title;
         $category->slug = $this->slug;
         $category->description = $this->description;

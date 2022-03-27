@@ -8,41 +8,32 @@ use Illuminate\Support\Str;
 class CategoryCreateRequest extends CategoryRequest
 {
     /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
-    {
-        return true;
-    }
-
-    /**
      * Get the validation rules that apply to the request.
      *
      * @return array
      */
     public function rules()
     {
+        // slug the slug again, because user can input any kind of text in slug
+        $this->slug = Str::slug($this->slug);
         return [
-            'title' => 'required|unique:categories',
+            'title' => 'required',
+            'slug' => 'required|unique:categories',
         ];
     }
 
     public function save()
     {
-        $slug = $this->filled('slug') ? $this->slug : Str::slug($this->title);
-
         $image_name = null;
         if ($this->filled('thumbnail')) {
-            $image_name = $this->storeThumbnail($slug);
+            $image_name = $this->storeThumbnail($this->slug);
         }
 
         return Category::create([
             'uuid' => Str::uuid(),
             'title' => $this->title,
-            'slug' => $slug,
-            'description' => $this->filled('description') ? $this->description : '',
+            'slug' => $this->slug,
+            'description' => $this->filled('description') ? $this->description : null,
             'thumbnail' => $image_name,
         ]);
     }
