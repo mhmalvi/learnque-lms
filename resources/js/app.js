@@ -41,12 +41,15 @@ import CreateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeCreate
 import UpdateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeUpdateComponent.vue";
 
 import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
+import LiveClass from "./components/LiveClass/CreateClass.vue";
 
 /**
  * importing students components
  */
 import ClassroomList from "./components/Users/ClassroomList.vue";
 import StudentClassroomView from "./components/Users/ClassroomView.vue";
+import StudentClassroomList from "./components/Users/StudentClassroomList.vue";
+import StudentClassroomView from "./components/Users/StudentClassroomView.vue";
 
 const app = createApp({});
 
@@ -76,10 +79,13 @@ app.component("user-edit-profile", UserEditProfile);
 
 app.component("classroom-items-grid-list", ClassroomItemsGridList);
 app.component("classroom-view", ClassroomView);
+
+app.component("live-class", LiveClass);
 // End of Admin components
 
 // Students components
 app.component("student-classroom-list", ClassroomList);
+app.component("student-classroom-list", StudentClassroomList);
 app.component("student-classroom-view", StudentClassroomView);
 // End of students components
 

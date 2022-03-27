@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\EnrollUsersController;
 use App\Http\Controllers\Admin\NewsNoticesController;
 use App\Http\Controllers\Admin\ProfileController;
+use App\Http\Controllers\Admin\LiveClassesController;
 use App\Http\Controllers\Admin\StudentsController;
 use App\Http\Controllers\Admin\TeachersController;
 use Illuminate\Support\Facades\Route;
@@ -46,6 +47,11 @@ Route::prefix('classrooms')->name('classroom.')->group(function () {
 
     Route::patch('{classroom:unique_id}/students/update', [ClassroomsController::class, 'updateStudents']);
     Route::patch('{classroom:unique_id}/teachers/update', [ClassroomsController::class, 'updateTeachers']);
+});
+
+//Live Class
+Route::prefix('liveclass')->name('liveclass.')->group(function () {
+    Route::get('/', [LiveClassesController::class, 'index'])->name('index');
 });
 
 // Category routes
