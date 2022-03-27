@@ -33,7 +33,20 @@ class CreateCalendarEventRequest extends FormRequest
     public function save()
     {
         $start_date = date('Y-m-d', strtotime($this->date[0]));
-        $end_date = date('Y-m-d', strtotime($this->date[1]));
+        if (!$this->date[1]) {
+
+            $end_date = date('Y-m-d', strtotime($this->date[0]));
+        } else {
+            $end_date = date('Y-m-d', strtotime($this->date[1]));
+        }
+
+        if (
+            strtotime($this->start_time) > strtotime($this->end_time)
+        ) {
+            $temp = $this->start_time;
+            $this->start_time = $this->end_time;
+            $this->end_time = $temp;
+        }
 
         CalendarEvent::create([
             'title' => $this->title,
