@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\CourseCreateRequest;
 use App\Http\Requests\Admin\CourseUpdateRequest;
+use App\Http\Resources\CourseResource;
 use App\Http\Resources\CoursesCollection;
 use App\Models\Course;
 use Illuminate\Http\Request;
@@ -83,6 +84,7 @@ class CoursesController extends Controller
      */
     public function edit(Course $course)
     {
+        $course = new CourseResource($course);
         return view('admin.pages.courses.edit', compact('course'));
     }
 
@@ -101,12 +103,13 @@ class CoursesController extends Controller
 
             return response()->json([
                 'message' => "Successfully updated the course!",
-                'redirect_back' => $old_code == $course->code ? false : true,
-                'index_page' => route('admin.courses.index'),
+                'refresh' => $old_code == $course->code ? false : true,
+                'refresh_link' => route('admin.courses.edit', ['course' => $course->code]),
             ], 200);
         } catch (\Throwable $th) {
             return response()->json([
-                'message' => $th->getMessage(),
+                'message' => "Something went wrong!",
+                'error' => $th->getMessage(),
             ], 500);
         }
     }

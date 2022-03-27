@@ -113,24 +113,11 @@
           <p class="card-subtitle text-70 mb-16pt mb-lg-0"></p>
         </div>
         <div class="col-lg-8">
-          <div class="d-flex align-items-center">
-            <div class="form-group img-container">
-              <label for="thumbnail" class="img-container-lbl"
-                >Click here to Upload Thumbnail</label
-              >
-              <div class="row w-100" v-if="formData.thumbnail">
-                <div class="col-12 img-wrapper">
-                  <img :src="formData.thumbnail" class="img-fluid" />
-                </div>
-              </div>
-              <input
-                type="file"
-                id="thumbnail"
-                class="form-control d-none"
-                @change="onThumbnailUpload"
-              />
-            </div>
-          </div>
+          <ImagePickerComponent
+            ref="image_picker"
+            @requestForChange="changeThumbnail"
+            @requestForDelete="deleteThumbnail"
+          />
 
           <div class="mt-5">
             <button
@@ -173,10 +160,11 @@ import Validators from "../../modules/Validators";
 import { QuillEditor } from "@vueup/vue-quill";
 import "@vueup/vue-quill/dist/vue-quill.snow.css";
 import IsLoading from "../../modules/IsLoading";
+import Swal from "sweetalert2";
+import ImagePickerComponent from "../Global/ImagePickerComponent.vue";
 
 export default {
-  components: { QuillEditor },
-
+  components: { QuillEditor, ImagePickerComponent },
   setup(props, { emit }) {
     const isLoading = ref(false);
     const isValid = ref(false);
@@ -187,6 +175,7 @@ export default {
       errors: [],
       message: "",
     });
+    const image_picker = ref(0);
 
     const { start, stop } = IsLoading();
 
@@ -198,6 +187,7 @@ export default {
 
     const formData = reactive({
       id: null,
+      uuid: "",
       code: "",
       title: "",
       category: "",
@@ -213,36 +203,26 @@ export default {
 
     const setData = (course) => {
       formData.id = course.id;
+      formData.uuid = course.uuid;
       formData.code = course.code;
       formData.title = course.title;
       formData.category = course.category ?? "";
       formData.description = course.description;
-      formData.thumbnail = course.image_url;
+      formData.thumbnail = course.image;
       myEditor.value.setHTML(course.description);
+
+      image_picker.value.setImage(formData.thumbnail);
     };
 
     const resetForm = () => {
       isValid.value = false;
+      formData.uuid = "";
       formData.code = "";
       formData.title = "";
       formData.category = "uncategorized";
       formData.description = "";
       formData.thumbnail = "";
       myEditor.value.setHTML("");
-    };
-
-    const onThumbnailUpload = (event) => {
-      const { fileType } = Validators();
-      let file = event.target.files[0];
-      if (fileType(file.name)) {
-        let reader = new FileReader();
-        reader.onload = (e) => {
-          formData.thumbnail = e.target.result;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        // this.errors.push(`${file.name} is not a valid file type!`);
-      }
     };
 
     const onSaveAsDraft = () => {
@@ -276,10 +256,27 @@ export default {
 
       validation.errors = error.data.errors;
       validation.message = error.data.message;
+
+      if (!validation.errors) {
+        Swal.fire({
+          icon: "error",
+          title: validation.message,
+        });
+      }
     };
 
     const completed = () => {
       isLoading.value = false;
+    };
+
+    const changeThumbnail = ({ image }) => {
+      image_picker.value.setImage(image);
+      formData.thumbnail = image;
+    };
+
+    const deleteThumbnail = () => {
+      image_picker.value.deleteImage();
+      formData.thumbnail = "";
     };
 
     return {
@@ -289,7 +286,7 @@ export default {
       validation,
       isLoading,
       myEditor,
-      onThumbnailUpload,
+      image_picker,
       setData,
       onFormSubmitHandlar,
       onSaveAsDraft,
@@ -298,6 +295,8 @@ export default {
       success,
       fail,
       completed,
+      changeThumbnail,
+      deleteThumbnail,
     };
   },
 };

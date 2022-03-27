@@ -19,12 +19,13 @@ export default {
     const form_component = ref(0);
 
     onMounted(() => {
+      course.value.category = course.value.category.uuid;
       form_component.value.setData(course.value);
     });
 
     const handleUpdate = (data) => {
       axios
-        .post("/admin/courses/edit/" + course.value.id, {
+        .post("/admin/courses/edit/" + course.value.uuid, {
           _method: "PATCH",
           ...data,
         })
@@ -35,8 +36,10 @@ export default {
           });
           form_component.value.success(false);
 
-          if (res.data.redirect_back) {
-            location.replace(res.data.index_page);
+          if (res.data.refresh) {
+            setTimeout(() => {
+              location.replace(res.data.refresh_link);
+            }, 2000);
           }
         })
         .catch((err) => {
