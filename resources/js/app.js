@@ -41,7 +41,7 @@ import CreateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeCreate
 import UpdateNewsNoticeComponent from "./components/NewsNotices/NewsNoticeUpdateComponent.vue";
 
 import AvatarHeaderComponent from "./components/AvatarHeaderComponent.vue";
-import LiveClass from "./components/LiveClass/CreateClass.vue";
+// import LiveClass from "./components/LiveClass/CreateClass.vue";
 import LiveClassListComponent from "./components/LiveClass/LiveClassListComponent.vue";
 import CreateLiveClassComponent from "./components/LiveClass/CreateLiveClassComponent.vue";
 import UpdateLiveClassComponent from "./components/LiveClass/UpdateLiveClassComponent.vue";
@@ -51,8 +51,8 @@ import UpdateLiveClassComponent from "./components/LiveClass/UpdateLiveClassComp
  */
 import ClassroomList from "./components/Users/ClassroomList.vue";
 import StudentClassroomView from "./components/Users/ClassroomView.vue";
-import StudentClassroomList from "./components/Users/StudentClassroomList.vue";
-import StudentClassroomView from "./components/Users/StudentClassroomView.vue";
+// import StudentClassroomList from "./components/Users/StudentClassroomList.vue";
+// import StudentClassroomView from "./components/Users/StudentClassroomView.vue";
 
 const app = createApp({});
 
@@ -90,7 +90,7 @@ app.component("edit-live-class-component", UpdateLiveClassComponent);
 
 // Students components
 app.component("student-classroom-list", ClassroomList);
-app.component("student-classroom-list", StudentClassroomList);
+// app.component("student-classroom-list", StudentClassroomList);
 app.component("student-classroom-view", StudentClassroomView);
 // End of students components
 
