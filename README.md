@@ -1,3 +1,6 @@
+<!-- repo-card -->
+![learnque-lms](docs/assets/social-card.png)
+
 # Learnque LMS
 
 A comprehensive Learning Management System built for **Quadque Technologies**, providing a full-featured digital learning environment for students, teachers, and administrators.
